@@ -1,0 +1,355 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="cf-app-wrapper">
+  
+  {# Mobile Sidebar Backdrop Overlay #}
+  <div class="cf-sidebar-overlay" id="cf-sidebar-overlay"></div>
+
+  <!-- Dark Navy Sidebar (~250px) -->
+  <aside class="cf-sidebar" id="cf-sidebar">
+    <!-- Brand / Firm Header -->
+    <div class="cf-sidebar-brand">
+      <a href="{% url 'core:dashboard' %}" class="cf-brand-link">
+        <div class="cf-brand-logo-icon">CF</div>
+        <div>
+          <div class="cf-brand-title">
+            {{ APP_NAME }}
+            <span class="cf-brand-nepal-badge">NEPAL</span>
+          </div>
+          <div style="font-size: 0.6875rem; color: var(--cf-text-on-navy-muted);">Practice OS</div>
+        </div>
+      </a>
+      <button type="button" class="cf-modal-close-btn d-lg-none" id="cf-sidebar-close" style="color: #fff;" aria-label="Close Sidebar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- Navigation Scroll Area -->
+    <div class="cf-sidebar-content">
+      
+      <!-- Section: WORKSPACE -->
+      <div class="cf-sidebar-section-label">Workspace</div>
+      <ul class="cf-nav-list">
+        <li class="cf-nav-item">
+          <a href="{% url 'core:dashboard' %}" class="cf-nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+            <span class="cf-nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            </span>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="cf-nav-item">
+          <a href="{% url 'clients:client_list' %}" class="cf-nav-link {% if 'clients' in request.path %}active{% endif %}">
+            <span class="cf-nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </span>
+            <span>Clients</span>
+            <span class="cf-nav-pill-badge">128</span>
+          </a>
+        </li>
+        <li class="cf-nav-item">
+          <a href="{% url 'tasks:task_list' %}" class="cf-nav-link {% if 'tasks' in request.path %}active{% endif %}">
+            <span class="cf-nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </span>
+            <span>Tasks</span>
+            <span class="cf-nav-pill-badge" style="background-color: rgba(245, 158, 11, 0.2); color: #FCD34D;">24</span>
+          </a>
+        </li>
+        <li class="cf-nav-item">
+          <a href="{% url 'documents:document_list' %}" class="cf-nav-link {% if 'documents' in request.path %}active{% endif %}">
+            <span class="cf-nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </span>
+            <span>Documents</span>
+          </a>
+        </li>
+        <li class="cf-nav-item">
+          <a href="{% url 'compliance:compliance_list' %}" class="cf-nav-link {% if 'compliance' in request.path %}active{% endif %}">
+            <span class="cf-nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+            </span>
+            <span>Compliance</span>
+            <span class="cf-nav-pill-badge" style="background-color: rgba(220, 38, 38, 0.25); color: #FCA5A5;">8 Due</span>
+          </a>
+        </li>
+        <li class="cf-nav-item">
+          <a href="{% url 'calendar_app:calendar_view' %}" class="cf-nav-link {% if 'calendar' in request.path %}active{% endif %}">
+            <span class="cf-nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </span>
+            <span>Calendar</span>
+          </a>
+        </li>
+        <li class="cf-nav-item">
+          <a href="{% url 'messages_app:inbox' %}" class="cf-nav-link {% if 'messages' in request.path %}active{% endif %}">
+            <span class="cf-nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </span>
+            <span>Messages</span>
+          </a>
+        </li>
+      </ul>
+
+      <!-- Section: INSIGHTS -->
+      <div class="cf-sidebar-section-label">Insights</div>
+      <ul class="cf-nav-list">
+        <li class="cf-nav-item">
+          <a href="{% url 'reports:report_dashboard' %}" class="cf-nav-link {% if 'reports' in request.path %}active{% endif %}">
+            <span class="cf-nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            </span>
+            <span>Reports</span>
+          </a>
+        </li>
+        <li class="cf-nav-item">
+          <a href="{% url 'billing:invoice_list' %}" class="cf-nav-link {% if 'billing' in request.path %}active{% endif %}">
+            <span class="cf-nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            </span>
+            <span>Billing</span>
+          </a>
+        </li>
+      </ul>
+
+      <!-- Section: ADMIN -->
+      <div class="cf-sidebar-section-label">Admin</div>
+      <ul class="cf-nav-list">
+        <li class="cf-nav-item">
+          <a href="{% url 'firms:team_list' %}" class="cf-nav-link {% if 'firms/team' in request.path %}active{% endif %}">
+            <span class="cf-nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </span>
+            <span>Team</span>
+          </a>
+        </li>
+        <li class="cf-nav-item">
+          <a href="{% url 'firms:firm_settings' %}" class="cf-nav-link {% if 'firms/settings' in request.path %}active{% endif %}">
+            <span class="cf-nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </span>
+            <span>Settings</span>
+          </a>
+        </li>
+        <li class="cf-nav-item">
+          <a href="{% url 'audit:audit_list' %}" class="cf-nav-link {% if 'audit' in request.path %}active{% endif %}">
+            <span class="cf-nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            </span>
+            <span>Audit Logs</span>
+          </a>
+        </li>
+
+        {# Component Design System Showcase Link #}
+        <li class="cf-nav-item" style="margin-top: 10px;">
+          <a href="{% url 'core:design_system' %}" class="cf-nav-link {% if 'design-system' in request.path %}active{% endif %}" style="border: 1px dashed rgba(212, 175, 55, 0.4); color: #FCD34D;">
+            <span class="cf-nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            </span>
+            <span>Design System UI</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Sidebar Bottom: User & Session -->
+    <div class="cf-sidebar-footer">
+      <div class="cf-user-profile-card">
+        <div class="cf-avatar">
+          {% if request.user.is_authenticated %}
+            {{ request.user.get_display_name|slice:":2"|upper }}
+          {% else %}
+            CA
+          {% endif %}
+        </div>
+        <div class="cf-user-info">
+          <div class="cf-user-name">
+            {% if request.user.is_authenticated %}
+              {{ request.user.get_display_name }}
+            {% else %}
+              CA. Suyog Dhakal
+            {% endif %}
+          </div>
+          <div class="cf-user-role">
+            {% if request.user.is_authenticated %}
+              {{ request.user.get_role_display }}
+            {% else %}
+              Managing Partner (FCA)
+            {% endif %}
+          </div>
+        </div>
+        
+        {# Logout link #}
+        <a href="{% url 'accounts:logout' %}" title="Sign out" style="color: var(--cf-text-on-navy-muted); padding: 4px;" onclick="event.preventDefault(); document.getElementById('cf-logout-form').submit();">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </a>
+        <form id="cf-logout-form" action="{% url 'accounts:logout' %}" method="post" style="display: none;">
+          {% csrf_token %}
+        </form>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Application Workspace -->
+  <div class="cf-main-area">
+    
+    <!-- Top Navigation Bar -->
+    <header class="cf-topbar">
+      <div class="cf-topbar-left">
+        <!-- Mobile Toggle Button -->
+        <button type="button" class="cf-mobile-toggle-btn" id="cf-sidebar-toggle" aria-label="Open Navigation">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+
+        <!-- Global Search -->
+        <div class="cf-global-search-box">
+          <span class="cf-search-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </span>
+          <input type="search" 
+                 class="cf-global-search-input" 
+                 placeholder="Search clients, PAN, task ID, tax code, documents..." 
+                 aria-label="Global search">
+          <kbd class="cf-search-kbd">⌘K</kbd>
+        </div>
+      </div>
+
+      <div class="cf-topbar-right">
+        <!-- Nepal Fiscal Year & Active Firm Status -->
+        <div class="cf-fiscal-badge" title="Active Nepal Bikram Sambat Fiscal Year">
+          <span class="cf-fiscal-dot"></span>
+          <span>FY {{ CURRENT_FISCAL_YEAR }} &bull; Ashoj 2081</span>
+        </div>
+
+        <!-- Help Button / Modal Trigger -->
+        <button type="button" 
+                class="cf-icon-btn" 
+                title="Help & Nepal CA Guidelines"
+                data-cf-modal-target="#cf-help-modal">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </button>
+
+        <!-- Notifications Dropdown -->
+        <div class="cf-dropdown">
+          <button type="button" 
+                  class="cf-icon-btn" 
+                  data-cf-dropdown-toggle 
+                  title="Notifications ({{ UNREAD_NOTIFICATIONS_COUNT }} new)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            {% if UNREAD_NOTIFICATIONS_COUNT > 0 %}
+              <span class="cf-badge-dot"></span>
+            {% endif %}
+          </button>
+          
+          <div class="cf-dropdown-menu" style="width: 320px;">
+            <div class="cf-dropdown-header" style="display: flex; justify-content: space-between; align-items: center;">
+              <span>Alerts & Deadlines</span>
+              <span class="cf-badge cf-badge-warning" style="font-size: 0.65rem;">{{ UNREAD_NOTIFICATIONS_COUNT }} New</span>
+            </div>
+            
+            <a href="{% url 'compliance:compliance_list' %}" class="cf-dropdown-item" style="align-items: flex-start; gap: 0.75rem;">
+              <span class="cf-status-dot danger" style="margin-top: 5px;"></span>
+              <div>
+                <strong style="display:block; font-size: 0.8125rem;">VAT Return Deadline</strong>
+                <span style="font-size: 0.75rem; color: var(--cf-text-muted);">Monthly VAT return due 25th Ashoj (3 days remaining)</span>
+              </div>
+            </a>
+            
+            <a href="{% url 'tasks:task_list' %}" class="cf-dropdown-item" style="align-items: flex-start; gap: 0.75rem;">
+              <span class="cf-status-dot warning" style="margin-top: 5px;"></span>
+              <div>
+                <strong style="display:block; font-size: 0.8125rem;">Audit Working Paper Review</strong>
+                <span style="font-size: 0.75rem; color: var(--cf-text-muted);">Assigned to Senior Auditor for Apex Hydropower</span>
+              </div>
+            </a>
+
+            <div class="cf-dropdown-divider"></div>
+            <a href="{% url 'notifications:notification_list' %}" class="cf-dropdown-item" style="justify-content: center; font-weight: 600; color: var(--cf-secondary-navy);">
+              View All Notifications
+            </a>
+          </div>
+        </div>
+
+        <!-- User Profile Dropdown -->
+        <div class="cf-dropdown">
+          <button type="button" 
+                  class="cf-btn cf-btn-ghost" 
+                  data-cf-dropdown-toggle 
+                  style="padding: 0.35rem 0.5rem; gap: 0.5rem; border: 1px solid var(--cf-border); border-radius: var(--cf-radius-full);">
+            <div class="cf-avatar" style="width: 28px; height: 28px; font-size: 0.75rem; background-color: var(--cf-primary-navy);">
+              {% if request.user.is_authenticated %}{{ request.user.get_display_name|slice:":2"|upper }}{% else %}SD{% endif %}
+            </div>
+            <span class="d-none d-md-inline" style="font-size: 0.8125rem; font-weight: 600; color: var(--cf-primary-navy);">
+              {% if request.user.is_authenticated %}{{ request.user.get_display_name }}{% else %}Dhakal &amp; Associates{% endif %}
+            </span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+
+          <div class="cf-dropdown-menu">
+            <div class="cf-dropdown-header">Practice Account</div>
+            <a href="{% url 'accounts:profile' %}" class="cf-dropdown-item">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span>My Profile &amp; ICAN Info</span>
+            </a>
+            <a href="{% url 'firms:firm_settings' %}" class="cf-dropdown-item">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <span>Firm Preferences</span>
+            </a>
+            <div class="cf-dropdown-divider"></div>
+            <a href="{% url 'accounts:logout' %}" class="cf-dropdown-item danger" onclick="event.preventDefault(); document.getElementById('cf-logout-form').submit();">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              <span>Sign Out</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Dynamic Page Content -->
+    <main class="cf-page-content">
+      {% block app_content %}{% endblock %}
+    </main>
+
+    <!-- App Shell Footer -->
+    <footer class="cf-app-footer">
+      <div>
+        <strong>{{ APP_NAME }}</strong> &mdash; Nepal CA Practice Management System &bull; Active FY: <strong>{{ CURRENT_FISCAL_YEAR }}</strong>
+      </div>
+      <div>
+        <span>Compliant with ICAN &amp; IRD e-Filing guidelines &bull; v1.0.0</span>
+      </div>
+    </footer>
+  </div>
+</div>
+
+{# Help & Guidelines Modal #}
+<div class="cf-modal-backdrop" id="cf-help-modal">
+  <div class="cf-modal-dialog">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title">CAFlow Help &amp; Practice Support</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="cf-modal-body">
+      <h4 style="font-size: 0.9375rem; margin-bottom: 0.5rem;">Nepal Tax &amp; Audit Reference Guides</h4>
+      <p style="font-size: 0.8125rem;">
+        CAFlow simplifies practice management across Inland Revenue Department (IRD) deadlines, Office of Company Registrar (OCR) filings, and ICAN audit standards.
+      </p>
+      
+      <div style="margin-top: 1rem; padding: 0.875rem; background: var(--cf-bg); border-radius: var(--cf-radius-md); border: 1px solid var(--cf-border);">
+        <strong style="display: block; font-size: 0.8125rem; color: var(--cf-primary-navy);">Keyboard Shortcuts</strong>
+        <div style="font-size: 0.75rem; color: var(--cf-text-secondary); margin-top: 0.35rem; display: flex; flex-direction: column; gap: 4px;">
+          <div><kbd class="cf-search-kbd" style="position:static; margin-right: 6px;">⌘K</kbd> Open Global Search</div>
+          <div><kbd class="cf-search-kbd" style="position:static; margin-right: 6px;">Esc</kbd> Close any modal or overlay</div>
+        </div>
+      </div>
+    </div>
+    <div class="cf-modal-footer">
+      <button type="button" class="cf-btn cf-btn-primary" data-cf-modal-close>Got It</button>
+    </div>
+  </div>
+</div>
+{% endblock %}

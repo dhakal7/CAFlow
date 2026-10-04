@@ -1,0 +1,87 @@
+{# CAFlow Reusable Form Field Component #}
+<div class="cf-form-group {{ extra_classes|default:'' }}">
+  {% if field %}
+    {# Render from Django Form Field instance #}
+    <label class="cf-label" for="{{ field.id_for_label }}">
+      {{ field.label }}
+      {% if field.field.required %}<span class="required-star">*</span>{% endif %}
+    </label>
+
+    <div class="cf-input-wrapper">
+      {{ field }}
+    </div>
+
+    {% if field.help_text %}
+      <div class="cf-help-text">{{ field.help_text }}</div>
+    {% endif %}
+
+    {% if field.errors %}
+      {% for error in field.errors %}
+        <div class="cf-error-text">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          {{ error }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+  {% else %}
+    {# Manual field markup #}
+    {% if label %}
+      <label class="cf-label" {% if id %}for="{{ id }}"{% endif %}>
+        {{ label }}
+        {% if required %}<span class="required-star">*</span>{% endif %}
+      </label>
+    {% endif %}
+
+    {% if type == "textarea" %}
+      <textarea 
+        class="cf-textarea {% if is_invalid %}is-invalid{% endif %}"
+        {% if id %}id="{{ id }}"{% endif %}
+        name="{{ name }}"
+        rows="{{ rows|default:3 }}"
+        placeholder="{{ placeholder|default:'' }}"
+        {% if required %}required{% endif %}
+        {% if disabled %}disabled{% endif %}>{{ value|default:'' }}</textarea>
+    {% elif type == "select" %}
+      <select 
+        class="cf-select {% if is_invalid %}is-invalid{% endif %}"
+        {% if id %}id="{{ id }}"{% endif %}
+        name="{{ name }}"
+        {% if required %}required{% endif %}
+        {% if disabled %}disabled{% endif %}>
+        {{ options_html|safe }}
+      </select>
+    {% elif type == "checkbox" %}
+      <label class="cf-checkbox-label">
+        <input type="checkbox"
+               class="cf-checkbox"
+               {% if id %}id="{{ id }}"{% endif %}
+               name="{{ name }}"
+               {% if checked %}checked{% endif %}
+               {% if disabled %}disabled{% endif %}>
+        <span>{% if checkbox_text %}{{ checkbox_text }}{% elif label %}{{ label }}{% endif %}</span>
+      </label>
+    {% else %}
+      <input 
+        type="{{ type|default:'text' }}"
+        class="cf-input {% if is_invalid %}is-invalid{% endif %}"
+        {% if id %}id="{{ id }}"{% endif %}
+        name="{{ name }}"
+        value="{{ value|default:'' }}"
+        placeholder="{{ placeholder|default:'' }}"
+        {% if required %}required{% endif %}
+        {% if disabled %}disabled{% endif %}>
+    {% endif %}
+
+    {% if help_text %}
+      <div class="cf-help-text">{{ help_text }}</div>
+    {% endif %}
+
+    {% if error %}
+      <div class="cf-error-text">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        {{ error }}
+      </div>
+    {% endif %}
+  {% endif %}
+</div>

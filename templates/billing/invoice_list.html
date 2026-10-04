@@ -1,0 +1,109 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}Practice Billing &amp; Invoices &mdash; {{ APP_NAME }}{% endblock %}
+
+{% block app_content %}
+{% include "components/breadcrumbs.html" with items=breadcrumbs %}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1>Practice Billing &amp; Invoices</h1>
+    <p style="font-size: 0.875rem; color: var(--cf-text-muted);">
+      Issue professional fee bills compliant with Nepal 13% Value Added Tax and track payments.
+    </p>
+  </div>
+
+  <button type="button" class="cf-btn cf-btn-primary" onclick="CAFlow.toast('New invoice modal opened', 'info')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <span>Generate Fee Invoice</span>
+  </button>
+</div>
+
+<!-- Billing Metrics -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-md-3">
+    <div class="cf-card" style="padding: 1rem;">
+      <div style="font-size: 0.75rem; font-weight: 700; color: var(--cf-text-muted); text-transform: uppercase;">Total Billed (FY 2081/82)</div>
+      <div class="mono-font" style="font-size: 1.5rem; font-weight: 800; color: var(--cf-primary-navy);">NPR 680K</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-md-3">
+    <div class="cf-card" style="padding: 1rem;">
+      <div style="font-size: 0.75rem; font-weight: 700; color: var(--cf-text-muted); text-transform: uppercase;">Received &bull; Paid</div>
+      <div class="mono-font" style="font-size: 1.5rem; font-weight: 800; color: var(--cf-success);">NPR 635K</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-md-3">
+    <div class="cf-card" style="padding: 1rem;">
+      <div style="font-size: 0.75rem; font-weight: 700; color: var(--cf-text-muted); text-transform: uppercase;">Outstanding Dues</div>
+      <div class="mono-font" style="font-size: 1.5rem; font-weight: 800; color: var(--cf-danger);">NPR 45K</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-md-3">
+    <div class="cf-card" style="padding: 1rem;">
+      <div style="font-size: 0.75rem; font-weight: 700; color: var(--cf-text-muted); text-transform: uppercase;">Output VAT (13%)</div>
+      <div class="mono-font" style="font-size: 1.5rem; font-weight: 800; color: var(--cf-secondary-navy);">NPR 78.2K</div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-table-container">
+  <div class="cf-table-toolbar">
+    <div style="display: flex; gap: 0.5rem;">
+      <button class="cf-btn cf-btn-secondary cf-btn-sm">All Invoices</button>
+      <button class="cf-btn cf-btn-outline cf-btn-sm">Unpaid (4)</button>
+      <button class="cf-btn cf-btn-outline cf-btn-sm">Paid in Full</button>
+    </div>
+
+    <input type="search" class="cf-input" placeholder="Search invoices..." style="height: 36px; width: 220px; font-size: 0.8125rem;" onkeyup="CAFlow.filterTable('billing-table', this.value)">
+  </div>
+
+  <div class="cf-table-responsive">
+    <table class="cf-table" id="billing-table">
+      <thead>
+        <tr>
+          <th>Invoice #</th>
+          <th>Client Name</th>
+          <th>Fee Subtotal</th>
+          <th>VAT (13%)</th>
+          <th>Total Payable</th>
+          <th>Status</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="mono-font" style="font-weight: 700;">INV-2081-0042</span></td>
+          <td>
+            <strong>Apex Hydropower Development Ltd</strong>
+            <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Statutory Audit Fee (Interim)</div>
+          </td>
+          <td><span class="mono-font">NPR 150,000.00</span></td>
+          <td><span class="mono-font">NPR 19,500.00</span></td>
+          <td><strong class="mono-font" style="color: var(--cf-primary-navy);">NPR 169,500.00</strong></td>
+          <td><span class="cf-badge cf-badge-success" dot="True">Paid</span></td>
+          <td style="text-align: right;">
+            <button class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('Printing Tax Invoice', 'info')">Print</button>
+          </td>
+        </tr>
+
+        <tr>
+          <td><span class="mono-font" style="font-weight: 700;">INV-2081-0043</span></td>
+          <td>
+            <strong>Himalayan Traders Pvt Ltd</strong>
+            <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Quarterly Tax Advisory &amp; VAT Filing Retainer</div>
+          </td>
+          <td><span class="mono-font">NPR 40,000.00</span></td>
+          <td><span class="mono-font">NPR 5,200.00</span></td>
+          <td><strong class="mono-font" style="color: var(--cf-danger);">NPR 45,200.00</strong></td>
+          <td><span class="cf-badge cf-badge-warning" dot="True">Pending</span></td>
+          <td style="text-align: right;">
+            <button class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('Payment reminder sent to client', 'success')">Remind</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

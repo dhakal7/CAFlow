@@ -1,0 +1,17 @@
+{# CAFlow Reusable Empty State Component #}
+<div class="cf-empty-state {{ extra_classes|default:'' }}">
+  <div class="cf-empty-icon">
+    {% if icon_svg %}
+      {{ icon_svg|safe }}
+    {% else %}
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="11" y2="17"/></svg>
+    {% endif %}
+  </div>
+  <h4 class="cf-empty-title">{{ title|default:'No records found' }}</h4>
+  <p class="cf-empty-desc">{{ description|default:'Get started by adding your first entry using the button below.' }}</p>
+  {% if action_html %}
+    <div style="margin-top: 1rem;">
+      {{ action_html|safe }}
+    </div>
+  {% endif %}
+</div>

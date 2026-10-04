@@ -1,0 +1,14 @@
+{# CAFlow Reusable Tabs Component #}
+<ul class="cf-nav-tabs {{ extra_classes|default:'' }}">
+  {% for tab in tabs %}
+    <li>
+      <a href="{{ tab.url|default:'#' }}" class="cf-tab-link {% if tab.is_active %}active{% endif %}">
+        {% if tab.icon %}{{ tab.icon|safe }}{% endif %}
+        <span>{{ tab.title }}</span>
+        {% if tab.count is not None %}
+          <span class="cf-badge cf-badge-muted" style="font-size: 0.6875rem; padding: 1px 6px;">{{ tab.count }}</span>
+        {% endif %}
+      </a>
+    </li>
+  {% endfor %}
+</ul>

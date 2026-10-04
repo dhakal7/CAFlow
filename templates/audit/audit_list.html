@@ -1,0 +1,74 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}Immutable Audit Trail &mdash; {{ APP_NAME }}{% endblock %}
+
+{% block app_content %}
+{% include "components/breadcrumbs.html" with items=breadcrumbs %}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1>Security &amp; Audit Logs</h1>
+    <p style="font-size: 0.875rem; color: var(--cf-text-muted);">
+      Tamper-evident logs of data access, document downloads, and status changes for ICAN quality review compliance.
+    </p>
+  </div>
+
+  <button type="button" class="cf-btn cf-btn-outline" onclick="CAFlow.toast('Exporting cryptographically signed audit log', 'info')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <span>Export Audit Trail (CSV)</span>
+  </button>
+</div>
+
+<div class="cf-table-container">
+  <div class="cf-table-toolbar">
+    <div style="font-size: 0.8125rem; color: var(--cf-text-muted);">
+      All actions logged with IP address and timestamps
+    </div>
+    <input type="search" class="cf-input" placeholder="Search audit trail..." style="height: 36px; width: 220px; font-size: 0.8125rem;" onkeyup="CAFlow.filterTable('audit-table', this.value)">
+  </div>
+
+  <div class="cf-table-responsive">
+    <table class="cf-table" id="audit-table">
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>User</th>
+          <th>Action</th>
+          <th>Module</th>
+          <th>Details</th>
+          <th>IP Address</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="mono-font" style="font-size: 0.75rem;">2024-10-04 16:15:22</span></td>
+          <td><strong>CA. Suyog Dhakal</strong></td>
+          <td><span class="cf-badge cf-badge-success">UPDATE</span></td>
+          <td>Tasks</td>
+          <td>Signed off on physical stock audit checklist for Himalayan Traders</td>
+          <td><span class="mono-font" style="font-size: 0.75rem;">103.10.29.14</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="mono-font" style="font-size: 0.75rem;">2024-10-04 15:40:08</span></td>
+          <td><strong>Bikash Karki</strong></td>
+          <td><span class="cf-badge cf-badge-secondary">CREATE</span></td>
+          <td>Documents</td>
+          <td>Uploaded Bhadra VAT Annex 5 spreadsheet (1.2 MB)</td>
+          <td><span class="mono-font" style="font-size: 0.75rem;">103.10.29.18</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="mono-font" style="font-size: 0.75rem;">2024-10-04 14:10:55</span></td>
+          <td><strong>CA. Anjali Sharma</strong></td>
+          <td><span class="cf-badge cf-badge-warning">VIEW</span></td>
+          <td>Billing</td>
+          <td>Generated Tax Invoice INV-2081-0042 for Apex Hydropower Ltd</td>
+          <td><span class="mono-font" style="font-size: 0.75rem;">103.10.29.14</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

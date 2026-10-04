@@ -1,0 +1,28 @@
+{# CAFlow Reusable Card Component #}
+<div class="cf-card {% if hover %}cf-card-hover{% endif %} {{ extra_classes|default:'' }}">
+  {% if title or action_html %}
+    <div class="cf-card-header">
+      <div>
+        <h3 class="cf-card-title">{{ title }}</h3>
+        {% if subtitle %}
+          <div class="cf-card-subtitle">{{ subtitle }}</div>
+        {% endif %}
+      </div>
+      {% if action_html %}
+        <div>
+          {{ action_html|safe }}
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <div class="cf-card-body">
+    {{ content|default:body_html|safe }}
+  </div>
+
+  {% if footer_html %}
+    <div class="cf-card-footer">
+      {{ footer_html|safe }}
+    </div>
+  {% endif %}
+</div>

@@ -1,0 +1,79 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}Document Repository &mdash; {{ APP_NAME }}{% endblock %}
+
+{% block app_content %}
+{% include "components/breadcrumbs.html" with items=breadcrumbs %}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1>Firm &amp; Client Document Vault</h1>
+    <p style="font-size: 0.875rem; color: var(--cf-text-muted);">
+      Secure repository for tax filings, audit working papers, VAT books, and signed financial statements.
+    </p>
+  </div>
+
+  <button type="button" class="cf-btn cf-btn-primary" onclick="CAFlow.toast('Upload modal triggered', 'info')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    <span>Upload Document</span>
+  </button>
+</div>
+
+<div class="cf-table-container">
+  <div class="cf-table-toolbar">
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+      <button class="cf-btn cf-btn-secondary cf-btn-sm">All Files (342)</button>
+      <button class="cf-btn cf-btn-outline cf-btn-sm">Audit Working Papers</button>
+      <button class="cf-btn cf-btn-outline cf-btn-sm">Tax Returns (D-01/02/03)</button>
+      <button class="cf-btn cf-btn-outline cf-btn-sm">VAT Books</button>
+    </div>
+
+    <input type="search" class="cf-input" placeholder="Search files..." style="height: 36px; width: 220px; font-size: 0.8125rem;" onkeyup="CAFlow.filterTable('docs-table', this.value)">
+  </div>
+
+  <div class="cf-table-responsive">
+    <table class="cf-table" id="docs-table">
+      <thead>
+        <tr>
+          <th>Document Title</th>
+          <th>Client</th>
+          <th>Category</th>
+          <th>Fiscal Year</th>
+          <th>Uploaded By</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <strong style="color: var(--cf-primary-navy);">Signed Independent Auditor's Report FY 2080/81.pdf</strong>
+            <div style="font-size: 0.75rem; color: var(--cf-text-muted);">PDF &bull; 3.8 MB</div>
+          </td>
+          <td>Apex Hydropower Ltd</td>
+          <td><span class="cf-badge cf-badge-primary">Audit Report</span></td>
+          <td><span class="mono-font" style="font-size: 0.8125rem;">2080/81</span></td>
+          <td>CA. Suyog Dhakal</td>
+          <td style="text-align: right;">
+            <button class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('Downloading encrypted PDF', 'success')">Download</button>
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            <strong style="color: var(--cf-primary-navy);">Bhadra Month VAT Sales &amp; Purchase Register.xlsx</strong>
+            <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Excel Workbook &bull; 1.2 MB</div>
+          </td>
+          <td>Himalayan Traders Pvt Ltd</td>
+          <td><span class="cf-badge cf-badge-secondary">VAT Books</span></td>
+          <td><span class="mono-font" style="font-size: 0.8125rem;">2081/82</span></td>
+          <td>Bikash Karki</td>
+          <td style="text-align: right;">
+            <button class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('Downloading spreadsheet', 'success')">Download</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

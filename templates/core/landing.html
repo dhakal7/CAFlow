@@ -1,0 +1,589 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ APP_NAME }} — Run your CA firm from one powerful workspace{% endblock %}
+
+{% block content %}
+<div style="background-color: var(--cf-bg); min-height: 100vh;">
+  
+  <!-- 1. PUBLIC NAVBAR -->
+  <header style="background-color: #FFFFFF; border-bottom: 1px solid var(--cf-border); position: sticky; top: 0; z-index: 1000; box-shadow: var(--cf-shadow-xs);">
+    <div style="max-width: 1240px; margin: 0 auto; padding: 0.85rem 1.5rem; display: flex; align-items: center; justify-content: space-between;">
+      <a href="{% url 'core:landing' %}" style="display: flex; align-items: center; gap: 0.65rem; text-decoration: none;">
+        <div class="cf-brand-logo-icon" style="background: var(--cf-primary-navy);">CF</div>
+        <div>
+          <span style="font-size: 1.25rem; font-weight: 800; color: var(--cf-primary-navy); letter-spacing: -0.02em;">CAFlow</span>
+          <span class="cf-brand-nepal-badge" style="margin-left: 4px;">NEPAL</span>
+        </div>
+      </a>
+
+      <nav class="d-none d-md-flex" style="align-items: center; gap: 2rem;">
+        <a href="#features" style="font-size: 0.875rem; font-weight: 600; color: var(--cf-text-secondary);">Features</a>
+        <a href="#nepal-compliance" style="font-size: 0.875rem; font-weight: 600; color: var(--cf-text-secondary);">Nepal Compliance</a>
+        <a href="#client-portal" style="font-size: 0.875rem; font-weight: 600; color: var(--cf-text-secondary);">Client Portal</a>
+        <a href="#pricing" style="font-size: 0.875rem; font-weight: 600; color: var(--cf-text-secondary);">Pricing</a>
+        <a href="#faq" style="font-size: 0.875rem; font-weight: 600; color: var(--cf-text-secondary);">FAQ</a>
+        <a href="{% url 'core:design_system' %}" style="font-size: 0.875rem; font-weight: 700; color: var(--cf-warning);">UI Kit</a>
+      </nav>
+
+      <div style="display: flex; align-items: center; gap: 0.875rem;">
+        <a href="{% url 'accounts:login' %}" class="cf-btn cf-btn-ghost cf-btn-sm">Sign In</a>
+        <a href="{% url 'core:dashboard' %}" class="cf-btn cf-btn-primary cf-btn-sm">Launch Demo App</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 2. HERO SECTION -->
+  <section style="padding: 5rem 1.5rem 4rem; text-align: center; background: radial-gradient(circle at 50% 20%, rgba(23, 59, 87, 0.05) 0%, rgba(248, 247, 243, 0) 70%);">
+    <div style="max-width: 900px; margin: 0 auto;">
+      
+      <!-- Top Announcement Pill -->
+      <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: #FFFFFF; border: 1px solid var(--cf-border); padding: 0.35rem 0.85rem; border-radius: var(--cf-radius-full); box-shadow: var(--cf-shadow-xs); margin-bottom: 1.75rem;">
+        <span class="cf-badge cf-badge-success" style="font-size: 0.6875rem; padding: 2px 8px;">NEW</span>
+        <span style="font-size: 0.8125rem; font-weight: 600; color: var(--cf-secondary-navy);">
+          Built for Nepal Chartered Accountants &bull; IRD &amp; ICAN Ready
+        </span>
+      </div>
+
+      <h1 style="font-size: clamp(2.25rem, 5vw, 3.5rem); font-weight: 800; color: var(--cf-primary-navy); letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 1.5rem;">
+        Run your CA firm from one powerful workspace.
+      </h1>
+
+      <p style="font-size: clamp(1rem, 2vw, 1.25rem); color: var(--cf-text-secondary); max-width: 720px; margin: 0 auto 2.25rem; line-height: 1.6;">
+        Manage clients, documents, compliance workflows, tasks and communication from one secure platform.
+      </p>
+
+      <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 3.5rem;">
+        <a href="{% url 'accounts:login' %}" class="cf-btn cf-btn-primary cf-btn-lg">
+          <span>Start Free</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+        <button type="button" class="cf-btn cf-btn-outline cf-btn-lg" data-cf-modal-target="#cf-demo-modal">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+          <span>Book a Demo</span>
+        </button>
+      </div>
+
+      <!-- Hero Visual / Dashboard Preview Frame -->
+      <div style="background: #FFFFFF; border: 1px solid var(--cf-border); border-radius: var(--cf-radius-xl); box-shadow: var(--cf-shadow-xl); padding: 1.25rem; position: relative; overflow: hidden;">
+        <div style="background: var(--cf-surface-muted); border-radius: var(--cf-radius-lg); border: 1px solid var(--cf-border); padding: 1.25rem; text-align: left;">
+          
+          <!-- Mock Browser Bar -->
+          <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 0.85rem; border-bottom: 1px solid var(--cf-border); margin-bottom: 1.25rem;">
+            <div style="display: flex; gap: 6px;">
+              <span style="width: 10px; height: 10px; border-radius: 50%; background: #EF4444; display: inline-block;"></span>
+              <span style="width: 10px; height: 10px; border-radius: 50%; background: #F59E0B; display: inline-block;"></span>
+              <span style="width: 10px; height: 10px; border-radius: 50%; background: #10B981; display: inline-block;"></span>
+            </div>
+            <div style="font-size: 0.75rem; font-family: var(--cf-font-mono); color: var(--cf-text-muted); background: #FFFFFF; padding: 2px 16px; border-radius: 4px; border: 1px solid var(--cf-border);">
+              https://app.caflow.com.np/workspace/dashboard
+            </div>
+            <div style="font-size: 0.75rem; color: var(--cf-success); font-weight: 600;">FY 2081/82 Active</div>
+          </div>
+
+          <!-- Hero Mock Stats Grid -->
+          <div class="row g-3">
+            <div class="col-6 col-md-3">
+              <div class="cf-card" style="padding: 1rem;">
+                <div style="font-size: 0.6875rem; text-transform: uppercase; font-weight: 700; color: var(--cf-text-muted);">Total Clients</div>
+                <div style="font-size: 1.5rem; font-weight: 800; color: var(--cf-primary-navy);">128</div>
+                <div style="font-size: 0.6875rem; color: var(--cf-success);">+12 this fiscal quarter</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="cf-card" style="padding: 1rem;">
+                <div style="font-size: 0.6875rem; text-transform: uppercase; font-weight: 700; color: var(--cf-text-muted);">Pending Tasks</div>
+                <div style="font-size: 1.5rem; font-weight: 800; color: var(--cf-warning);">24</div>
+                <div style="font-size: 0.6875rem; color: var(--cf-text-muted);">Assigned to 8 trainees</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="cf-card" style="padding: 1rem;">
+                <div style="font-size: 0.6875rem; text-transform: uppercase; font-weight: 700; color: var(--cf-text-muted);">Due Soon (IRD)</div>
+                <div style="font-size: 1.5rem; font-weight: 800; color: var(--cf-danger);">8</div>
+                <div style="font-size: 0.6875rem; color: var(--cf-danger);">Monthly VAT 25th Ashoj</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="cf-card" style="padding: 1rem;">
+                <div style="font-size: 0.6875rem; text-transform: uppercase; font-weight: 700; color: var(--cf-text-muted);">Outstanding Fee</div>
+                <div style="font-size: 1.5rem; font-weight: 800; color: var(--cf-primary-navy);">NPR 45K</div>
+                <div style="font-size: 0.6875rem; color: var(--cf-text-muted);">3 invoices ready</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. PRODUCT INTRODUCTION & STATS -->
+  <section style="padding: 4rem 1.5rem; background: #FFFFFF; border-top: 1px solid var(--cf-border); border-bottom: 1px solid var(--cf-border);">
+    <div style="max-width: 1180px; margin: 0 auto;">
+      <div class="row align-items-center g-4">
+        <div class="col-lg-5">
+          <span class="cf-badge cf-badge-primary" style="margin-bottom: 0.75rem;">PURPOSE-BUILT IN NEPAL</span>
+          <h2 style="font-size: 2rem; color: var(--cf-primary-navy); margin-bottom: 1rem;">
+            Designed specifically for Nepali accounting practices and statutory standards.
+          </h2>
+          <p style="color: var(--cf-text-secondary); line-height: 1.6;">
+            Generic global software like QuickBooks or Asana fail when faced with Nepali Bikram Sambat deadlines, IRD TDS e-filing tables, and ICAN peer review working papers. CAFlow bridges the gap.
+          </p>
+        </div>
+        <div class="col-lg-7">
+          <div class="row g-3">
+            <div class="col-sm-4 text-center">
+              <div class="cf-card" style="padding: 1.5rem 1rem;">
+                <div style="font-size: 2.25rem; font-weight: 800; color: var(--cf-secondary-navy);">100%</div>
+                <div style="font-size: 0.8125rem; font-weight: 600; color: var(--cf-text-secondary); margin-top: 4px;">BS &amp; AD Calendar Sync</div>
+              </div>
+            </div>
+            <div class="col-sm-4 text-center">
+              <div class="cf-card" style="padding: 1.5rem 1rem;">
+                <div style="font-size: 2.25rem; font-weight: 800; color: var(--cf-success);">Zero</div>
+                <div style="font-size: 0.8125rem; font-weight: 600; color: var(--cf-text-secondary); margin-top: 4px;">Missed IRD VAT Deadlines</div>
+              </div>
+            </div>
+            <div class="col-sm-4 text-center">
+              <div class="cf-card" style="padding: 1.5rem 1rem;">
+                <div style="font-size: 2.25rem; font-weight: 800; color: var(--cf-primary-navy);">ICAN</div>
+                <div style="font-size: 0.8125rem; font-weight: 600; color: var(--cf-text-secondary); margin-top: 4px;">Audit Trail Standards</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. CORE FEATURES -->
+  <section id="features" style="padding: 5rem 1.5rem;">
+    <div style="max-width: 1180px; margin: 0 auto;">
+      <div style="text-align: center; max-width: 640px; margin: 0 auto 3.5rem;">
+        <span class="cf-badge cf-badge-secondary" style="margin-bottom: 0.75rem;">COMPREHENSIVE SUITE</span>
+        <h2 style="font-size: 2.25rem; color: var(--cf-primary-navy);">Everything your practice needs under one roof.</h2>
+        <p style="color: var(--cf-text-secondary);">Say goodbye to fragmented WhatsApp groups, lost Google Drive links, and late penalty charges.</p>
+      </div>
+
+      <div class="row g-4">
+        <!-- Feature 1: Multi-tenant Practice CRM -->
+        <div class="col-md-4">
+          <div class="cf-card cf-card-hover" style="height: 100%;">
+            <div class="cf-stat-icon-wrap cf-stat-icon-navy" style="margin-bottom: 1.25rem;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <h4 class="cf-card-title">Client Entity CRM &amp; PAN Master</h4>
+            <p style="font-size: 0.875rem; color: var(--cf-text-secondary); margin-top: 0.5rem;">
+              Unified client profiles storing 9-digit IRD PAN, Company Registrar (OCR) registration numbers, director contacts, and past fiscal year files.
+            </p>
+          </div>
+        </div>
+
+        <!-- Feature 2: Task & Audit Workflow -->
+        <div class="col-md-4">
+          <div class="cf-card cf-card-hover" style="height: 100%;">
+            <div class="cf-stat-icon-wrap cf-stat-icon-warning" style="margin-bottom: 1.25rem;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            </div>
+            <h4 class="cf-card-title">Audit Working Papers &amp; Tasks</h4>
+            <p style="font-size: 0.875rem; color: var(--cf-text-secondary); margin-top: 0.5rem;">
+              Assign audit tasks to Senior Associates and Article Trainees. Multi-tier review workflow with Partner sign-off before statutory release.
+            </p>
+          </div>
+        </div>
+
+        <!-- Feature 3: Statutory Compliance Tracker -->
+        <div class="col-md-4">
+          <div class="cf-card cf-card-hover" style="height: 100%;">
+            <div class="cf-stat-icon-wrap cf-stat-icon-success" style="margin-bottom: 1.25rem;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <h4 class="cf-card-title">Nepal Statutory Filing Engine</h4>
+            <p style="font-size: 0.875rem; color: var(--cf-text-secondary); margin-top: 0.5rem;">
+              Pre-loaded with Nepal Income Tax Act 2058, VAT Act 2052, and Companies Act 2063 schedules with automatic penalty prevention alerts.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. NEPAL-SPECIFIC CAPABILITIES -->
+  <section id="nepal-compliance" style="padding: 5rem 1.5rem; background: #FFFFFF; border-top: 1px solid var(--cf-border);">
+    <div style="max-width: 1180px; margin: 0 auto;">
+      <div class="row align-items-center g-5">
+        <div class="col-lg-6">
+          <span class="cf-badge cf-badge-warning" style="margin-bottom: 0.75rem;">NEPAL TAX ENGINE</span>
+          <h2 style="font-size: 2.25rem; color: var(--cf-primary-navy); margin-bottom: 1.25rem;">
+            Master IRD and OCR filing cycles without spreadsheets.
+          </h2>
+          <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1.5rem;">
+            <div style="display: flex; gap: 0.85rem;">
+              <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--cf-success-bg); color: var(--cf-success); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 700;">✓</div>
+              <div>
+                <strong style="color: var(--cf-primary-navy);">Monthly VAT Return (25th Ashoj / Every Month)</strong>
+                <p style="font-size: 0.8125rem; margin-bottom: 0;">Automated client alert reminders for VAT purchase &amp; sales ledger collection.</p>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 0.85rem;">
+              <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--cf-success-bg); color: var(--cf-success); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 700;">✓</div>
+              <div>
+                <strong style="color: var(--cf-primary-navy);">Advance Tax Installments (Poush 40%, Chaitra 70%, Ashadh 100%)</strong>
+                <p style="font-size: 0.8125rem; margin-bottom: 0;">Calculates advance tax projections and generates client submission memos.</p>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 0.85rem;">
+              <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--cf-success-bg); color: var(--cf-success); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 700;">✓</div>
+              <div>
+                <strong style="color: var(--cf-primary-navy);">Annual OCR Company Return &amp; AGM Deadlines</strong>
+                <p style="font-size: 0.8125rem; margin-bottom: 0;">Tracks Section 51, 80 and D-1, D-2, D-3 forms required by Company Registrar.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="cf-card" style="padding: 2rem; background: var(--cf-bg); border: 1px solid var(--cf-border);">
+            <h4 style="margin-bottom: 1.25rem; color: var(--cf-primary-navy); display: flex; align-items: center; justify-content: space-between;">
+              <span>Upcoming Statutory Deadlines</span>
+              <span class="cf-badge cf-badge-muted">BS 2081</span>
+            </h4>
+
+            <div style="display: flex; flex-direction: column; gap: 0.875rem;">
+              <div style="padding: 0.875rem; background: #fff; border-radius: var(--cf-radius-md); border-left: 4px solid var(--cf-danger); box-shadow: var(--cf-shadow-xs);">
+                <div style="display: flex; justify-content: space-between;">
+                  <strong style="font-size: 0.875rem; color: var(--cf-primary-navy);">Monthly VAT Return (Bhadra)</strong>
+                  <span class="cf-badge cf-badge-danger">25 Ashoj</span>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 4px;">Inland Revenue Department &bull; Section 17</div>
+              </div>
+
+              <div style="padding: 0.875rem; background: #fff; border-radius: var(--cf-radius-md); border-left: 4px solid var(--cf-warning); box-shadow: var(--cf-shadow-xs);">
+                <div style="display: flex; justify-content: space-between;">
+                  <strong style="font-size: 0.875rem; color: var(--cf-primary-navy);">1st Advance Tax Installment (40%)</strong>
+                  <span class="cf-badge cf-badge-warning">Poush End</span>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 4px;">Income Tax Act 2058 &bull; Section 94</div>
+              </div>
+
+              <div style="padding: 0.875rem; background: #fff; border-radius: var(--cf-radius-md); border-left: 4px solid var(--cf-secondary-navy); box-shadow: var(--cf-shadow-xs);">
+                <div style="display: flex; justify-content: space-between;">
+                  <strong style="font-size: 0.875rem; color: var(--cf-primary-navy);">Annual OCR Filing &amp; Audit Report</strong>
+                  <span class="cf-badge cf-badge-secondary">Poush End</span>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 4px;">Companies Act 2063 &bull; Section 80</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. CLIENT PORTAL PREVIEW -->
+  <section id="client-portal" style="padding: 5rem 1.5rem;">
+    <div style="max-width: 1180px; margin: 0 auto; text-align: center;">
+      <span class="cf-badge cf-badge-primary" style="margin-bottom: 0.75rem;">CLIENT EXPERIENCE</span>
+      <h2 style="font-size: 2.25rem; color: var(--cf-primary-navy); margin-bottom: 1rem;">
+        Give your clients a polished self-service portal.
+      </h2>
+      <p style="color: var(--cf-text-secondary); max-width: 650px; margin: 0 auto 3rem;">
+        Clients can securely upload bank statements, download tax clearance certificates, approve fee invoices, and track audit query status in real-time.
+      </p>
+
+      <div class="row g-4 text-start">
+        <div class="col-md-4">
+          <div class="cf-card" style="padding: 1.75rem;">
+            <div style="font-size: 1.25rem; font-weight: 700; color: var(--cf-secondary-navy); margin-bottom: 0.5rem;">Document Request Locker</div>
+            <p style="font-size: 0.875rem; color: var(--cf-text-secondary);">Request specific missing bills or trial balances with single-click email and SMS reminders.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="cf-card" style="padding: 1.75rem;">
+            <div style="font-size: 1.25rem; font-weight: 700; color: var(--cf-secondary-navy); margin-bottom: 0.5rem;">Instant Tax Returns Access</div>
+            <p style="font-size: 0.875rem; color: var(--cf-text-secondary);">Clients can download IRD D-01/D-02 tax clearance certificates 24/7 without calling your staff.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="cf-card" style="padding: 1.75rem;">
+            <div style="font-size: 1.25rem; font-weight: 700; color: var(--cf-secondary-navy); margin-bottom: 0.5rem;">NPR Invoicing &amp; Receipts</div>
+            <p style="font-size: 0.875rem; color: var(--cf-text-secondary);">Practice invoices compliant with Nepal 13% VAT and TDS deduction guidelines.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. SECURITY & ICAN COMPLIANCE -->
+  <section style="padding: 4.5rem 1.5rem; background: var(--cf-primary-navy); color: #FFFFFF;">
+    <div style="max-width: 1180px; margin: 0 auto; text-align: center;">
+      <span class="cf-badge cf-badge-warning" style="margin-bottom: 0.75rem;">ENTERPRISE CONFIDENTIALITY</span>
+      <h2 style="font-size: 2.25rem; color: #FFFFFF; margin-bottom: 1.25rem;">
+        Bank-grade security meeting ICAN Code of Ethics.
+      </h2>
+      <p style="color: var(--cf-text-on-navy-muted); max-width: 650px; margin: 0 auto 3rem;">
+        Your client data is protected with granular role-based access, complete audit trails, and strict multi-tenant isolation.
+      </p>
+
+      <div class="row g-4 text-start">
+        <div class="col-md-4">
+          <div style="background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: var(--cf-radius-lg); border: 1px solid rgba(255, 255, 255, 0.1);">
+            <strong style="display: block; font-size: 1.05rem; margin-bottom: 0.5rem; color: #fff;">Immutable Audit Logs</strong>
+            <p style="font-size: 0.8125rem; color: var(--cf-text-on-navy-muted); margin: 0;">Every document view, export, and status modification is logged with IP timestamps for peer reviews.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div style="background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: var(--cf-radius-lg); border: 1px solid rgba(255, 255, 255, 0.1);">
+            <strong style="display: block; font-size: 1.05rem; margin-bottom: 0.5rem; color: #fff;">Role-Based Permissions</strong>
+            <p style="font-size: 0.8125rem; color: var(--cf-text-on-navy-muted); margin: 0;">Managing Partner, Audit Manager, Senior Auditor, and Article Trainee permission boundaries.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div style="background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: var(--cf-radius-lg); border: 1px solid rgba(255, 255, 255, 0.1);">
+            <strong style="display: block; font-size: 1.05rem; margin-bottom: 0.5rem; color: #fff;">Encrypted Document Storage</strong>
+            <p style="font-size: 0.8125rem; color: var(--cf-text-on-navy-muted); margin: 0;">Sensitive financial statements and working papers encrypted in transit and at rest.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. PRICING PLACEHOLDER -->
+  <section id="pricing" style="padding: 5rem 1.5rem;">
+    <div style="max-width: 1180px; margin: 0 auto; text-align: center;">
+      <span class="cf-badge cf-badge-secondary" style="margin-bottom: 0.75rem;">TRANSPARENT PLANS</span>
+      <h2 style="font-size: 2.25rem; color: var(--cf-primary-navy); margin-bottom: 1rem;">Simple pricing for firms of any size.</h2>
+      <p style="color: var(--cf-text-secondary); max-width: 600px; margin: 0 auto 3rem;">Billed in Nepali Rupees (NPR) with local VAT invoices.</p>
+
+      <div class="row g-4 text-start">
+        <!-- Solo -->
+        <div class="col-lg-4">
+          <div class="cf-card" style="padding: 2rem; height: 100%;">
+            <h4 style="margin-bottom: 0.25rem;">Solo Practitioner</h4>
+            <div style="font-size: 0.8125rem; color: var(--cf-text-muted); margin-bottom: 1.25rem;">Ideal for independent CAs and small tax consultants.</div>
+            <div style="font-size: 2.25rem; font-weight: 800; color: var(--cf-primary-navy); margin-bottom: 1.5rem;">
+              NPR 2,999<span style="font-size: 0.875rem; font-weight: 500; color: var(--cf-text-muted);"> / month</span>
+            </div>
+            <ul style="list-style: none; padding: 0; margin: 0 0 2rem 0; font-size: 0.875rem; color: var(--cf-text-secondary); display: flex; flex-direction: column; gap: 0.65rem;">
+              <li>✓ Up to 40 Active Clients</li>
+              <li>✓ 2 Staff Trainee Accounts</li>
+              <li>✓ Nepal IRD Compliance Deadlines</li>
+              <li>✓ Document Repository (10 GB)</li>
+            </ul>
+            <a href="{% url 'accounts:login' %}" class="cf-btn cf-btn-outline" style="width: 100%;">Start 14-Day Trial</a>
+          </div>
+        </div>
+
+        <!-- Growth (Featured) -->
+        <div class="col-lg-4">
+          <div class="cf-card" style="padding: 2rem; height: 100%; border: 2px solid var(--cf-primary-navy); position: relative; box-shadow: var(--cf-shadow-lg);">
+            <span class="cf-badge cf-badge-primary" style="position: absolute; top: -12px; right: 20px;">MOST POPULAR</span>
+            <h4 style="margin-bottom: 0.25rem;">Growth Firm</h4>
+            <div style="font-size: 0.8125rem; color: var(--cf-text-muted); margin-bottom: 1.25rem;">For partnership CA firms managing multi-manager audits.</div>
+            <div style="font-size: 2.25rem; font-weight: 800; color: var(--cf-primary-navy); margin-bottom: 1.5rem;">
+              NPR 6,999<span style="font-size: 0.875rem; font-weight: 500; color: var(--cf-text-muted);"> / month</span>
+            </div>
+            <ul style="list-style: none; padding: 0; margin: 0 0 2rem 0; font-size: 0.875rem; color: var(--cf-text-secondary); display: flex; flex-direction: column; gap: 0.65rem;">
+              <li>✓ Up to 250 Active Clients</li>
+              <li>✓ 15 Staff / Trainee Accounts</li>
+              <li>✓ Multi-Tier Review Sign-offs</li>
+              <li>✓ Client Self-Service Portal</li>
+              <li>✓ Document Repository (100 GB)</li>
+            </ul>
+            <a href="{% url 'accounts:login' %}" class="cf-btn cf-btn-primary" style="width: 100%;">Start 14-Day Trial</a>
+          </div>
+        </div>
+
+        <!-- Enterprise -->
+        <div class="col-lg-4">
+          <div class="cf-card" style="padding: 2rem; height: 100%;">
+            <h4 style="margin-bottom: 0.25rem;">Multi-Branch Enterprise</h4>
+            <div style="font-size: 0.8125rem; color: var(--cf-text-muted); margin-bottom: 1.25rem;">For top-tier CA firms with Kathmandu, Biratnagar, and Pokhara branches.</div>
+            <div style="font-size: 2.25rem; font-weight: 800; color: var(--cf-primary-navy); margin-bottom: 1.5rem;">
+              NPR 14,999<span style="font-size: 0.875rem; font-weight: 500; color: var(--cf-text-muted);"> / month</span>
+            </div>
+            <ul style="list-style: none; padding: 0; margin: 0 0 2rem 0; font-size: 0.875rem; color: var(--cf-text-secondary); display: flex; flex-direction: column; gap: 0.65rem;">
+              <li>✓ Unlimited Active Clients</li>
+              <li>✓ Unlimited Staff &amp; Trainees</li>
+              <li>✓ Multi-Branch Consolidated Billing</li>
+              <li>✓ Dedicated Account Manager</li>
+              <li>✓ Custom OCR Integrations</li>
+            </ul>
+            <button type="button" class="cf-btn cf-btn-outline" style="width: 100%;" data-cf-modal-target="#cf-demo-modal">Contact Sales</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. FAQ ACCORDION PLACEHOLDER -->
+  <section id="faq" style="padding: 5rem 1.5rem; background: #FFFFFF; border-top: 1px solid var(--cf-border);">
+    <div style="max-width: 820px; margin: 0 auto;">
+      <div style="text-align: center; margin-bottom: 3.5rem;">
+        <span class="cf-badge cf-badge-secondary" style="margin-bottom: 0.75rem;">FREQUENTLY ASKED</span>
+        <h2 style="font-size: 2.25rem; color: var(--cf-primary-navy);">Common Questions from Managing Partners</h2>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <div class="cf-card" style="padding: 1.25rem 1.5rem;">
+          <strong style="display: block; font-size: 1rem; color: var(--cf-primary-navy); margin-bottom: 0.35rem;">
+            Does CAFlow support both Bikram Sambat (BS) and Gregorian (AD) dates?
+          </strong>
+          <p style="font-size: 0.875rem; color: var(--cf-text-secondary); margin: 0;">
+            Yes! CAFlow is engineered specifically for Nepal's fiscal calendar (e.g. 2081/82) and provides automatic conversion between BS deadlines and AD timestamps.
+          </p>
+        </div>
+
+        <div class="cf-card" style="padding: 1.25rem 1.5rem;">
+          <strong style="display: block; font-size: 1rem; color: var(--cf-primary-navy); margin-bottom: 0.35rem;">
+            Can article trainees access all firm clients?
+          </strong>
+          <p style="font-size: 0.875rem; color: var(--cf-text-secondary); margin: 0;">
+            No. CAFlow enforces role-based access control. Article trainees only see clients and working papers explicitly assigned to their engagement team.
+          </p>
+        </div>
+
+        <div class="cf-card" style="padding: 1.25rem 1.5rem;">
+          <strong style="display: block; font-size: 1rem; color: var(--cf-primary-navy); margin-bottom: 0.35rem;">
+            How secure is client data stored in CAFlow?
+          </strong>
+          <p style="font-size: 0.875rem; color: var(--cf-text-secondary); margin: 0;">
+            All client files and PAN records are encrypted with AES-256. PostgreSQL data isolation guarantees your firm's data is never visible to other firms.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10. CALL TO ACTION (CTA) -->
+  <section style="padding: 5rem 1.5rem; text-align: center; background: linear-gradient(135deg, var(--cf-primary-navy) 0%, var(--cf-secondary-navy) 100%); color: #FFFFFF;">
+    <div style="max-width: 780px; margin: 0 auto;">
+      <h2 style="font-size: 2.5rem; color: #FFFFFF; margin-bottom: 1rem;">Transform your CA practice today.</h2>
+      <p style="font-size: 1.125rem; color: var(--cf-text-on-navy-muted); margin-bottom: 2.25rem;">
+        Join forward-thinking Chartered Accountants across Nepal who have upgraded from spreadsheets to CAFlow.
+      </p>
+      <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+        <a href="{% url 'accounts:login' %}" class="cf-btn cf-btn-lg" style="background: #FFFFFF; color: var(--cf-primary-navy);">
+          Start Free 14-Day Trial
+        </a>
+        <a href="{% url 'core:dashboard' %}" class="cf-btn cf-btn-outline cf-btn-lg" style="color: #FFFFFF; border-color: rgba(255,255,255,0.3); background: transparent;">
+          View Demo Dashboard
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11. PUBLIC FOOTER -->
+  <footer style="background-color: var(--cf-navy-darker); color: var(--cf-text-on-navy-muted); padding: 4rem 1.5rem 2rem; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+    <div style="max-width: 1180px; margin: 0 auto;">
+      <div class="row g-4" style="margin-bottom: 3rem;">
+        <div class="col-md-5">
+          <div style="display: flex; align-items: center; gap: 0.65rem; margin-bottom: 1rem;">
+            <div class="cf-brand-logo-icon" style="background: var(--cf-secondary-navy);">CF</div>
+            <span style="font-size: 1.25rem; font-weight: 800; color: #FFFFFF;">CAFlow</span>
+            <span class="cf-brand-nepal-badge">NEPAL</span>
+          </div>
+          <p style="font-size: 0.875rem; color: var(--cf-text-on-navy-muted); max-width: 380px;">
+            The modern operating system for Nepal Chartered Accountant practices, managing partners, and audit teams.
+          </p>
+          <div style="font-size: 0.75rem; color: var(--cf-text-on-navy-muted);">
+            Kathmandu, Bagmati Province, Nepal &bull; info@caflow.com.np
+          </div>
+        </div>
+
+        <div class="col-6 col-md-2">
+          <h6 style="color: #FFFFFF; margin-bottom: 1rem;">Platform</h6>
+          <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.8125rem;">
+            <a href="{% url 'core:dashboard' %}" style="color: var(--cf-text-on-navy-muted);">Dashboard</a>
+            <a href="#features" style="color: var(--cf-text-on-navy-muted);">Client Management</a>
+            <a href="#features" style="color: var(--cf-text-on-navy-muted);">Audit Papers</a>
+            <a href="#nepal-compliance" style="color: var(--cf-text-on-navy-muted);">IRD Compliance</a>
+          </div>
+        </div>
+
+        <div class="col-6 col-md-2">
+          <h6 style="color: #FFFFFF; margin-bottom: 1rem;">Design System</h6>
+          <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.8125rem;">
+            <a href="{% url 'core:design_system' %}" style="color: var(--cf-text-on-navy-muted);">Component Gallery</a>
+            <a href="{% url 'core:design_system' %}#buttons" style="color: var(--cf-text-on-navy-muted);">Buttons &amp; Badges</a>
+            <a href="{% url 'core:design_system' %}#modals" style="color: var(--cf-text-on-navy-muted);">Modals &amp; Toasts</a>
+            <a href="{% url 'core:design_system' %}#forms" style="color: var(--cf-text-on-navy-muted);">Forms &amp; Fields</a>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <h6 style="color: #FFFFFF; margin-bottom: 1rem;">Nepal Statutory</h6>
+          <p style="font-size: 0.75rem; color: var(--cf-text-on-navy-muted);">
+            Aligned with Institute of Chartered Accountants of Nepal (ICAN) code and Inland Revenue Department e-services.
+          </p>
+          <div class="cf-fiscal-badge" style="background: rgba(255,255,255,0.06); color: #fff; border-color: rgba(255,255,255,0.15);">
+            <span class="cf-fiscal-dot"></span>
+            <span>FY {{ CURRENT_FISCAL_YEAR }} Ready</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; font-size: 0.75rem;">
+        <div>&copy; {% now "Y" %} CAFlow Technologies Pvt. Ltd. All rights reserved.</div>
+        <div style="display: flex; gap: 1.5rem;">
+          <a href="#" style="color: var(--cf-text-on-navy-muted);">Privacy Policy</a>
+          <a href="#" style="color: var(--cf-text-on-navy-muted);">Terms of Service</a>
+          <a href="#" style="color: var(--cf-text-on-navy-muted);">Security Standard</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</div>
+
+{# Book a Demo Modal #}
+<div class="cf-modal-backdrop" id="cf-demo-modal">
+  <div class="cf-modal-dialog">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title">Book a 1-on-1 Practice Demo</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form onsubmit="event.preventDefault(); CAFlow.closeModal('#cf-demo-modal'); CAFlow.toast('Demo request received! Our practice advisor will contact you within 24 hours.', 'success');">
+      <div class="cf-modal-body">
+        <p style="font-size: 0.8125rem; color: var(--cf-text-secondary); margin-bottom: 1.25rem;">
+          See how CAFlow automates compliance workflows and replaces manual spreadsheets for your CA firm.
+        </p>
+        <div class="cf-form-group">
+          <label class="cf-label">Full Name <span class="required-star">*</span></label>
+          <input type="text" class="cf-input" placeholder="CA. Suyog Dhakal" required>
+        </div>
+        <div class="cf-form-group">
+          <label class="cf-label">Firm Name <span class="required-star">*</span></label>
+          <input type="text" class="cf-input" placeholder="Dhakal & Associates" required>
+        </div>
+        <div class="row g-2">
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label">Work Email <span class="required-star">*</span></label>
+            <input type="email" class="cf-input" placeholder="suyog@firm.com.np" required>
+          </div>
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label">Mobile Number <span class="required-star">*</span></label>
+            <input type="tel" class="cf-input" placeholder="+977 98XXXXXXXX" required>
+          </div>
+        </div>
+        <div class="cf-form-group">
+          <label class="cf-label">Number of Staff / Trainees</label>
+          <select class="cf-select">
+            <option>1 - 5 Staff</option>
+            <option selected>6 - 15 Staff</option>
+            <option>16 - 40 Staff</option>
+            <option>40+ Staff (Multi-branch)</option>
+          </select>
+        </div>
+      </div>
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Schedule Demo</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

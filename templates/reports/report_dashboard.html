@@ -1,0 +1,55 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}Practice Insights &amp; Reports &mdash; {{ APP_NAME }}{% endblock %}
+
+{% block app_content %}
+{% include "components/breadcrumbs.html" with items=breadcrumbs %}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1>Practice Analytics &amp; Reports</h1>
+    <p style="font-size: 0.875rem; color: var(--cf-text-muted);">
+      Reconciliation exports, IRD TDS registers, VAT sales reports, and firm revenue trends.
+    </p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-6 col-lg-4">
+    <div class="cf-card cf-card-hover" style="height: 100%;">
+      <h4 class="cf-card-title">Nepal VAT 13% Sales &amp; Purchase Register</h4>
+      <p style="font-size: 0.8125rem; color: var(--cf-text-secondary); margin-top: 0.5rem;">
+        Generate consolidated Annex 5 (Purchase Book) and Annex 6 (Sales Book) formatted for IRD e-portal upload.
+      </p>
+      <div style="margin-top: 1.25rem;">
+        <button class="cf-btn cf-btn-outline cf-btn-sm" onclick="CAFlow.toast('Generating VAT register excel', 'info')">Export XLSX</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6 col-lg-4">
+    <div class="cf-card cf-card-hover" style="height: 100%;">
+      <h4 class="cf-card-title">TDS Withholding Statement</h4>
+      <p style="font-size: 0.8125rem; color: var(--cf-text-secondary); margin-top: 0.5rem;">
+        Reconciliation of Section 87, 88, and 89 withholding taxes against client bank payments and IRD ETDS vouchers.
+      </p>
+      <div style="margin-top: 1.25rem;">
+        <button class="cf-btn cf-btn-outline cf-btn-sm" onclick="CAFlow.toast('Generating TDS schedule', 'info')">Export Report</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6 col-lg-4">
+    <div class="cf-card cf-card-hover" style="height: 100%;">
+      <h4 class="cf-card-title">ICAN Audit Quality Review (AQR) Log</h4>
+      <p style="font-size: 0.8125rem; color: var(--cf-text-secondary); margin-top: 0.5rem;">
+        Working papers completion index, partner sign-off timestamps, and trainee supervision evidence.
+      </p>
+      <div style="margin-top: 1.25rem;">
+        <button class="cf-btn cf-btn-outline cf-btn-sm" onclick="CAFlow.toast('Generating ICAN audit bundle', 'info')">Generate Bundle</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

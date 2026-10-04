@@ -1,0 +1,87 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}Nepal Statutory Compliance Calendar &mdash; {{ APP_NAME }}{% endblock %}
+
+{% block app_content %}
+{% include "components/breadcrumbs.html" with items=breadcrumbs %}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1>Nepal Statutory Compliance Calendar</h1>
+    <p style="font-size: 0.875rem; color: var(--cf-text-muted);">
+      Inland Revenue Department (IRD), Office of Company Registrar (OCR), and ICAN statutory timelines.
+    </p>
+  </div>
+
+  <button type="button" class="cf-btn cf-btn-primary" onclick="CAFlow.toast('New compliance tracking deadline created', 'success')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <span>Add Filing Deadline</span>
+  </button>
+</div>
+
+<div class="cf-alert cf-alert-warning" style="margin-bottom: 1.5rem;">
+  <div>
+    <strong>Upcoming Statutory Notice:</strong> Monthly VAT returns for Bhadra 2081 must be uploaded on the IRD portal by <strong>25th Ashoj 2081</strong> to prevent Section 19 penalty surcharges.
+  </div>
+</div>
+
+<div class="cf-table-container">
+  <div class="cf-table-toolbar">
+    <div style="display: flex; gap: 0.5rem;">
+      <button class="cf-btn cf-btn-secondary cf-btn-sm">Current Month (Ashoj 2081)</button>
+      <button class="cf-btn cf-btn-outline cf-btn-sm">Upcoming Quarter</button>
+      <button class="cf-btn cf-btn-outline cf-btn-sm">Annual Returns</button>
+    </div>
+
+    <input type="search" class="cf-input" placeholder="Search filings..." style="height: 36px; width: 220px; font-size: 0.8125rem;" onkeyup="CAFlow.filterTable('compliance-table', this.value)">
+  </div>
+
+  <div class="cf-table-responsive">
+    <table class="cf-table" id="compliance-table">
+      <thead>
+        <tr>
+          <th>Statutory Filing</th>
+          <th>Governing Act / Authority</th>
+          <th>BS Due Date</th>
+          <th>AD Equivalent</th>
+          <th>Pending Clients</th>
+          <th>Status</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <strong style="color: var(--cf-primary-navy);">Monthly VAT Return (Bhadra 2081)</strong>
+            <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Annex 5, 6, 7 &amp; Payment Challan</div>
+          </td>
+          <td>VAT Act, 2052 (Section 17)</td>
+          <td><span class="mono-font" style="font-weight: 700; color: var(--cf-danger);">2081-06-25</span></td>
+          <td><span class="mono-font" style="font-size: 0.8125rem;">2024-10-11</span></td>
+          <td>5 Clients Pending</td>
+          <td><span class="cf-badge cf-badge-danger" dot="True">3 Days Left</span></td>
+          <td style="text-align: right;">
+            <button class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('Bulk reminder queued', 'info')">Remind Clients</button>
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            <strong style="color: var(--cf-primary-navy);">1st Advance Tax Installment (40%)</strong>
+            <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Income Tax Act Section 94 projection</div>
+          </td>
+          <td>Income Tax Act, 2058</td>
+          <td><span class="mono-font" style="font-weight: 700;">2081-09-30 (Poush End)</span></td>
+          <td><span class="mono-font" style="font-size: 0.8125rem;">2025-01-14</span></td>
+          <td>28 Clients</td>
+          <td><span class="cf-badge cf-badge-warning" dot="True">In Preparation</span></td>
+          <td style="text-align: right;">
+            <button class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('Opening advance tax worksheet', 'info')">Estimate</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

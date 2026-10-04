@@ -1,0 +1,109 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}Audit &amp; Compliance Tasks &mdash; {{ APP_NAME }}{% endblock %}
+
+{% block app_content %}
+{% include "components/breadcrumbs.html" with items=breadcrumbs %}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1>Task Board &amp; Audit Workflows</h1>
+    <p style="font-size: 0.875rem; color: var(--cf-text-muted);">
+      Track engagement assignments, partner reviews, and statutory tax preparation milestones.
+    </p>
+  </div>
+
+  <button type="button" class="cf-btn cf-btn-primary" onclick="CAFlow.toast('New task creator opened', 'info')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <span>Create Engagement Task</span>
+  </button>
+</div>
+
+<!-- Task Status Summary Pills -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-md-3">
+    <div class="cf-card" style="padding: 1rem;">
+      <div style="font-size: 0.75rem; font-weight: 700; color: var(--cf-text-muted); text-transform: uppercase;">To Do</div>
+      <div style="font-size: 1.5rem; font-weight: 800; color: var(--cf-primary-navy);">8</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-md-3">
+    <div class="cf-card" style="padding: 1rem;">
+      <div style="font-size: 0.75rem; font-weight: 700; color: var(--cf-text-muted); text-transform: uppercase;">In Progress</div>
+      <div style="font-size: 1.5rem; font-weight: 800; color: var(--cf-warning);">10</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-md-3">
+    <div class="cf-card" style="padding: 1rem;">
+      <div style="font-size: 0.75rem; font-weight: 700; color: var(--cf-text-muted); text-transform: uppercase;">Partner Review</div>
+      <div style="font-size: 1.5rem; font-weight: 800; color: var(--cf-secondary-navy);">6</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-md-3">
+    <div class="cf-card" style="padding: 1rem;">
+      <div style="font-size: 0.75rem; font-weight: 700; color: var(--cf-text-muted); text-transform: uppercase;">Completed (This FY)</div>
+      <div style="font-size: 1.5rem; font-weight: 800; color: var(--cf-success);">42</div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-table-container">
+  <div class="cf-table-toolbar">
+    <div style="display: flex; gap: 0.5rem;">
+      <button class="cf-btn cf-btn-secondary cf-btn-sm">All Tasks (24)</button>
+      <button class="cf-btn cf-btn-outline cf-btn-sm">My Assignments (7)</button>
+      <button class="cf-btn cf-btn-outline cf-btn-sm">Urgent &bull; 4</button>
+    </div>
+
+    <input type="search" class="cf-input" placeholder="Search tasks..." style="height: 36px; width: 220px; font-size: 0.8125rem;" onkeyup="CAFlow.filterTable('tasks-table', this.value)">
+  </div>
+
+  <div class="cf-table-responsive">
+    <table class="cf-table" id="tasks-table">
+      <thead>
+        <tr>
+          <th>Task Title</th>
+          <th>Client</th>
+          <th>Assignee</th>
+          <th>Priority</th>
+          <th>Due Date</th>
+          <th>Status</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <strong style="color: var(--cf-primary-navy);">Trial Balance &amp; General Ledger Scrutiny</strong>
+            <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Verify opening balances against prior audited accounts</div>
+          </td>
+          <td>Himalayan Traders Pvt Ltd</td>
+          <td>Bikash Karki</td>
+          <td><span class="cf-badge cf-badge-danger">Urgent</span></td>
+          <td><span class="mono-font" style="font-size: 0.8125rem;">2081-06-24</span></td>
+          <td><span class="cf-badge cf-badge-warning" dot="True">In Progress</span></td>
+          <td style="text-align: right;">
+            <button class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('Working paper opened', 'info')">Open</button>
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            <strong style="color: var(--cf-primary-navy);">TDS Reconciliation with IRD Portal</strong>
+            <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Section 88, 88A, 89 deduction audit</div>
+          </td>
+          <td>Apex Hydropower Ltd</td>
+          <td>Pooja Regmi</td>
+          <td><span class="cf-badge cf-badge-warning">High</span></td>
+          <td><span class="mono-font" style="font-size: 0.8125rem;">2081-06-25</span></td>
+          <td><span class="cf-badge cf-badge-primary" dot="True">Under Review</span></td>
+          <td style="text-align: right;">
+            <button class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('Working paper opened', 'info')">Open</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

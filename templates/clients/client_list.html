@@ -1,0 +1,159 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}Client Directory &mdash; {{ APP_NAME }}{% endblock %}
+
+{% block app_content %}
+{% include "components/breadcrumbs.html" with items=breadcrumbs %}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1>Client Directory &amp; PAN Master</h1>
+    <p style="font-size: 0.875rem; color: var(--cf-text-muted);">
+      Manage corporate clients, proprietorships, IRD PAN registrations, and engagement managers.
+    </p>
+  </div>
+
+  <button type="button" class="cf-btn cf-btn-primary" data-cf-modal-target="#cf-add-client-modal">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <span>Add New Client</span>
+  </button>
+</div>
+
+<div class="cf-table-container">
+  <div class="cf-table-toolbar">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <span class="cf-badge cf-badge-primary">128 Active Clients</span>
+      <span style="font-size: 0.8125rem; color: var(--cf-text-muted);">Kathmandu &amp; Pokhara Branches</span>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <input type="search" class="cf-input" id="client-search-input" placeholder="Search by name, PAN, director..." style="height: 36px; width: 260px; font-size: 0.8125rem;" onkeyup="CAFlow.filterTable('clients-data-table', this.value)">
+      <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" onclick="CAFlow.toast('Exporting client registry to Excel (NFRS format)', 'info')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Export</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="cf-table-responsive">
+    <table class="cf-table" id="clients-data-table">
+      <thead>
+        <tr>
+          <th>Client Name</th>
+          <th>IRD PAN</th>
+          <th>Type</th>
+          <th>Engagement Manager</th>
+          <th>City / District</th>
+          <th>Filing Status</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <strong style="color: var(--cf-primary-navy);">Himalayan Traders Pvt Ltd</strong>
+            <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Director: Mr. Ramesh Adhikari</div>
+          </td>
+          <td><span class="mono-font" style="font-size: 0.8125rem; font-weight: 600;">601928374</span></td>
+          <td><span class="cf-badge cf-badge-secondary">Pvt. Ltd.</span></td>
+          <td>CA. Anjali Sharma</td>
+          <td>Kathmandu</td>
+          <td><span class="cf-badge cf-badge-success" dot="True">VAT Active</span></td>
+          <td style="text-align: right;">
+            <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('Client profile loaded', 'info')">View</button>
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            <strong style="color: var(--cf-primary-navy);">Apex Hydropower Development Ltd</strong>
+            <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Director: Er. Sunil Thapa</div>
+          </td>
+          <td><span class="mono-font" style="font-size: 0.8125rem; font-weight: 600;">300481920</span></td>
+          <td><span class="cf-badge cf-badge-primary">Public Ltd.</span></td>
+          <td>CA. Suyog Dhakal</td>
+          <td>Lalitpur</td>
+          <td><span class="cf-badge cf-badge-warning" dot="True">Audit in Progress</span></td>
+          <td style="text-align: right;">
+            <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('Client profile loaded', 'info')">View</button>
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            <strong style="color: var(--cf-primary-navy);">Kathmandu Tech Solutions</strong>
+            <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Director: Ms. Prerana Shrestha</div>
+          </td>
+          <td><span class="mono-font" style="font-size: 0.8125rem; font-weight: 600;">604928113</span></td>
+          <td><span class="cf-badge cf-badge-secondary">Pvt. Ltd.</span></td>
+          <td>Pooja Regmi</td>
+          <td>Kathmandu</td>
+          <td><span class="cf-badge cf-badge-success" dot="True">Compliant</span></td>
+          <td style="text-align: right;">
+            <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('Client profile loaded', 'info')">View</button>
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            <strong style="color: var(--cf-primary-navy);">Lumbini Organic Farm &amp; Agro</strong>
+            <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Proprietor: Mr. Hari Prasad Gautam</div>
+          </td>
+          <td><span class="mono-font" style="font-size: 0.8125rem; font-weight: 600;">500123987</span></td>
+          <td><span class="cf-badge cf-badge-muted">Proprietorship</span></td>
+          <td>Bikash Karki</td>
+          <td>Rupandehi</td>
+          <td><span class="cf-badge cf-badge-danger" dot="True">TDS Due</span></td>
+          <td style="text-align: right;">
+            <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('Client profile loaded', 'info')">View</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{# Modal: Add Client #}
+<div class="cf-modal-backdrop" id="cf-add-client-modal">
+  <div class="cf-modal-dialog">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title">Register New Client Entity</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form onsubmit="event.preventDefault(); CAFlow.closeModal('#cf-add-client-modal'); CAFlow.toast('Client registered into master PAN database!', 'success');">
+      <div class="cf-modal-body">
+        <div class="cf-form-group">
+          <label class="cf-label">Client Name <span class="required-star">*</span></label>
+          <input type="text" class="cf-input" placeholder="e.g. Annapurna Agro Industries" required>
+        </div>
+        <div class="row g-2">
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label">Nepal IRD PAN <span class="required-star">*</span></label>
+            <input type="text" class="cf-input mono-font" placeholder="9 Digits" maxlength="9" required>
+          </div>
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label">Company Type</label>
+            <select class="cf-select">
+              <option>Private Limited Company</option>
+              <option>Public Limited Company</option>
+              <option>Proprietorship Business</option>
+              <option>Partnership Firm</option>
+            </select>
+          </div>
+        </div>
+        <div class="cf-form-group">
+          <label class="cf-label">Director / Contact Person</label>
+          <input type="text" class="cf-input" placeholder="Primary Authorised Signatory">
+        </div>
+      </div>
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Save to Directory</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

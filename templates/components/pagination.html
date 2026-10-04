@@ -1,0 +1,45 @@
+{# CAFlow Reusable Pagination Component #}
+{% if page_obj and page_obj.has_other_pages %}
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-top: 1px solid var(--cf-border-subtle); flex-wrap: wrap; gap: 0.75rem;">
+  <div style="font-size: 0.8125rem; color: var(--cf-text-muted);">
+    Showing page <strong>{{ page_obj.number }}</strong> of <strong>{{ page_obj.paginator.num_pages }}</strong> 
+    ({{ page_obj.paginator.count }} total records)
+  </div>
+
+  <ul class="cf-pagination">
+    {% if page_obj.has_previous %}
+      <li>
+        <a href="?page=1" class="cf-page-btn" title="First Page">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
+        </a>
+      </li>
+      <li>
+        <a href="?page={{ page_obj.previous_page_number }}" class="cf-page-btn" title="Previous Page">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        </a>
+      </li>
+    {% else %}
+      <li><span class="cf-page-btn disabled"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></span></li>
+    {% endif %}
+
+    <li style="margin: 0 4px;">
+      <span class="cf-page-btn active">{{ page_obj.number }}</span>
+    </li>
+
+    {% if page_obj.has_next %}
+      <li>
+        <a href="?page={{ page_obj.next_page_number }}" class="cf-page-btn" title="Next Page">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </li>
+      <li>
+        <a href="?page={{ page_obj.paginator.num_pages }}" class="cf-page-btn" title="Last Page">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+        </a>
+      </li>
+    {% else %}
+      <li><span class="cf-page-btn disabled"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span></li>
+    {% endif %}
+  </ul>
+</div>
+{% endif %}

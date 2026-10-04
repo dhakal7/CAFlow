@@ -1,0 +1,76 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}Firm Preferences &amp; Settings &mdash; {{ APP_NAME }}{% endblock %}
+
+{% block app_content %}
+{% include "components/breadcrumbs.html" with items=breadcrumbs %}
+
+<div style="margin-bottom: 2rem;">
+  <h1>Firm Settings &amp; Compliance Master</h1>
+  <p style="font-size: 0.875rem; color: var(--cf-text-muted);">
+    Practice profile, ICAN registration, Inland Revenue Department PAN, and fiscal year preferences.
+  </p>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="cf-card">
+      <div class="cf-card-header">
+        <h3 class="cf-card-title">Practice Entity Details</h3>
+      </div>
+
+      <form onsubmit="event.preventDefault(); CAFlow.toast('Firm settings updated successfully!', 'success');">
+        <div class="row g-3">
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label">Chartered Accountancy Firm Name</label>
+            <input type="text" class="cf-input" value="Dhakal &amp; Associates, Chartered Accountants" required>
+          </div>
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label">ICAN Firm Registration Number</label>
+            <input type="text" class="cf-input mono-font" value="ICAN-FRN-0412" required>
+          </div>
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label">Firm 9-Digit IRD PAN</label>
+            <input type="text" class="cf-input mono-font" value="301928475" maxlength="9" required>
+          </div>
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label">Default Bikram Sambat Fiscal Year</label>
+            <select class="cf-select">
+              <option selected>2081/82 (Current Active FY)</option>
+              <option>2080/81</option>
+              <option>2079/80</option>
+            </select>
+          </div>
+          <div class="col-12 cf-form-group">
+            <label class="cf-label">Principal Office Address</label>
+            <input type="text" class="cf-input" value="Putalisadak, Ward No. 28, Kathmandu, Nepal">
+          </div>
+        </div>
+
+        <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+          <button type="submit" class="cf-btn cf-btn-primary">Update Firm Settings</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="cf-card">
+      <div class="cf-card-header">
+        <h3 class="cf-card-title">Subscription Tier</h3>
+      </div>
+      <div style="margin-bottom: 1rem;">
+        <span class="cf-badge cf-badge-primary" style="font-size: 0.8125rem;">Growth Firm Plan</span>
+        <div style="font-size: 1.25rem; font-weight: 800; color: var(--cf-primary-navy); margin-top: 0.5rem;">
+          NPR 6,999 <span style="font-size: 0.75rem; font-weight: 500; color: var(--cf-text-muted);">/ month</span>
+        </div>
+      </div>
+      <p style="font-size: 0.8125rem; color: var(--cf-text-secondary); margin-bottom: 1rem;">
+        Next renewal on 1st Kartik 2081. Invoiced under Nepal VAT.
+      </p>
+      <button class="cf-btn cf-btn-outline cf-btn-sm" style="width: 100%;" onclick="CAFlow.toast('Managing subscription billing', 'info')">Manage Plan</button>
+    </div>
+  </div>
+</div>
+{% endblock %}

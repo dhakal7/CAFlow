@@ -1,0 +1,5 @@
+{# CAFlow Reusable Status Dot Component #}
+<span style="display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.8125rem; font-weight: 500; color: var(--cf-text-secondary);">
+  <span class="cf-status-dot {{ status|default:'active' }}"></span>
+  {% if text %}<span>{{ text }}</span>{% endif %}
+</span>

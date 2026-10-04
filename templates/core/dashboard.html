@@ -1,0 +1,582 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}Practice Dashboard &mdash; {{ APP_NAME }}{% endblock %}
+
+{% block app_content %}
+<!-- Breadcrumb Header -->
+{% include "components/breadcrumbs.html" with items=breadcrumbs %}
+
+<!-- Dashboard Page Header -->
+<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1 style="margin-bottom: 0.25rem;">Practice Overview</h1>
+    <div style="font-size: 0.875rem; color: var(--cf-text-muted);">
+      Welcome back, <strong>CA. Suyog Dhakal</strong> &bull; Firm: <strong>Dhakal &amp; Associates (ICAN Reg: 1420)</strong>
+    </div>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 0.75rem;">
+    <!-- Create Task Trigger -->
+    <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-target="#cf-quick-task-modal">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>New Task</span>
+    </button>
+
+    <!-- Request Document Trigger -->
+    <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-target="#cf-request-doc-modal">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <span>Request Document</span>
+    </button>
+
+    <!-- Onboard Client Trigger -->
+    <button type="button" class="cf-btn cf-btn-primary" data-cf-modal-target="#cf-new-client-modal">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+      <span>Add Client</span>
+    </button>
+  </div>
+</div>
+
+<!-- =========================================================================
+     FOUR PRIMARY METRIC STAT CARDS
+     ========================================================================= -->
+<div class="row g-3 mb-4">
+  <!-- Card 1: Total Clients (128) -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="cf-card cf-stat-card cf-card-hover">
+      <div class="cf-stat-top">
+        <div>
+          <div class="cf-stat-label">Total Clients</div>
+          <div class="cf-stat-value">128</div>
+        </div>
+        <div class="cf-stat-icon-wrap cf-stat-icon-navy">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+      </div>
+      <div class="cf-stat-meta">
+        <span class="cf-badge cf-badge-success" style="font-size: 0.6875rem;">+14%</span>
+        <span>vs previous fiscal year</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 2: Pending Tasks (24) -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="cf-card cf-stat-card cf-card-hover">
+      <div class="cf-stat-top">
+        <div>
+          <div class="cf-stat-label">Pending Tasks</div>
+          <div class="cf-stat-value" style="color: var(--cf-warning);">24</div>
+        </div>
+        <div class="cf-stat-icon-wrap cf-stat-icon-warning">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+      </div>
+      <div class="cf-stat-meta">
+        <span class="cf-badge cf-badge-warning" style="font-size: 0.6875rem;">6 Review</span>
+        <span>Awaiting partner signoff</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 3: Due Soon (8) -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="cf-card cf-stat-card cf-card-hover">
+      <div class="cf-stat-top">
+        <div>
+          <div class="cf-stat-label">Due Soon (Compliance)</div>
+          <div class="cf-stat-value" style="color: var(--cf-danger);">8</div>
+        </div>
+        <div class="cf-stat-icon-wrap cf-stat-icon-danger">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+      </div>
+      <div class="cf-stat-meta">
+        <span class="cf-badge cf-badge-danger" style="font-size: 0.6875rem;">3 Days</span>
+        <span>Monthly VAT return (25th Ashoj)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 4: Outstanding (NPR 45K) -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="cf-card cf-stat-card cf-card-hover">
+      <div class="cf-stat-top">
+        <div>
+          <div class="cf-stat-label">Outstanding Fees</div>
+          <div class="cf-stat-value mono-font">NPR 45K</div>
+        </div>
+        <div class="cf-stat-icon-wrap cf-stat-icon-success">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        </div>
+      </div>
+      <div class="cf-stat-meta">
+        <span class="cf-badge cf-badge-primary" style="font-size: 0.6875rem;">4 Invoices</span>
+        <span>Billed with 13% Nepal VAT</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================================
+     MIDDLE SECTION: TODAY'S WORK & UPCOMING COMPLIANCE
+     ========================================================================= #}
+<div class="row g-4 mb-4">
+  <!-- Today's Work Table -->
+  <div class="col-lg-8">
+    <div class="cf-table-container">
+      <div class="cf-table-toolbar">
+        <div>
+          <h4 style="margin: 0; font-size: 1rem; font-weight: 700; color: var(--cf-primary-navy);">Today's Work &amp; Engagement Queue</h4>
+          <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Active working papers and audits scheduled for today</div>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem;">
+          <input type="search" class="cf-input" id="task-filter-input" placeholder="Filter tasks..." style="height: 34px; font-size: 0.8125rem; width: 170px;" onkeyup="CAFlow.filterTable('dashboard-tasks-table', this.value)">
+          <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" onclick="CAFlow.toast('Task list refreshed', 'info')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="cf-table-responsive">
+        <table class="cf-table" id="dashboard-tasks-table">
+          <thead>
+            <tr>
+              <th style="width: 38px;"><input type="checkbox" class="cf-checkbox" aria-label="Select all"></th>
+              <th>Task / Engagement</th>
+              <th>Client (Nepal PAN)</th>
+              <th>Assignee</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th style="text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><input type="checkbox" class="cf-checkbox"></td>
+              <td>
+                <strong style="color: var(--cf-primary-navy);">Physical Stock Audit Verification</strong>
+                <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Year-end inventory count working papers</div>
+              </td>
+              <td>
+                <div>Himalayan Traders Pvt Ltd</div>
+                <div class="mono-font" style="font-size: 0.6875rem; color: var(--cf-text-muted);">PAN: 601928374</div>
+              </td>
+              <td>
+                <div style="display: flex; align-items: center; gap: 0.45rem;">
+                  <div class="cf-avatar" style="width: 24px; height: 24px; font-size: 0.65rem;">BK</div>
+                  <span style="font-size: 0.8125rem;">Bikash K. (Trainee)</span>
+                </div>
+              </td>
+              <td><span class="cf-badge cf-badge-danger">Urgent</span></td>
+              <td><span class="cf-badge cf-badge-warning">In Progress</span></td>
+              <td style="text-align: right;">
+                <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('Viewing working paper details', 'info')">View</button>
+              </td>
+            </tr>
+
+            <tr>
+              <td><input type="checkbox" class="cf-checkbox"></td>
+              <td>
+                <strong style="color: var(--cf-primary-navy);">D-03 Tax Assessment Reconciliation</strong>
+                <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Income Tax Act Section 99 audit verification</div>
+              </td>
+              <td>
+                <div>Lumbini Cement Industries</div>
+                <div class="mono-font" style="font-size: 0.6875rem; color: var(--cf-text-muted);">PAN: 300481920</div>
+              </td>
+              <td>
+                <div style="display: flex; align-items: center; gap: 0.45rem;">
+                  <div class="cf-avatar" style="width: 24px; height: 24px; font-size: 0.65rem; background: var(--cf-secondary-navy);">AS</div>
+                  <span style="font-size: 0.8125rem;">Anjali S. (Manager)</span>
+                </div>
+              </td>
+              <td><span class="cf-badge cf-badge-warning">High</span></td>
+              <td><span class="cf-badge cf-badge-primary">Under Review</span></td>
+              <td style="text-align: right;">
+                <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('Review module opened', 'info')">Review</button>
+              </td>
+            </tr>
+
+            <tr>
+              <td><input type="checkbox" class="cf-checkbox"></td>
+              <td>
+                <strong style="color: var(--cf-primary-navy);">Monthly Sales &amp; Purchase VAT Ledger</strong>
+                <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Annex 5 &amp; Annex 6 upload preparation</div>
+              </td>
+              <td>
+                <div>Kathmandu Tech Solutions</div>
+                <div class="mono-font" style="font-size: 0.6875rem; color: var(--cf-text-muted);">PAN: 604928113</div>
+              </td>
+              <td>
+                <div style="display: flex; align-items: center; gap: 0.45rem;">
+                  <div class="cf-avatar" style="width: 24px; height: 24px; font-size: 0.65rem;">PR</div>
+                  <span style="font-size: 0.8125rem;">Pooja R. (Associate)</span>
+                </div>
+              </td>
+              <td><span class="cf-badge cf-badge-secondary">Medium</span></td>
+              <td><span class="cf-badge cf-badge-success">Ready</span></td>
+              <td style="text-align: right;">
+                <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('VAT Annex export initiated', 'success')">File</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="padding: 0.85rem 1.25rem; background-color: var(--cf-surface-hover); border-top: 1px solid var(--cf-border-subtle); display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 0.8125rem; color: var(--cf-text-muted);">3 active tasks shown of 24 total</span>
+        <a href="{% url 'tasks:task_list' %}" class="cf-btn cf-btn-ghost cf-btn-sm">View Full Task Board &rarr;</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upcoming Nepal Statutory Compliance -->
+  <div class="col-lg-4">
+    <div class="cf-card" style="height: 100%;">
+      <div class="cf-card-header">
+        <div>
+          <h3 class="cf-card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Upcoming Compliance
+          </h3>
+          <div class="cf-card-subtitle">Nepal IRD &amp; OCR Deadlines</div>
+        </div>
+        <span class="cf-badge cf-badge-danger">8 Due</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.875rem;">
+        <!-- Compliance Item 1 -->
+        <div style="padding: 0.85rem; border-radius: var(--cf-radius-md); background: var(--cf-surface-muted); border-left: 3px solid var(--cf-danger);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <strong style="font-size: 0.875rem; color: var(--cf-primary-navy);">Monthly VAT Return (Bhadra)</strong>
+            <span class="cf-badge cf-badge-danger" style="font-size: 0.6875rem;">25 Ashoj</span>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 4px;">
+            Inland Revenue Department &bull; Section 17
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+            <span style="font-size: 0.75rem; color: var(--cf-danger); font-weight: 600;">5 clients pending filing</span>
+            <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" style="padding: 2px 8px; font-size: 0.6875rem;" onclick="CAFlow.toast('Reminding 5 clients via SMS/Email', 'info')">Remind All</button>
+          </div>
+        </div>
+
+        <!-- Compliance Item 2 -->
+        <div style="padding: 0.85rem; border-radius: var(--cf-radius-md); background: var(--cf-surface-muted); border-left: 3px solid var(--cf-warning);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <strong style="font-size: 0.875rem; color: var(--cf-primary-navy);">TDS Bi-monthly E-Return</strong>
+            <span class="cf-badge cf-badge-warning" style="font-size: 0.6875rem;">25 Ashoj</span>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 4px;">
+            Income Tax Act 2058 &bull; Section 90
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+            <span style="font-size: 0.75rem; color: var(--cf-text-muted);">18 clients verified</span>
+            <span class="cf-badge cf-badge-muted" style="font-size: 0.6875rem;">On Track</span>
+          </div>
+        </div>
+
+        <!-- Compliance Item 3 -->
+        <div style="padding: 0.85rem; border-radius: var(--cf-radius-md); background: var(--cf-surface-muted); border-left: 3px solid var(--cf-secondary-navy);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <strong style="font-size: 0.875rem; color: var(--cf-primary-navy);">Company Registrar (OCR) D-01</strong>
+            <span class="cf-badge cf-badge-muted" style="font-size: 0.6875rem;">Poush End</span>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 4px;">
+            Companies Act 2063 &bull; Section 51
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+            <span style="font-size: 0.75rem; color: var(--cf-text-muted);">Annual General Meeting documentation</span>
+            <span class="cf-badge cf-badge-muted" style="font-size: 0.6875rem;">Scheduled</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cf-card-footer">
+        <a href="{% url 'compliance:compliance_list' %}" style="font-size: 0.8125rem; font-weight: 600; color: var(--cf-secondary-navy);">
+          View Full Statutory Calendar &rarr;
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================================
+     BOTTOM ROW: DOCUMENT REQUESTS, TEAM WORKLOAD, RECENT ACTIVITY
+     ========================================================================= -->
+<div class="row g-4">
+  <!-- Document Requests Tracker -->
+  <div class="col-md-4">
+    <div class="cf-card" style="height: 100%;">
+      <div class="cf-card-header">
+        <div>
+          <h3 class="cf-card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Document Requests
+          </h3>
+          <div class="cf-card-subtitle">Pending client uploads</div>
+        </div>
+        <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" data-cf-modal-target="#cf-request-doc-modal">+ Request</button>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <div style="padding: 0.75rem; border: 1px solid var(--cf-border); border-radius: var(--cf-radius-md);">
+          <div style="display: flex; justify-content: space-between;">
+            <strong style="font-size: 0.8125rem; color: var(--cf-primary-navy);">Bank Confirmation Letter</strong>
+            <span class="cf-badge cf-badge-danger" style="font-size: 0.65rem;">Overdue</span>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--cf-text-secondary); margin-top: 2px;">Apex Hydropower Ltd &bull; Nabil Bank A/C</div>
+        </div>
+
+        <div style="padding: 0.75rem; border: 1px solid var(--cf-border); border-radius: var(--cf-radius-md);">
+          <div style="display: flex; justify-content: space-between;">
+            <strong style="font-size: 0.8125rem; color: var(--cf-primary-navy);">Bhadra Month Sales Invoices</strong>
+            <span class="cf-badge cf-badge-warning" style="font-size: 0.65rem;">Pending</span>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--cf-text-secondary); margin-top: 2px;">Everest Organic Teas &bull; 14 files</div>
+        </div>
+
+        <div style="padding: 0.75rem; border: 1px solid var(--cf-border); border-radius: var(--cf-radius-md);">
+          <div style="display: flex; justify-content: space-between;">
+            <strong style="font-size: 0.8125rem; color: var(--cf-primary-navy);">Signed Board Minutes of AGM</strong>
+            <span class="cf-badge cf-badge-success" style="font-size: 0.65rem;">Received</span>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--cf-text-secondary); margin-top: 2px;">Shikhar Microfinance &bull; PDF (2.4 MB)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Team Workload Distribution -->
+  <div class="col-md-4">
+    <div class="cf-card" style="height: 100%;">
+      <div class="cf-card-header">
+        <div>
+          <h3 class="cf-card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            Team Workload
+          </h3>
+          <div class="cf-card-subtitle">Active audit capacity</div>
+        </div>
+        <span class="cf-badge cf-badge-muted">6 Associates</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.8125rem; margin-bottom: 4px;">
+            <span><strong>Anjali Sharma</strong> (Audit Manager)</span>
+            <span class="cf-badge cf-badge-warning" style="font-size: 0.6875rem;">85% Capacity</span>
+          </div>
+          <div style="width: 100%; height: 6px; background: var(--cf-surface-muted); border-radius: 99px; overflow: hidden;">
+            <div style="width: 85%; height: 100%; background: var(--cf-warning); border-radius: 99px;"></div>
+          </div>
+        </div>
+
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.8125rem; margin-bottom: 4px;">
+            <span><strong>Bikash Karki</strong> (Article Trainee)</span>
+            <span class="cf-badge cf-badge-danger" style="font-size: 0.6875rem;">95% Full</span>
+          </div>
+          <div style="width: 100%; height: 6px; background: var(--cf-surface-muted); border-radius: 99px; overflow: hidden;">
+            <div style="width: 95%; height: 100%; background: var(--cf-danger); border-radius: 99px;"></div>
+          </div>
+        </div>
+
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.8125rem; margin-bottom: 4px;">
+            <span><strong>Pooja Regmi</strong> (Senior Associate)</span>
+            <span class="cf-badge cf-badge-success" style="font-size: 0.6875rem;">55% Active</span>
+          </div>
+          <div style="width: 100%; height: 6px; background: var(--cf-surface-muted); border-radius: 99px; overflow: hidden;">
+            <div style="width: 55%; height: 100%; background: var(--cf-success); border-radius: 99px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Client Activity Timeline -->
+  <div class="col-md-4">
+    <div class="cf-card" style="height: 100%;">
+      <div class="cf-card-header">
+        <div>
+          <h3 class="cf-card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"/></svg>
+            Recent Activity
+          </h3>
+          <div class="cf-card-subtitle">Immutable audit trail preview</div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.875rem; font-size: 0.8125rem;">
+        <div style="display: flex; gap: 0.65rem;">
+          <span class="cf-status-dot success" style="margin-top: 6px;"></span>
+          <div>
+            <div><strong>CA. Suyog Dhakal</strong> signed off on <strong>Apex Hydro Audit</strong></div>
+            <div style="font-size: 0.6875rem; color: var(--cf-text-muted);">18 mins ago &bull; Verified Working Paper</div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.65rem;">
+          <span class="cf-status-dot warning" style="margin-top: 6px;"></span>
+          <div>
+            <div><strong>Himalayan Traders</strong> uploaded <strong>Bhadra Purchase Register</strong></div>
+            <div style="font-size: 0.6875rem; color: var(--cf-text-muted);">1 hour ago &bull; Client Portal upload</div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.65rem;">
+          <span class="cf-status-dot danger" style="margin-top: 6px;"></span>
+          <div>
+            <div><strong>System Sentinel</strong> flagged <strong>VAT deadline alert for 5 clients</strong></div>
+            <div style="font-size: 0.6875rem; color: var(--cf-text-muted);">3 hours ago &bull; Automated compliance monitor</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================================
+     MODALS FOR DASHBOARD QUICK ACTIONS
+     ========================================================================= -->
+
+{# Modal 1: Quick Add Client #}
+<div class="cf-modal-backdrop" id="cf-new-client-modal">
+  <div class="cf-modal-dialog">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title">Onboard New Client Entity</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form onsubmit="event.preventDefault(); CAFlow.closeModal('#cf-new-client-modal'); CAFlow.toast('Client successfully onboarded!', 'success');">
+      <div class="cf-modal-body">
+        <div class="cf-form-group">
+          <label class="cf-label">Client / Trade Name <span class="required-star">*</span></label>
+          <input type="text" class="cf-input" placeholder="e.g. Shangri-La Hydro Energy Ltd." required>
+        </div>
+        <div class="row g-2">
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label">Nepal IRD PAN (9 Digits) <span class="required-star">*</span></label>
+            <input type="text" class="cf-input mono-font" placeholder="601827364" maxlength="9" required>
+          </div>
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label">Client Type</label>
+            <select class="cf-select">
+              <option>Private Limited Company</option>
+              <option>Public Limited Company</option>
+              <option>Proprietorship Practice</option>
+              <option>Partnership Firm</option>
+              <option>NGO / INGO</option>
+            </select>
+          </div>
+        </div>
+        <div class="cf-form-group">
+          <label class="cf-label">Primary Contact Person</label>
+          <input type="text" class="cf-input" placeholder="Managing Director / Finance Head">
+        </div>
+      </div>
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Save Client</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# Modal 2: Quick Task Modal #}
+<div class="cf-modal-backdrop" id="cf-quick-task-modal">
+  <div class="cf-modal-dialog">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title">Create Audit / Compliance Task</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form onsubmit="event.preventDefault(); CAFlow.closeModal('#cf-quick-task-modal'); CAFlow.toast('Task assigned successfully!', 'success');">
+      <div class="cf-modal-body">
+        <div class="cf-form-group">
+          <label class="cf-label">Task Title <span class="required-star">*</span></label>
+          <input type="text" class="cf-input" placeholder="e.g. VAT Purchase &amp; Sales Verification" required>
+        </div>
+        <div class="cf-form-group">
+          <label class="cf-label">Client Entity</label>
+          <select class="cf-select">
+            <option>Himalayan Traders Pvt Ltd</option>
+            <option>Lumbini Cement Industries</option>
+            <option>Kathmandu Tech Solutions</option>
+            <option>Apex Hydropower Ltd</option>
+          </select>
+        </div>
+        <div class="row g-2">
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label">Assign To</label>
+            <select class="cf-select">
+              <option>Bikash Karki (Trainee)</option>
+              <option>Pooja Regmi (Associate)</option>
+              <option>Anjali Sharma (Manager)</option>
+            </select>
+          </div>
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label">Priority</label>
+            <select class="cf-select">
+              <option>Medium</option>
+              <option>High</option>
+              <option>Urgent</option>
+              <option>Low</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Create Task</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# Modal 3: Request Document Modal #}
+<div class="cf-modal-backdrop" id="cf-request-doc-modal">
+  <div class="cf-modal-dialog">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title">Request Documents from Client</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form onsubmit="event.preventDefault(); CAFlow.closeModal('#cf-request-doc-modal'); CAFlow.toast('Document request email dispatched to client!', 'success');">
+      <div class="cf-modal-body">
+        <div class="cf-form-group">
+          <label class="cf-label">Client Entity <span class="required-star">*</span></label>
+          <select class="cf-select" required>
+            <option>Himalayan Traders Pvt Ltd</option>
+            <option>Apex Hydropower Ltd</option>
+            <option>Lumbini Cement Industries</option>
+          </select>
+        </div>
+        <div class="cf-form-group">
+          <label class="cf-label">Required Document Category</label>
+          <select class="cf-select">
+            <option>Bank Statements (All Operating Accounts)</option>
+            <option>Monthly VAT Purchase &amp; Sales Books</option>
+            <option>TDS Deduction Certificates &amp; Challans</option>
+            <option>Fixed Asset Physical Verification Register</option>
+            <option>Signed Board Resolutions / Minutes</option>
+          </select>
+        </div>
+        <div class="cf-form-group">
+          <label class="cf-label">Instructions for Client</label>
+          <textarea class="cf-textarea" rows="2" placeholder="Please upload scanned PDFs before 24th Ashoj for timely filing."></textarea>
+        </div>
+      </div>
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Send Request</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

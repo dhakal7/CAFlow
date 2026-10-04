@@ -1,0 +1,22 @@
+{# CAFlow Reusable Button Component #}
+{% if href %}
+  <a href="{{ href }}" 
+     class="cf-btn cf-btn-{{ variant|default:'primary' }}{% if size %} cf-btn-{{ size }}{% endif %}{% if disabled %} disabled{% endif %} {{ extra_classes|default:'' }}"
+     {% if id %}id="{{ id }}"{% endif %}
+     {% if disabled %}aria-disabled="true" tabindex="-1"{% endif %}
+     {{ data_attributes|default:'' }}>
+    {% if is_loading %}<span class="cf-spinner"></span>{% endif %}
+    {% if icon %}{{ icon|safe }}{% endif %}
+    <span>{{ text }}</span>
+  </a>
+{% else %}
+  <button type="{{ type|default:'button' }}" 
+          class="cf-btn cf-btn-{{ variant|default:'primary' }}{% if size %} cf-btn-{{ size }}{% endif %} {{ extra_classes|default:'' }}"
+          {% if id %}id="{{ id }}"{% endif %}
+          {% if disabled %}disabled{% endif %}
+          {{ data_attributes|default:'' }}>
+    {% if is_loading %}<span class="cf-spinner"></span>{% endif %}
+    {% if icon %}{{ icon|safe }}{% endif %}
+    <span>{{ text }}</span>
+  </button>
+{% endif %}

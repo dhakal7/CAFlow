@@ -1,0 +1,379 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}Design System &amp; UI Component Library &mdash; {{ APP_NAME }}{% endblock %}
+
+{% block app_content %}
+<div class="mb-4">
+  {% include "components/breadcrumbs.html" with items=breadcrumbs %}
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <h1 style="margin-bottom: 0.25rem;">CAFlow Design System &amp; UI Components</h1>
+      <p style="font-size: 0.9375rem; color: var(--cf-text-secondary); max-width: 780px;">
+        The unified UI architecture for CAFlow. All modules (Clients, Tasks, Compliance, Billing, Documents) strictly adhere to these components, color tokens, and interaction patterns.
+      </p>
+    </div>
+    <div>
+      <span class="cf-badge cf-badge-primary" style="padding: 6px 12px; font-size: 0.8125rem;">Design System v1.0.0</span>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Jump Tabs -->
+<ul class="cf-nav-tabs">
+  <li><a href="#colors" class="cf-tab-link active">Color System</a></li>
+  <li><a href="#buttons" class="cf-tab-link">Buttons &amp; States</a></li>
+  <li><a href="#badges" class="cf-tab-link">Badges &amp; Status</a></li>
+  <li><a href="#forms" class="cf-tab-link">Forms &amp; Inputs</a></li>
+  <li><a href="#cards" class="cf-tab-link">Cards &amp; Metrics</a></li>
+  <li><a href="#tables" class="cf-tab-link">Table System</a></li>
+  <li><a href="#modals" class="cf-tab-link">Modals &amp; Dialogs</a></li>
+  <li><a href="#alerts" class="cf-tab-link">Alerts &amp; Toasts</a></li>
+  <li><a href="#empty-states" class="cf-tab-link">Empty &amp; Loading</a></li>
+</ul>
+
+<!-- =========================================================================
+     1. COLOR SYSTEM SPECIFICATION
+     ========================================================================= -->
+<section id="colors" class="mb-5">
+  <div class="cf-card mb-4">
+    <div class="cf-card-header">
+      <h3 class="cf-card-title">1. Color Palette Tokens</h3>
+      <span style="font-size: 0.75rem; color: var(--cf-text-muted);">Defined in static/css/variables.css</span>
+    </div>
+    
+    <div class="row g-3">
+      <!-- Primary Navy -->
+      <div class="col-6 col-md-3">
+        <div style="background-color: #0B1F33; height: 70px; border-radius: var(--cf-radius-md); box-shadow: var(--cf-shadow-sm);"></div>
+        <div style="margin-top: 0.5rem;">
+          <strong style="font-size: 0.8125rem; display: block;">Primary Navy</strong>
+          <code style="font-size: 0.75rem; color: var(--cf-text-muted);">#0B1F33 &bull; --cf-primary-navy</code>
+        </div>
+      </div>
+
+      <!-- Secondary Navy -->
+      <div class="col-6 col-md-3">
+        <div style="background-color: #173B57; height: 70px; border-radius: var(--cf-radius-md); box-shadow: var(--cf-shadow-sm);"></div>
+        <div style="margin-top: 0.5rem;">
+          <strong style="font-size: 0.8125rem; display: block;">Secondary Navy</strong>
+          <code style="font-size: 0.75rem; color: var(--cf-text-muted);">#173B57 &bull; --cf-secondary-navy</code>
+        </div>
+      </div>
+
+      <!-- Background -->
+      <div class="col-6 col-md-3">
+        <div style="background-color: #F8F7F3; height: 70px; border-radius: var(--cf-radius-md); border: 1px solid var(--cf-border);"></div>
+        <div style="margin-top: 0.5rem;">
+          <strong style="font-size: 0.8125rem; display: block;">Canvas Background</strong>
+          <code style="font-size: 0.75rem; color: var(--cf-text-muted);">#F8F7F3 &bull; --cf-bg</code>
+        </div>
+      </div>
+
+      <!-- Surface -->
+      <div class="col-6 col-md-3">
+        <div style="background-color: #FFFFFF; height: 70px; border-radius: var(--cf-radius-md); border: 1px solid var(--cf-border);"></div>
+        <div style="margin-top: 0.5rem;">
+          <strong style="font-size: 0.8125rem; display: block;">Surface White</strong>
+          <code style="font-size: 0.75rem; color: var(--cf-text-muted);">#FFFFFF &bull; --cf-surface</code>
+        </div>
+      </div>
+
+      <!-- Primary Text -->
+      <div class="col-6 col-md-3">
+        <div style="background-color: #18232C; height: 70px; border-radius: var(--cf-radius-md);"></div>
+        <div style="margin-top: 0.5rem;">
+          <strong style="font-size: 0.8125rem; display: block;">Primary Text</strong>
+          <code style="font-size: 0.75rem; color: var(--cf-text-muted);">#18232C &bull; --cf-text-primary</code>
+        </div>
+      </div>
+
+      <!-- Muted Text -->
+      <div class="col-6 col-md-3">
+        <div style="background-color: #687680; height: 70px; border-radius: var(--cf-radius-md);"></div>
+        <div style="margin-top: 0.5rem;">
+          <strong style="font-size: 0.8125rem; display: block;">Muted Text</strong>
+          <code style="font-size: 0.75rem; color: var(--cf-text-muted);">#687680 &bull; --cf-text-muted</code>
+        </div>
+      </div>
+
+      <!-- Border -->
+      <div class="col-6 col-md-3">
+        <div style="background-color: #DDE3E7; height: 70px; border-radius: var(--cf-radius-md);"></div>
+        <div style="margin-top: 0.5rem;">
+          <strong style="font-size: 0.8125rem; display: block;">Border / Divider</strong>
+          <code style="font-size: 0.75rem; color: var(--cf-text-muted);">#DDE3E7 &bull; --cf-border</code>
+        </div>
+      </div>
+
+      <!-- Success -->
+      <div class="col-6 col-md-3">
+        <div style="background-color: #3F7D5A; height: 70px; border-radius: var(--cf-radius-md);"></div>
+        <div style="margin-top: 0.5rem;">
+          <strong style="font-size: 0.8125rem; display: block;">Success</strong>
+          <code style="font-size: 0.75rem; color: var(--cf-text-muted);">#3F7D5A &bull; --cf-success</code>
+        </div>
+      </div>
+
+      <!-- Warning -->
+      <div class="col-6 col-md-3">
+        <div style="background-color: #B58A3A; height: 70px; border-radius: var(--cf-radius-md);"></div>
+        <div style="margin-top: 0.5rem;">
+          <strong style="font-size: 0.8125rem; display: block;">Warning</strong>
+          <code style="font-size: 0.75rem; color: var(--cf-text-muted);">#B58A3A &bull; --cf-warning</code>
+        </div>
+      </div>
+
+      <!-- Danger -->
+      <div class="col-6 col-md-3">
+        <div style="background-color: #B94A48; height: 70px; border-radius: var(--cf-radius-md);"></div>
+        <div style="margin-top: 0.5rem;">
+          <strong style="font-size: 0.8125rem; display: block;">Danger</strong>
+          <code style="font-size: 0.75rem; color: var(--cf-text-muted);">#B94A48 &bull; --cf-danger</code>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================================
+     2. BUTTON SYSTEM
+     ========================================================================= -->
+<section id="buttons" class="mb-5">
+  <div class="cf-card mb-4">
+    <div class="cf-card-header">
+      <h3 class="cf-card-title">2. Button Variants &amp; Interaction States</h3>
+      <span style="font-size: 0.75rem; color: var(--cf-text-muted);">templates/components/button.html</span>
+    </div>
+
+    <!-- Variants -->
+    <div class="mb-4">
+      <h5 style="margin-bottom: 0.75rem;">Variants</h5>
+      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+        {% include "components/button.html" with variant="primary" text="Primary Action" %}
+        {% include "components/button.html" with variant="secondary" text="Secondary Action" %}
+        {% include "components/button.html" with variant="outline" text="Outline Button" %}
+        {% include "components/button.html" with variant="ghost" text="Ghost Button" %}
+        {% include "components/button.html" with variant="success" text="Success Button" %}
+        {% include "components/button.html" with variant="danger" text="Danger Action" %}
+      </div>
+    </div>
+
+    <!-- Sizes -->
+    <div class="mb-4">
+      <h5 style="margin-bottom: 0.75rem;">Sizes</h5>
+      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+        {% include "components/button.html" with variant="primary" size="sm" text="Small Button" %}
+        {% include "components/button.html" with variant="primary" text="Default Size (md)" %}
+        {% include "components/button.html" with variant="primary" size="lg" text="Large Hero Button" %}
+      </div>
+    </div>
+
+    <!-- States: Disabled, Loading, With Icons -->
+    <div>
+      <h5 style="margin-bottom: 0.75rem;">States: Icons, Loading, Disabled</h5>
+      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+        {% include "components/button.html" with variant="primary" text="Save Client" icon='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>' %}
+        {% include "components/button.html" with variant="secondary" text="Filing Taxes..." is_loading=True %}
+        {% include "components/button.html" with variant="primary" text="Disabled State" disabled=True %}
+        {% include "components/button.html" with variant="outline" text="Disabled Outline" disabled=True %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================================
+     3. BADGES & STATUS INDICATORS
+     ========================================================================= -->
+<section id="badges" class="mb-5">
+  <div class="cf-card mb-4">
+    <div class="cf-card-header">
+      <h3 class="cf-card-title">3. Badges, Chips &amp; Status Dots</h3>
+      <span style="font-size: 0.75rem; color: var(--cf-text-muted);">templates/components/badge.html</span>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-6">
+        <h5 style="margin-bottom: 0.75rem;">Pill Status Badges</h5>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          {% include "components/badge.html" with variant="primary" text="Managing Partner" %}
+          {% include "components/badge.html" with variant="secondary" text="Article Trainee" %}
+          {% include "components/badge.html" with variant="success" text="VAT Filed (IRD Verified)" dot=True %}
+          {% include "components/badge.html" with variant="warning" text="Review Pending" dot=True %}
+          {% include "components/badge.html" with variant="danger" text="Overdue Filing" dot=True %}
+          {% include "components/badge.html" with variant="muted" text="Archived" dot=True %}
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <h5 style="margin-bottom: 0.75rem;">Status Dots with Text</h5>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+          {% include "components/status_dot.html" with status="success" text="Active Practice License &bull; ICAN Good Standing" %}
+          {% include "components/status_dot.html" with status="warning" text="Advance Tax Estimation in progress" %}
+          {% include "components/status_dot.html" with status="danger" text="VAT Annex Missing &bull; Penalty risk" %}
+          {% include "components/status_dot.html" with status="muted" text="Inactive Client Entity" %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================================
+     4. FORM SYSTEM
+     ========================================================================= -->
+<section id="forms" class="mb-5">
+  <div class="cf-card mb-4">
+    <div class="cf-card-header">
+      <h3 class="cf-card-title">4. Form Inputs, Selects &amp; Validation</h3>
+      <span style="font-size: 0.75rem; color: var(--cf-text-muted);">templates/components/form_field.html</span>
+    </div>
+
+    <div class="row g-4">
+      <!-- Standard Input -->
+      <div class="col-md-6">
+        {% include "components/form_field.html" with label="Client Trade Name" placeholder="e.g. Nepal Trading Corporation" required=True help_text="Registered legal name under Nepal Companies Act" %}
+      </div>
+
+      <!-- IRD PAN (Monospace) -->
+      <div class="col-md-6">
+        <div class="cf-form-group">
+          <label class="cf-label">Inland Revenue Department PAN <span class="required-star">*</span></label>
+          <input type="text" class="cf-input mono-font" placeholder="300918274" value="601928374" maxlength="9">
+          <div class="cf-help-text">Valid 9-digit IRD Permanent Account Number</div>
+        </div>
+      </div>
+
+      <!-- Select Dropdown -->
+      <div class="col-md-6">
+        <div class="cf-form-group">
+          <label class="cf-label">Client Legal Classification</label>
+          <select class="cf-select">
+            <option>Private Limited Company (Pvt. Ltd.)</option>
+            <option>Public Limited Company</option>
+            <option>Proprietorship Firm</option>
+            <option>Partnership Firm</option>
+            <option>Non-Governmental Organization (NGO)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Invalid State with Error -->
+      <div class="col-md-6">
+        {% include "components/form_field.html" with label="Auditor Email Address" value="invalid-email@" is_invalid=True error="Please enter a valid official firm email address" %}
+      </div>
+
+      <!-- Textarea -->
+      <div class="col-12">
+        {% include "components/form_field.html" with type="textarea" label="Audit Engagement Scope &amp; Notes" placeholder="Detail any specific NFRS or NAS exemptions requested by management..." %}
+      </div>
+
+      <!-- Checkbox -->
+      <div class="col-12">
+        {% include "components/form_field.html" with type="checkbox" name="terms" checkbox_text="I confirm this engagement complies with the ICAN Code of Professional Ethics" checked=True %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================================
+     5. MODAL SYSTEM & TOASTS
+     ========================================================================= -->
+<section id="modals" class="mb-5">
+  <div class="cf-card mb-4">
+    <div class="cf-card-header">
+      <h3 class="cf-card-title">5. Modals, Confirmations &amp; Toast Triggers</h3>
+      <span style="font-size: 0.75rem; color: var(--cf-text-muted);">Vanilla JS Powered</span>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-6">
+        <h5 style="margin-bottom: 0.75rem;">Modal Styles</h5>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button type="button" class="cf-btn cf-btn-primary" data-cf-modal-target="#demo-create-modal">
+            Open "Create" Modal
+          </button>
+          
+          <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-target="#demo-upload-modal">
+            Open "Upload" Modal
+          </button>
+        </div>
+
+        <div style="margin-top: 1rem;">
+          <h5 style="margin-bottom: 0.75rem;">Generic JS Confirm Dialog</h5>
+          <button type="button" class="cf-btn cf-btn-danger" onclick="CAFlow.confirm({
+            title: 'Delete Client Record',
+            message: 'Are you sure you want to permanently delete Himalayan Traders? This action will archive all associated working papers.',
+            confirmText: 'Delete Client',
+            variant: 'danger',
+            onConfirm: () => CAFlow.toast('Client successfully deleted', 'danger')
+          })">
+            Trigger Danger Confirm
+          </button>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <h5 style="margin-bottom: 0.75rem;">Toast Notification System</h5>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button type="button" class="cf-btn cf-btn-sm cf-btn-success" onclick="CAFlow.toast('VAT Return successfully filed with IRD portal!', 'success')">
+            Success Toast
+          </button>
+          <button type="button" class="cf-btn cf-btn-sm cf-btn-outline" style="color: var(--cf-warning); border-color: var(--cf-warning);" onclick="CAFlow.toast('Monthly VAT deadline in 48 hours for 8 clients.', 'warning')">
+            Warning Toast
+          </button>
+          <button type="button" class="cf-btn cf-btn-sm cf-btn-danger" onclick="CAFlow.toast('Failed to generate audit report: Missing Annex 5', 'danger')">
+            Danger Toast
+          </button>
+          <button type="button" class="cf-btn cf-btn-sm cf-btn-outline" onclick="CAFlow.toast('New document shared by client accountant.', 'info')">
+            Info Toast
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================================
+     6. EMPTY STATES & LOADING STATES
+     ========================================================================= -->
+<section id="empty-states" class="mb-5">
+  <div class="cf-card mb-4">
+    <div class="cf-card-header">
+      <h3 class="cf-card-title">6. Empty State Patterns</h3>
+      <span style="font-size: 0.75rem; color: var(--cf-text-muted);">templates/components/empty_state.html</span>
+    </div>
+
+    {% include "components/empty_state.html" with title="No VAT returns pending for Ashoj" description="All clients have successfully filed their monthly VAT annexes. Any new statutory filings will appear here." action_html='<button class="cf-btn cf-btn-primary" onclick="CAFlow.toast(\"Creating new audit checklist\", \"info\")">+ New Audit Filing</button>' %}
+  </div>
+</section>
+
+<!-- Modals for Demonstration -->
+{% include "components/modal.html" with id="demo-create-modal" title="Create New Audit Working Paper" body_html='
+  <div class="cf-form-group">
+    <label class="cf-label">Audit Working Paper Title <span class="required-star">*</span></label>
+    <input type="text" class="cf-input" placeholder="e.g. Bank Reconciliation &amp; Direct Confirmations">
+  </div>
+  <div class="cf-form-group">
+    <label class="cf-label">Client</label>
+    <select class="cf-select">
+      <option>Himalayan Traders Pvt Ltd</option>
+      <option>Lumbini Cement Industries</option>
+    </select>
+  </div>
+' footer_html='
+  <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+  <button type="button" class="cf-btn cf-btn-primary" onclick="CAFlow.closeModal(\"#demo-create-modal\"); CAFlow.toast(\"Working paper created!\", \"success\");">Create Paper</button>
+' %}
+
+{% include "components/modal.html" with id="demo-upload-modal" title="Upload Client Tax Invoices" body_html='
+  <div style="border: 2px dashed var(--cf-border); padding: 2rem; text-align: center; border-radius: var(--cf-radius-md); background: var(--cf-bg);">
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color: var(--cf-text-muted); margin-bottom: 0.75rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    <div style="font-weight: 600; color: var(--cf-primary-navy);">Drop files here or click to browse</div>
+    <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 4px;">PDF, XLSX, DOCX up to 25 MB</div>
+  </div>
+' footer_html='
+  <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+  <button type="button" class="cf-btn cf-btn-primary" onclick="CAFlow.closeModal(\"#demo-upload-modal\"); CAFlow.toast(\"Files uploaded successfully!\", \"success\");">Upload Now</button>
+' %}
+
+{% endblock %}

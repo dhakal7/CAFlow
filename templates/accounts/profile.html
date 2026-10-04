@@ -1,0 +1,80 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}My Profile &mdash; {{ APP_NAME }}{% endblock %}
+
+{% block app_content %}
+{% include "components/breadcrumbs.html" with items=breadcrumbs %}
+
+<div style="margin-bottom: 2rem;">
+  <h1>Practitioner Profile &amp; Credentials</h1>
+  <p style="font-size: 0.875rem; color: var(--cf-text-muted);">
+    Manage your personal details, ICAN membership number, and firm affiliation.
+  </p>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="cf-card text-center" style="padding: 2rem;">
+      <div class="cf-avatar" style="width: 80px; height: 80px; font-size: 1.75rem; margin: 0 auto 1rem; background: var(--cf-primary-navy);">
+        {% if request.user.is_authenticated %}{{ request.user.get_display_name|slice:":2"|upper }}{% else %}SD{% endif %}
+      </div>
+      <h3 style="font-size: 1.15rem; margin-bottom: 0.25rem;">
+        {% if request.user.is_authenticated %}{{ request.user.get_display_name }}{% else %}CA. Suyog Dhakal{% endif %}
+      </h3>
+      <div style="font-size: 0.8125rem; color: var(--cf-text-muted); margin-bottom: 1rem;">
+        {% if request.user.is_authenticated %}{{ request.user.get_role_display }}{% else %}Managing Partner (FCA){% endif %}
+      </div>
+      <span class="cf-badge cf-badge-success" style="padding: 4px 10px;">Active ICAN Good Standing</span>
+      
+      <div class="cf-card-footer" style="margin-top: 1.5rem; justify-content: center; flex-direction: column; gap: 4px;">
+        <span style="font-size: 0.75rem; color: var(--cf-text-muted);">Firm Membership</span>
+        <strong style="color: var(--cf-primary-navy);">Dhakal &amp; Associates</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="cf-card">
+      <div class="cf-card-header">
+        <h3 class="cf-card-title">Professional Information</h3>
+      </div>
+      <form onsubmit="event.preventDefault(); CAFlow.toast('Profile details updated successfully!', 'success');">
+        <div class="row g-3">
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label">Full Name <span class="required-star">*</span></label>
+            <input type="text" class="cf-input" value="CA. Suyog Dhakal" required>
+          </div>
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label">Official Work Email <span class="required-star">*</span></label>
+            <input type="email" class="cf-input" value="suyog@dhakalassociates.com.np" required>
+          </div>
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label">ICAN Membership / Registration No</label>
+            <input type="text" class="cf-input mono-font" value="ICAN-FCA-1420">
+            <div class="cf-help-text">Institute of Chartered Accountants of Nepal Member ID</div>
+          </div>
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label">Mobile Contact</label>
+            <input type="tel" class="cf-input mono-font" value="+977 9851000000">
+          </div>
+          <div class="col-12 cf-form-group">
+            <label class="cf-label">Firm Role Designation</label>
+            <select class="cf-select">
+              <option selected>Managing Partner / FCA</option>
+              <option>Partner / FCA / ACA</option>
+              <option>Audit &amp; Tax Manager</option>
+              <option>Senior Audit Associate</option>
+              <option>Article Trainee (ICAN)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+          <button type="submit" class="cf-btn cf-btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}Practice Team &mdash; {{ APP_NAME }}{% endblock %}
+
+{% block app_content %}
+{% include "components/breadcrumbs.html" with items=breadcrumbs %}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1>Firm Team &amp; Trainees</h1>
+    <p style="font-size: 0.875rem; color: var(--cf-text-muted);">
+      Manage partner seats, audit managers, and ICAN registered article trainees.
+    </p>
+  </div>
+
+  <button type="button" class="cf-btn cf-btn-primary" onclick="CAFlow.toast('Invite team member dialog opened', 'info')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+    <span>Invite Staff Member</span>
+  </button>
+</div>
+
+<div class="cf-table-container">
+  <div class="cf-table-toolbar">
+    <div style="font-size: 0.875rem; font-weight: 600; color: var(--cf-primary-navy);">
+      Dhakal &amp; Associates Staff Allocation (6 of 15 seats used)
+    </div>
+  </div>
+
+  <div class="cf-table-responsive">
+    <table class="cf-table">
+      <thead>
+        <tr>
+          <th>Name / Member</th>
+          <th>Designation</th>
+          <th>ICAN Membership / Reg</th>
+          <th>Primary Role</th>
+          <th>Active Assignments</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <div class="cf-avatar" style="background: var(--cf-primary-navy);">SD</div>
+              <div>
+                <strong>CA. Suyog Dhakal</strong>
+                <div style="font-size: 0.75rem; color: var(--cf-text-muted);">suyog@firm.com.np</div>
+              </div>
+            </div>
+          </td>
+          <td>Managing Partner (FCA)</td>
+          <td><span class="mono-font" style="font-size: 0.8125rem;">ICAN-1420</span></td>
+          <td><span class="cf-badge cf-badge-primary">Firm Owner</span></td>
+          <td>18 Engagements</td>
+          <td><span class="cf-badge cf-badge-success" dot="True">Active</span></td>
+        </tr>
+
+        <tr>
+          <td>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <div class="cf-avatar" style="background: var(--cf-secondary-navy);">AS</div>
+              <div>
+                <strong>CA. Anjali Sharma</strong>
+                <div style="font-size: 0.75rem; color: var(--cf-text-muted);">anjali@firm.com.np</div>
+              </div>
+            </div>
+          </td>
+          <td>Audit &amp; Tax Manager (ACA)</td>
+          <td><span class="mono-font" style="font-size: 0.8125rem;">ICAN-2841</span></td>
+          <td><span class="cf-badge cf-badge-secondary">Manager</span></td>
+          <td>12 Engagements</td>
+          <td><span class="cf-badge cf-badge-success" dot="True">Active</span></td>
+        </tr>
+
+        <tr>
+          <td>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <div class="cf-avatar" style="background: #4A5560;">BK</div>
+              <div>
+                <strong>Bikash Karki</strong>
+                <div style="font-size: 0.75rem; color: var(--cf-text-muted);">bikash@firm.com.np</div>
+              </div>
+            </div>
+          </td>
+          <td>Article Trainee (Year 2)</td>
+          <td><span class="mono-font" style="font-size: 0.8125rem;">REG-2080-991</span></td>
+          <td><span class="cf-badge cf-badge-muted">Article Trainee</span></td>
+          <td>4 Tasks</td>
+          <td><span class="cf-badge cf-badge-success" dot="True">Active</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,8 @@
+{# CAFlow Reusable Badge Component #}
+<span class="cf-badge cf-badge-{{ variant|default:'primary' }} {{ extra_classes|default:'' }}">
+  {% if dot %}
+    <span class="cf-status-dot {{ dot_status|default:variant }}"></span>
+  {% endif %}
+  {% if icon %}{{ icon|safe }}{% endif %}
+  {{ text }}
+</span>

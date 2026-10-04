@@ -1,0 +1,83 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}Practice Calendar &mdash; {{ APP_NAME }}{% endblock %}
+
+{% block app_content %}
+{% include "components/breadcrumbs.html" with items=breadcrumbs %}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1>Audit &amp; Practice Calendar</h1>
+    <p style="font-size: 0.875rem; color: var(--cf-text-muted);">
+      Scheduled field audit visits, client tax hearings, and IRD filing deadlines.
+    </p>
+  </div>
+
+  <button type="button" class="cf-btn cf-btn-primary" onclick="CAFlow.toast('Event scheduling modal opened', 'info')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <span>Schedule Visit / Hearing</span>
+  </button>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="cf-card">
+      <div class="cf-card-header">
+        <h3 class="cf-card-title">Ashoj 2081 &bull; October 2024</h3>
+        <div style="display: flex; gap: 0.35rem;">
+          <button class="cf-btn cf-btn-outline cf-btn-sm">&larr; Bhadra</button>
+          <button class="cf-btn cf-btn-secondary cf-btn-sm">Current Month</button>
+          <button class="cf-btn cf-btn-outline cf-btn-sm">Kartik &rarr;</button>
+        </div>
+      </div>
+
+      <div style="padding: 1.5rem 0;">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div style="padding: 1rem; border: 1px solid var(--cf-border); border-radius: var(--cf-radius-md); background: var(--cf-surface-muted);">
+              <div style="font-size: 0.75rem; font-weight: 700; color: var(--cf-danger); text-transform: uppercase;">Ashoj 25 &bull; Friday</div>
+              <strong style="display: block; font-size: 0.9375rem; color: var(--cf-primary-navy); margin-top: 4px;">Monthly VAT Return Deadline</strong>
+              <p style="font-size: 0.8125rem; color: var(--cf-text-secondary); margin-top: 4px;">Mandatory submission on IRD e-portal before 5:00 PM.</p>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div style="padding: 1rem; border: 1px solid var(--cf-border); border-radius: var(--cf-radius-md); background: var(--cf-surface-muted);">
+              <div style="font-size: 0.75rem; font-weight: 700; color: var(--cf-secondary-navy); text-transform: uppercase;">Ashoj 28 &bull; Monday</div>
+              <strong style="display: block; font-size: 0.9375rem; color: var(--cf-primary-navy); margin-top: 4px;">Apex Hydropower On-Site Field Audit</strong>
+              <p style="font-size: 0.8125rem; color: var(--cf-text-secondary); margin-top: 4px;">Field physical verification of dam site machinery in Sindhupalchok.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="cf-card">
+      <div class="cf-card-header">
+        <h3 class="cf-card-title">Filter Events</h3>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+        <label class="cf-checkbox-label">
+          <input type="checkbox" class="cf-checkbox" checked>
+          <span>Statutory Tax Deadlines</span>
+        </label>
+        <label class="cf-checkbox-label">
+          <input type="checkbox" class="cf-checkbox" checked>
+          <span>Physical Audit Visits</span>
+        </label>
+        <label class="cf-checkbox-label">
+          <input type="checkbox" class="cf-checkbox" checked>
+          <span>Tax Office (IRD) Hearings</span>
+        </label>
+        <label class="cf-checkbox-label">
+          <input type="checkbox" class="cf-checkbox" checked>
+          <span>Client Review Meetings</span>
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

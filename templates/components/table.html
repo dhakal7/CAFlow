@@ -1,0 +1,52 @@
+{# CAFlow Reusable Table Wrapper Component #}
+<div class="cf-table-container {{ extra_classes|default:'' }}">
+  {% if title or search_id or actions_html %}
+    <div class="cf-table-toolbar">
+      <div>
+        {% if title %}
+          <h4 style="margin: 0; font-size: 0.9375rem; font-weight: 700; color: var(--cf-primary-navy);">{{ title }}</h4>
+        {% endif %}
+        {% if subtitle %}
+          <div style="font-size: 0.75rem; color: var(--cf-text-muted);">{{ subtitle }}</div>
+        {% endif %}
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+        {% if search_id and table_id %}
+          <div style="position: relative;">
+            <input type="search" 
+                   id="{{ search_id }}" 
+                   class="cf-input" 
+                   style="height: 36px; padding-left: 2rem; width: 220px; font-size: 0.8125rem;" 
+                   placeholder="{{ search_placeholder|default:'Search table...' }}"
+                   onkeyup="CAFlow.filterTable('{{ table_id }}', this.value)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 0.65rem; top: 50%; transform: translateY(-50%); color: var(--cf-text-muted);"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+        {% endif %}
+
+        {% if actions_html %}
+          <div>
+            {{ actions_html|safe }}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="cf-table-responsive">
+    <table class="cf-table" {% if table_id %}id="{{ table_id }}"{% endif %}>
+      <thead>
+        <tr>
+          {{ headers_html|safe }}
+        </tr>
+      </thead>
+      <tbody>
+        {{ rows_html|safe }}
+      </tbody>
+    </table>
+  </div>
+
+  {% if pagination_html %}
+    {{ pagination_html|safe }}
+  {% endif %}
+</div>

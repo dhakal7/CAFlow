@@ -1,0 +1,65 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}Notifications &mdash; {{ APP_NAME }}{% endblock %}
+
+{% block app_content %}
+{% include "components/breadcrumbs.html" with items=breadcrumbs %}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1>Alerts &amp; Notifications</h1>
+    <p style="font-size: 0.875rem; color: var(--cf-text-muted);">
+      In-app alerts for statutory filing deadlines, task assignments, and client portal updates.
+    </p>
+  </div>
+
+  <button type="button" class="cf-btn cf-btn-outline" onclick="CAFlow.toast('All notifications marked as read', 'success')">
+    <span>Mark All as Read</span>
+  </button>
+</div>
+
+<div class="cf-card" style="padding: 0.5rem 0;">
+  <div style="padding: 1rem 1.5rem; border-bottom: 1px solid var(--cf-border-subtle); display: flex; gap: 0.75rem;">
+    <button class="cf-btn cf-btn-secondary cf-btn-sm">All (8)</button>
+    <button class="cf-btn cf-btn-outline cf-btn-sm">Unread (3)</button>
+    <button class="cf-btn cf-btn-outline cf-btn-sm">Compliance</button>
+    <button class="cf-btn cf-btn-outline cf-btn-sm">Tasks</button>
+  </div>
+
+  <div style="display: flex; flex-direction: column;">
+    <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--cf-border-subtle); background: var(--cf-surface-hover); display: flex; justify-content: space-between; align-items: center;">
+      <div style="display: flex; gap: 1rem; align-items: center;">
+        <span class="cf-status-dot danger"></span>
+        <div>
+          <strong style="color: var(--cf-primary-navy);">Monthly VAT Return Deadline approaching for 5 clients</strong>
+          <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Due 25th Ashoj 2081 &bull; Inland Revenue Department</div>
+        </div>
+      </div>
+      <span class="cf-badge cf-badge-danger">Urgent</span>
+    </div>
+
+    <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--cf-border-subtle); background: var(--cf-surface-hover); display: flex; justify-content: space-between; align-items: center;">
+      <div style="display: flex; gap: 1rem; align-items: center;">
+        <span class="cf-status-dot warning"></span>
+        <div>
+          <strong style="color: var(--cf-primary-navy);">Trial Balance Scrutiny assigned to Bikash Karki</strong>
+          <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Assigned by CA. Suyog Dhakal &bull; 2 hours ago</div>
+        </div>
+      </div>
+      <span class="cf-badge cf-badge-warning">Review</span>
+    </div>
+
+    <div style="padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+      <div style="display: flex; gap: 1rem; align-items: center;">
+        <span class="cf-status-dot muted"></span>
+        <div>
+          <strong style="color: var(--cf-primary-navy);">Apex Hydropower paid Invoice INV-2081-0042</strong>
+          <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Payment of NPR 169,500.00 confirmed &bull; Yesterday</div>
+        </div>
+      </div>
+      <span class="cf-badge cf-badge-success">Paid</span>
+    </div>
+  </div>
+</div>
+{% endblock %}
