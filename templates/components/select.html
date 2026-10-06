@@ -1,0 +1,19 @@
+{# CAFlow Reusable Select Component #}
+<select 
+  class="cf-select {% if is_valid %}is-valid{% elif is_invalid %}is-invalid{% endif %} {{ extra_classes|default:'' }}"
+  {% if id %}id="{{ id }}"{% endif %}
+  {% if name %}name="{{ name }}"{% endif %}
+  {% if required %}required{% endif %}
+  {% if disabled %}disabled{% endif %}
+  {{ extra_attrs|default:'' }}>
+  {% if placeholder %}
+    <option value="" disabled {% if not selected_value %}selected{% endif %}>{{ placeholder }}</option>
+  {% endif %}
+  {% if options %}
+    {% for opt_val, opt_label in options %}
+      <option value="{{ opt_val }}" {% if selected_value == opt_val %}selected{% endif %}>{{ opt_label }}</option>
+    {% endfor %}
+  {% else %}
+    {{ options_html|safe }}
+  {% endif %}
+</select>

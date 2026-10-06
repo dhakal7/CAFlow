@@ -1,0 +1,64 @@
+{# CAFlow Reusable Confirmation Dialog Component #}
+<div class="cf-modal-backdrop {{ extra_backdrop_classes|default:'' }}" 
+     id="{{ id }}" 
+     role="dialog" 
+     aria-modal="true" 
+     aria-labelledby="{{ id }}-title">
+  <div class="cf-modal-dialog" style="max-width: 460px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title" id="{{ id }}-title">{{ title|default:'Confirm Action' }}</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="cf-modal-body">
+      <div style="display: flex; gap: 1rem; align-items: flex-start;">
+        {% if variant == 'danger' %}
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--cf-danger-bg); border: 1px solid var(--cf-danger-border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--cf-danger);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+        {% elif variant == 'warning' %}
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--cf-warning-bg); border: 1px solid var(--cf-warning-border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--cf-warning);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+        {% endif %}
+
+        <div>
+          <p style="margin: 0; font-size: 0.875rem; color: var(--cf-text-secondary);">
+            {{ message|default:'Are you sure you want to proceed with this action? This operation cannot be undone.' }}
+          </p>
+          {% if details_html %}
+            <div style="margin-top: 0.75rem;">
+              {{ details_html|safe }}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="cf-modal-footer">
+      <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>
+        {{ cancel_text|default:'Cancel' }}
+      </button>
+
+      {% if form_action %}
+        <form method="post" action="{{ form_action }}" style="display: inline-block; margin: 0;">
+          {% csrf_token %}
+          {% if extra_inputs_html %}{{ extra_inputs_html|safe }}{% endif %}
+          <button type="submit" class="cf-btn cf-btn-{{ variant|default:'danger' }}">
+            {{ confirm_text|default:'Confirm' }}
+          </button>
+        </form>
+      {% elif on_confirm %}
+        <button type="button" class="cf-btn cf-btn-{{ variant|default:'danger' }}" onclick="{{ on_confirm }}">
+          {{ confirm_text|default:'Confirm' }}
+        </button>
+      {% else %}
+        <button type="button" class="cf-btn cf-btn-{{ variant|default:'primary' }}" data-cf-modal-close>
+          {{ confirm_text|default:'Confirm' }}
+        </button>
+      {% endif %}
+    </div>
+  </div>
+</div>

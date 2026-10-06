@@ -1,17 +1,25 @@
 {% extends "layouts/app.html" %}
 {% load static %}
 
-{% block title %}Firm Preferences &amp; Settings &mdash; {{ APP_NAME }}{% endblock %}
+{% block title %}Firm Settings &amp; Preferences &mdash; {{ APP_NAME }}{% endblock %}
 
 {% block app_content %}
 {% include "components/breadcrumbs.html" with items=breadcrumbs %}
 
 <div style="margin-bottom: 2rem;">
-  <h1>Firm Settings &amp; Compliance Master</h1>
+  <h1>Firm Settings &amp; Practice Profile</h1>
   <p style="font-size: 0.875rem; color: var(--cf-text-muted);">
-    Practice profile, ICAN registration, Inland Revenue Department PAN, and fiscal year preferences.
+    Configure practice profile, ICAN registration, Inland Revenue Department PAN, currency, and localization preferences.
   </p>
 </div>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="cf-alert cf-alert-{{ message.tags|default:'info' }}" style="margin-bottom: 1.5rem;">
+      {{ message }}
+    </div>
+  {% endfor %}
+{% endif %}
 
 <div class="row g-4">
   <div class="col-lg-8">
@@ -20,31 +28,93 @@
         <h3 class="cf-card-title">Practice Entity Details</h3>
       </div>
 
-      <form onsubmit="event.preventDefault(); CAFlow.toast('Firm settings updated successfully!', 'success');">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {% if form.errors %}
+          <div class="cf-alert cf-alert-danger" style="margin-bottom: 1rem;">
+            Please correct the validation errors below.
+          </div>
+        {% endif %}
+
         <div class="row g-3">
+          <div class="col-md-8 cf-form-group">
+            <label class="cf-label" for="id_name">Chartered Accountancy Firm Name <span class="required-star">*</span></label>
+            {{ form.name }}
+            {% if form.name.errors %}<div style="color: var(--cf-danger); font-size: 0.75rem;">{{ form.name.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="col-md-4 cf-form-group">
+            <label class="cf-label" for="id_slug">Workspace URL Slug</label>
+            <input type="text" class="cf-input" value="{{ firm.slug }}" disabled style="background-color: var(--cf-bg); cursor: not-allowed;">
+          </div>
+
           <div class="col-md-6 cf-form-group">
-            <label class="cf-label">Chartered Accountancy Firm Name</label>
-            <input type="text" class="cf-input" value="Dhakal &amp; Associates, Chartered Accountants" required>
+            <label class="cf-label" for="id_email">Official Firm Email</label>
+            {{ form.email }}
+            {% if form.email.errors %}<div style="color: var(--cf-danger); font-size: 0.75rem;">{{ form.email.errors.0 }}</div>{% endif %}
           </div>
           <div class="col-md-6 cf-form-group">
-            <label class="cf-label">ICAN Firm Registration Number</label>
-            <input type="text" class="cf-input mono-font" value="ICAN-FRN-0412" required>
+            <label class="cf-label" for="id_phone">Official Contact Phone</label>
+            {{ form.phone }}
+            {% if form.phone.errors %}<div style="color: var(--cf-danger); font-size: 0.75rem;">{{ form.phone.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label" for="id_pan_number">Firm 9-Digit IRD PAN</label>
+            {{ form.pan_number }}
+            <div class="cf-help-text">Inland Revenue Department Permanent Account Number</div>
+            {% if form.pan_number.errors %}<div style="color: var(--cf-danger); font-size: 0.75rem;">{{ form.pan_number.errors.0 }}</div>{% endif %}
           </div>
           <div class="col-md-6 cf-form-group">
-            <label class="cf-label">Firm 9-Digit IRD PAN</label>
-            <input type="text" class="cf-input mono-font" value="301928475" maxlength="9" required>
+            <label class="cf-label" for="id_ican_firm_reg_no">ICAN Firm Registration Number</label>
+            {{ form.ican_firm_reg_no }}
+            <div class="cf-help-text">Institute of Chartered Accountants of Nepal Firm Reg</div>
+            {% if form.ican_firm_reg_no.errors %}<div style="color: var(--cf-danger); font-size: 0.75rem;">{{ form.ican_firm_reg_no.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label" for="id_city">City / District</label>
+            {{ form.city }}
+            {% if form.city.errors %}<div style="color: var(--cf-danger); font-size: 0.75rem;">{{ form.city.errors.0 }}</div>{% endif %}
           </div>
           <div class="col-md-6 cf-form-group">
-            <label class="cf-label">Default Bikram Sambat Fiscal Year</label>
-            <select class="cf-select">
-              <option selected>2081/82 (Current Active FY)</option>
-              <option>2080/81</option>
-              <option>2079/80</option>
-            </select>
+            <label class="cf-label" for="id_country">Country</label>
+            {{ form.country }}
+            {% if form.country.errors %}<div style="color: var(--cf-danger); font-size: 0.75rem;">{{ form.country.errors.0 }}</div>{% endif %}
           </div>
+
           <div class="col-12 cf-form-group">
-            <label class="cf-label">Principal Office Address</label>
-            <input type="text" class="cf-input" value="Putalisadak, Ward No. 28, Kathmandu, Nepal">
+            <label class="cf-label" for="id_address">Principal Office Address</label>
+            {{ form.address }}
+            {% if form.address.errors %}<div style="color: var(--cf-danger); font-size: 0.75rem;">{{ form.address.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="col-md-4 cf-form-group">
+            <label class="cf-label" for="id_currency">Default Currency</label>
+            {{ form.currency }}
+            {% if form.currency.errors %}<div style="color: var(--cf-danger); font-size: 0.75rem;">{{ form.currency.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="col-md-4 cf-form-group">
+            <label class="cf-label" for="id_timezone">Timezone</label>
+            {{ form.timezone }}
+            {% if form.timezone.errors %}<div style="color: var(--cf-danger); font-size: 0.75rem;">{{ form.timezone.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="col-md-4 cf-form-group">
+            <label class="cf-label" for="id_current_fiscal_year">Active Fiscal Year</label>
+            {{ form.current_fiscal_year }}
+            {% if form.current_fiscal_year.errors %}<div style="color: var(--cf-danger); font-size: 0.75rem;">{{ form.current_fiscal_year.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="col-12 cf-form-group">
+            <label class="cf-label" for="id_logo">Firm Logo</label>
+            {{ form.logo }}
+            {% if firm.logo %}
+              <div style="margin-top: 0.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                <img src="{{ firm.logo.url }}" alt="{{ firm.name }}" style="max-height: 48px; border-radius: 4px; border: 1px solid var(--cf-border);">
+                <span style="font-size: 0.75rem; color: var(--cf-text-muted);">Current Practice Logo</span>
+              </div>
+            {% endif %}
+            {% if form.logo.errors %}<div style="color: var(--cf-danger); font-size: 0.75rem;">{{ form.logo.errors.0 }}</div>{% endif %}
           </div>
         </div>
 
@@ -56,20 +126,24 @@
   </div>
 
   <div class="col-lg-4">
+    <!-- Firm Status Card -->
     <div class="cf-card">
       <div class="cf-card-header">
-        <h3 class="cf-card-title">Subscription Tier</h3>
+        <h3 class="cf-card-title">Practice Status</h3>
       </div>
       <div style="margin-bottom: 1rem;">
-        <span class="cf-badge cf-badge-primary" style="font-size: 0.8125rem;">Growth Firm Plan</span>
+        <span class="cf-badge cf-badge-primary" style="font-size: 0.8125rem;">{{ firm.get_subscription_tier_display }}</span>
         <div style="font-size: 1.25rem; font-weight: 800; color: var(--cf-primary-navy); margin-top: 0.5rem;">
-          NPR 6,999 <span style="font-size: 0.75rem; font-weight: 500; color: var(--cf-text-muted);">/ month</span>
+          {{ firm.currency }} {{ DEFAULT_CURRENCY|default:'NPR' }} &bull; Active
         </div>
       </div>
       <p style="font-size: 0.8125rem; color: var(--cf-text-secondary); margin-bottom: 1rem;">
-        Next renewal on 1st Kartik 2081. Invoiced under Nepal VAT.
+        Firm practice workspace registered under ICAN regulations. Dedicated tenant isolation enabled.
       </p>
-      <button class="cf-btn cf-btn-outline cf-btn-sm" style="width: 100%;" onclick="CAFlow.toast('Managing subscription billing', 'info')">Manage Plan</button>
+      <div style="font-size: 0.75rem; color: var(--cf-text-muted); display: flex; flex-direction: column; gap: 4px;">
+        <div>Firm ID: <span class="mono-font">{{ firm.id }}</span></div>
+        <div>Created: <strong>{{ firm.created_at|date:"d M Y" }}</strong></div>
+      </div>
     </div>
   </div>
 </div>

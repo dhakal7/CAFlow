@@ -1,159 +1,1913 @@
 {% extends "layouts/app.html" %}
 {% load static %}
 
-{% block title %}Client Directory &mdash; {{ APP_NAME }}{% endblock %}
+{% block title %}Clients &mdash; {{ APP_NAME }}{% endblock %}
 
 {% block app_content %}
 {% include "components/breadcrumbs.html" with items=breadcrumbs %}
 
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+{# ======================================================== #}
+{# 1. PAGE HEADER #}
+{# ======================================================== #}
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
   <div>
-    <h1>Client Directory &amp; PAN Master</h1>
-    <p style="font-size: 0.875rem; color: var(--cf-text-muted);">
-      Manage corporate clients, proprietorships, IRD PAN registrations, and engagement managers.
+    <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0 0 0.25rem 0;">Clients</h1>
+    <p style="font-size: 0.875rem; color: var(--cf-text-muted); margin: 0;">
+      Manage your firm's clients and relationships.
     </p>
   </div>
 
-  <button type="button" class="cf-btn cf-btn-primary" data-cf-modal-target="#cf-add-client-modal">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    <span>Add New Client</span>
-  </button>
+  <div style="display: flex; align-items: center; gap: 0.625rem; flex-wrap: wrap;">
+    {# Search Trigger for Header #}
+    <div style="position: relative; width: 220px;" class="d-none d-sm-block">
+      <input type="search" 
+             class="cf-input" 
+             id="header-client-search" 
+             placeholder="Search clients..." 
+             value="{{ current_q }}" 
+             style="height: 38px; font-size: 0.8125rem; padding-left: 32px;"
+             onkeydown="if(event.key==='Enter') executeSearch(this.value)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 10px; top: 11px; color: var(--cf-text-muted); pointer-events: none;">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+    </div>
+
+    {# Filter Button #}
+    <button type="button" 
+            class="cf-btn {% if active_filters_count > 0 %}cf-btn-secondary{% else %}cf-btn-outline{% endif %}" 
+            id="cf-toggle-filters-btn"
+            onclick="toggleFilterPanel()"
+            style="height: 38px;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+      </svg>
+      <span>Filter</span>
+      {% if active_filters_count > 0 %}
+        <span class="cf-badge cf-badge-warning" style="padding: 2px 6px; font-size: 0.6875rem; margin-left: 2px;">{{ active_filters_count }}</span>
+      {% endif %}
+    </button>
+
+    {# Export Button #}
+    <a href="{% url 'clients:client_export' %}?q={{ current_q|urlencode }}&status={{ current_status|urlencode }}&service={{ current_service|urlencode }}&assigned_to={{ current_assigned_to|urlencode }}&client_type={{ current_client_type|urlencode }}&deadline={{ current_deadline|urlencode }}" 
+       class="cf-btn cf-btn-outline" 
+       style="height: 38px;"
+       title="Export filtered clients to Excel/CSV">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      <span>Export</span>
+    </a>
+
+    {# + Add Client Button #}
+    <button type="button" 
+            class="cf-btn cf-btn-primary" 
+            id="cf-btn-add-client"
+            onclick="openAddClientWizard()"
+            style="height: 38px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      <span>Add Client</span>
+    </button>
+  </div>
 </div>
 
+{# ======================================================== #}
+{# 2. STATS OVERVIEW RIBBON #}
+{# ======================================================== #}
+<div class="row g-3" style="margin-bottom: 1.5rem;">
+  <div class="col-6 col-md-3">
+    <div class="cf-card cf-stat-card" style="padding: 1rem 1.25rem; border-left: 3px solid var(--cf-primary-navy);">
+      <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--cf-text-muted); font-weight: 600; letter-spacing: 0.05em;">Total Portfolio</div>
+      <div style="font-size: 1.625rem; font-weight: 700; color: var(--cf-primary-navy); margin-top: 0.25rem;">
+        {{ total_count }}
+        <span style="font-size: 0.8125rem; font-weight: 500; color: var(--cf-text-muted);">clients</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <a href="?status=ACTIVE" style="text-decoration: none;">
+      <div class="cf-card cf-stat-card" style="padding: 1rem 1.25rem; border-left: 3px solid var(--cf-success); cursor: pointer;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--cf-text-muted); font-weight: 600; letter-spacing: 0.05em;">Active Clients</div>
+          <span class="cf-status-dot success"></span>
+        </div>
+        <div style="font-size: 1.625rem; font-weight: 700; color: var(--cf-success); margin-top: 0.25rem;">
+          {{ active_count }}
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-6 col-md-3">
+    <a href="?status=ONBOARDING" style="text-decoration: none;">
+      <div class="cf-card cf-stat-card" style="padding: 1rem 1.25rem; border-left: 3px solid var(--cf-warning); cursor: pointer;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--cf-text-muted); font-weight: 600; letter-spacing: 0.05em;">Onboarding</div>
+          <span class="cf-status-dot warning"></span>
+        </div>
+        <div style="font-size: 1.625rem; font-weight: 700; color: var(--cf-warning); margin-top: 0.25rem;">
+          {{ onboarding_count }}
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-6 col-md-3">
+    <a href="?status=INACTIVE" style="text-decoration: none;">
+      <div class="cf-card cf-stat-card" style="padding: 1rem 1.25rem; border-left: 3px solid var(--cf-border-dark); cursor: pointer;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--cf-text-muted); font-weight: 600; letter-spacing: 0.05em;">Inactive / Archived</div>
+          <span class="cf-status-dot" style="background-color: var(--cf-text-muted);"></span>
+        </div>
+        <div style="font-size: 1.625rem; font-weight: 700; color: var(--cf-text-secondary); margin-top: 0.25rem;">
+          {{ inactive_count }}
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# 3. COLLAPSIBLE MULTI-CRITERIA FILTER PANEL #}
+{# ======================================================== #}
+<div class="cf-card" id="cf-filter-panel" style="margin-bottom: 1.5rem; {% if active_filters_count == 0 and not has_filters %}display: none;{% endif %} padding: 1.25rem; background: var(--cf-surface); border: 1px solid var(--cf-border);">
+  <form method="get" action="{% url 'clients:client_list' %}" id="cf-clients-filter-form">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <div style="font-size: 0.9375rem; font-weight: 700; color: var(--cf-primary-navy); display: flex; align-items: center; gap: 0.5rem;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        <span>Filter Client Directory</span>
+      </div>
+      <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" onclick="toggleFilterPanel()" aria-label="Close Filter Panel">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="row g-3">
+      {# Filter: Search #}
+      <div class="col-12 col-md-4">
+        <label class="cf-label" for="filter-q">Search Query</label>
+        <input type="search" name="q" id="filter-q" class="cf-input" placeholder="Name, Business, PAN, Email, Phone..." value="{{ current_q }}">
+      </div>
+
+      {# Filter: Status #}
+      <div class="col-6 col-md-2">
+        <label class="cf-label" for="filter-status">Status</label>
+        <select name="status" id="filter-status" class="cf-select">
+          <option value="">All Statuses</option>
+          <option value="ACTIVE" {% if current_status == 'ACTIVE' %}selected{% endif %}>Active</option>
+          <option value="ONBOARDING" {% if current_status == 'ONBOARDING' %}selected{% endif %}>Onboarding</option>
+          <option value="INACTIVE" {% if current_status == 'INACTIVE' %}selected{% endif %}>Inactive</option>
+          <option value="ARCHIVED" {% if current_status == 'ARCHIVED' %}selected{% endif %}>Archived</option>
+          <option value="SUSPENDED" {% if current_status == 'SUSPENDED' %}selected{% endif %}>Suspended</option>
+        </select>
+      </div>
+
+      {# Filter: Service #}
+      <div class="col-6 col-md-3">
+        <label class="cf-label" for="filter-service">Subscribed Service</label>
+        <select name="service" id="filter-service" class="cf-select">
+          <option value="">All CA Services</option>
+          {% for code, label in service_choices %}
+            <option value="{{ code }}" {% if current_service == code %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      {# Filter: Assigned Staff #}
+      <div class="col-6 col-md-3">
+        <label class="cf-label" for="filter-staff">Assigned Staff / Lead</label>
+        <select name="assigned_to" id="filter-staff" class="cf-select">
+          <option value="">All Practice Team</option>
+          {% for member in team_members %}
+            <option value="{{ member.id }}" {% if current_assigned_to == member.id|stringformat:"s" %}selected{% endif %}>
+              {{ member.get_full_name|default:member.email }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      {# Filter: Business Type #}
+      <div class="col-6 col-md-3">
+        <label class="cf-label" for="filter-type">Business Type</label>
+        <select name="client_type" id="filter-type" class="cf-select">
+          <option value="">All Entity Types</option>
+          {% for code, label in business_type_choices %}
+            <option value="{{ code }}" {% if current_client_type == code %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      {# Filter: Upcoming Deadline #}
+      <div class="col-6 col-md-3">
+        <label class="cf-label" for="filter-deadline">Upcoming Deadline</label>
+        <select name="deadline" id="filter-deadline" class="cf-select">
+          <option value="">Any Statutory Timeline</option>
+          <option value="overdue" {% if current_deadline == 'overdue' %}selected{% endif %}>Overdue Deadlines</option>
+          <option value="7days" {% if current_deadline == '7days' %}selected{% endif %}>Due within 7 Days</option>
+          <option value="30days" {% if current_deadline == '30days' %}selected{% endif %}>Due within 30 Days</option>
+        </select>
+      </div>
+
+      {# Actions #}
+      <div class="col-12 col-md-6" style="display: flex; align-items: flex-end; gap: 0.5rem; justify-content: flex-end;">
+        <a href="{% url 'clients:client_list' %}" class="cf-btn cf-btn-outline cf-btn-sm">Reset All</a>
+        <button type="submit" class="cf-btn cf-btn-primary cf-btn-sm">Apply Filters</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+{# ======================================================== #}
+{# 4. ACTIVE FILTERS CHIP BAR #}
+{# ======================================================== #}
+{% if has_filters %}
+  <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem; flex-wrap: wrap;">
+    <span style="font-size: 0.8125rem; font-weight: 600; color: var(--cf-text-secondary);">Filtered by:</span>
+
+    {% if current_q %}
+      <span class="cf-badge cf-badge-secondary" style="padding: 4px 8px; font-size: 0.75rem;">
+        Search: "{{ current_q }}"
+        <a href="?{% if current_status %}status={{ current_status }}&{% endif %}{% if current_service %}service={{ current_service }}&{% endif %}{% if current_assigned_to %}assigned_to={{ current_assigned_to }}&{% endif %}{% if current_client_type %}client_type={{ current_client_type }}&{% endif %}{% if current_deadline %}deadline={{ current_deadline }}{% endif %}" style="margin-left: 4px; text-decoration: none; color: inherit;">&times;</a>
+      </span>
+    {% endif %}
+
+    {% if current_status %}
+      <span class="cf-badge cf-badge-secondary" style="padding: 4px 8px; font-size: 0.75rem;">
+        Status: {{ current_status|title }}
+        <a href="?{% if current_q %}q={{ current_q }}&{% endif %}{% if current_service %}service={{ current_service }}&{% endif %}{% if current_assigned_to %}assigned_to={{ current_assigned_to }}&{% endif %}{% if current_client_type %}client_type={{ current_client_type }}&{% endif %}{% if current_deadline %}deadline={{ current_deadline }}{% endif %}" style="margin-left: 4px; text-decoration: none; color: inherit;">&times;</a>
+      </span>
+    {% endif %}
+
+    {% if current_service %}
+      <span class="cf-badge cf-badge-secondary" style="padding: 4px 8px; font-size: 0.75rem;">
+        Service: {{ current_service }}
+        <a href="?{% if current_q %}q={{ current_q }}&{% endif %}{% if current_status %}status={{ current_status }}&{% endif %}{% if current_assigned_to %}assigned_to={{ current_assigned_to }}&{% endif %}{% if current_client_type %}client_type={{ current_client_type }}&{% endif %}{% if current_deadline %}deadline={{ current_deadline }}{% endif %}" style="margin-left: 4px; text-decoration: none; color: inherit;">&times;</a>
+      </span>
+    {% endif %}
+
+    {% if current_assigned_to %}
+      <span class="cf-badge cf-badge-secondary" style="padding: 4px 8px; font-size: 0.75rem;">
+        Staff Filtered
+        <a href="?{% if current_q %}q={{ current_q }}&{% endif %}{% if current_status %}status={{ current_status }}&{% endif %}{% if current_service %}service={{ current_service }}&{% endif %}{% if current_client_type %}client_type={{ current_client_type }}&{% endif %}{% if current_deadline %}deadline={{ current_deadline }}{% endif %}" style="margin-left: 4px; text-decoration: none; color: inherit;">&times;</a>
+      </span>
+    {% endif %}
+
+    {% if current_client_type %}
+      <span class="cf-badge cf-badge-secondary" style="padding: 4px 8px; font-size: 0.75rem;">
+        Type: {{ current_client_type }}
+        <a href="?{% if current_q %}q={{ current_q }}&{% endif %}{% if current_status %}status={{ current_status }}&{% endif %}{% if current_service %}service={{ current_service }}&{% endif %}{% if current_assigned_to %}assigned_to={{ current_assigned_to }}&{% endif %}{% if current_deadline %}deadline={{ current_deadline }}{% endif %}" style="margin-left: 4px; text-decoration: none; color: inherit;">&times;</a>
+      </span>
+    {% endif %}
+
+    {% if current_deadline %}
+      <span class="cf-badge cf-badge-secondary" style="padding: 4px 8px; font-size: 0.75rem;">
+        Deadline: {{ current_deadline }}
+        <a href="?{% if current_q %}q={{ current_q }}&{% endif %}{% if current_status %}status={{ current_status }}&{% endif %}{% if current_service %}service={{ current_service }}&{% endif %}{% if current_assigned_to %}assigned_to={{ current_assigned_to }}&{% endif %}{% if current_client_type %}client_type={{ current_client_type }}{% endif %}" style="margin-left: 4px; text-decoration: none; color: inherit;">&times;</a>
+      </span>
+    {% endif %}
+
+    <a href="{% url 'clients:client_list' %}" style="font-size: 0.75rem; color: var(--cf-danger); text-decoration: underline; margin-left: 4px;">Clear All</a>
+  </div>
+{% endif %}
+
+{# ======================================================== #}
+{# 5. CLIENTS MAIN DATA TABLE #}
+{# ======================================================== #}
 <div class="cf-table-container">
   <div class="cf-table-toolbar">
-    <div style="display: flex; align-items: center; gap: 1rem;">
-      <span class="cf-badge cf-badge-primary">128 Active Clients</span>
-      <span style="font-size: 0.8125rem; color: var(--cf-text-muted);">Kathmandu &amp; Pokhara Branches</span>
+    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+      <span style="font-size: 0.875rem; font-weight: 700; color: var(--cf-primary-navy);">
+        Showing {{ page_obj.start_index|default:0 }} &ndash; {{ page_obj.end_index|default:0 }} of {{ paginator.count|default:0 }} Clients
+      </span>
+      {% if active_filters_count > 0 or current_q %}
+        <span class="cf-badge cf-badge-warning" style="font-size: 0.6875rem;">Filtered Results</span>
+      {% endif %}
     </div>
 
     <div style="display: flex; align-items: center; gap: 0.75rem;">
-      <input type="search" class="cf-input" id="client-search-input" placeholder="Search by name, PAN, director..." style="height: 36px; width: 260px; font-size: 0.8125rem;" onkeyup="CAFlow.filterTable('clients-data-table', this.value)">
-      <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" onclick="CAFlow.toast('Exporting client registry to Excel (NFRS format)', 'info')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        <span>Export</span>
-      </button>
+      <input type="search" 
+             class="cf-input" 
+             id="client-search-input" 
+             placeholder="Filter table rows..." 
+             style="height: 34px; width: 220px; font-size: 0.8125rem;" 
+             onkeyup="CAFlow.filterTable('clients-data-table', this.value)">
     </div>
   </div>
 
-  <div class="cf-table-responsive">
-    <table class="cf-table" id="clients-data-table">
-      <thead>
-        <tr>
-          <th>Client Name</th>
-          <th>IRD PAN</th>
-          <th>Type</th>
-          <th>Engagement Manager</th>
-          <th>City / District</th>
-          <th>Filing Status</th>
-          <th style="text-align: right;">Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>
-            <strong style="color: var(--cf-primary-navy);">Himalayan Traders Pvt Ltd</strong>
-            <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Director: Mr. Ramesh Adhikari</div>
-          </td>
-          <td><span class="mono-font" style="font-size: 0.8125rem; font-weight: 600;">601928374</span></td>
-          <td><span class="cf-badge cf-badge-secondary">Pvt. Ltd.</span></td>
-          <td>CA. Anjali Sharma</td>
-          <td>Kathmandu</td>
-          <td><span class="cf-badge cf-badge-success" dot="True">VAT Active</span></td>
-          <td style="text-align: right;">
-            <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('Client profile loaded', 'info')">View</button>
-          </td>
-        </tr>
+  {% if clients %}
+    {# Desktop & Tablet Responsive Table #}
+    <div class="cf-table-responsive d-none d-md-block">
+      <table class="cf-table" id="clients-data-table">
+        <thead>
+          <tr>
+            <th>Client</th>
+            <th>Business</th>
+            <th>PAN</th>
+            <th>Services</th>
+            <th>Assigned Staff</th>
+            <th>Status</th>
+            <th>Next Deadline</th>
+            <th style="text-align: right; min-width: 90px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for client in clients %}
+            {% with next_dl=client.get_next_deadline %}
+            <tr id="client-row-{{ client.id }}">
+              {# 1. Client Column #}
+              <td>
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                  <div class="cf-avatar cf-avatar-sm" style="background-color: var(--cf-secondary-navy); color: #fff; font-weight: 700; font-size: 0.75rem;">
+                    {{ client.display_contact_name|slice:":2"|upper }}
+                  </div>
+                  <div>
+                    <a href="{% url 'clients:client_detail' client.id %}" style="font-weight: 700; color: var(--cf-primary-navy); text-decoration: none;">
+                      {{ client.display_contact_name }}
+                    </a>
+                    <div style="font-size: 0.75rem; color: var(--cf-text-muted);">
+                      {{ client.email|default:client.phone|default:'No direct contact' }}
+                    </div>
+                  </div>
 
-        <tr>
-          <td>
-            <strong style="color: var(--cf-primary-navy);">Apex Hydropower Development Ltd</strong>
-            <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Director: Er. Sunil Thapa</div>
-          </td>
-          <td><span class="mono-font" style="font-size: 0.8125rem; font-weight: 600;">300481920</span></td>
-          <td><span class="cf-badge cf-badge-primary">Public Ltd.</span></td>
-          <td>CA. Suyog Dhakal</td>
-          <td>Lalitpur</td>
-          <td><span class="cf-badge cf-badge-warning" dot="True">Audit in Progress</span></td>
-          <td style="text-align: right;">
-            <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('Client profile loaded', 'info')">View</button>
-          </td>
-        </tr>
+                </div>
+              </td>
 
-        <tr>
-          <td>
-            <strong style="color: var(--cf-primary-navy);">Kathmandu Tech Solutions</strong>
-            <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Director: Ms. Prerana Shrestha</div>
-          </td>
-          <td><span class="mono-font" style="font-size: 0.8125rem; font-weight: 600;">604928113</span></td>
-          <td><span class="cf-badge cf-badge-secondary">Pvt. Ltd.</span></td>
-          <td>Pooja Regmi</td>
-          <td>Kathmandu</td>
-          <td><span class="cf-badge cf-badge-success" dot="True">Compliant</span></td>
-          <td style="text-align: right;">
-            <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('Client profile loaded', 'info')">View</button>
-          </td>
-        </tr>
+              {# 2. Business Column #}
+              <td>
+                <div style="font-weight: 600; color: var(--cf-text-primary);">
+                  {{ client.display_business_name }}
+                </div>
+                <div style="margin-top: 2px;">
+                  <span class="cf-badge cf-badge-secondary" style="font-size: 0.6875rem; padding: 2px 6px;">
+                    {{ client.get_client_type_display }}
+                  </span>
+                </div>
+              </td>
 
-        <tr>
-          <td>
-            <strong style="color: var(--cf-primary-navy);">Lumbini Organic Farm &amp; Agro</strong>
-            <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Proprietor: Mr. Hari Prasad Gautam</div>
-          </td>
-          <td><span class="mono-font" style="font-size: 0.8125rem; font-weight: 600;">500123987</span></td>
-          <td><span class="cf-badge cf-badge-muted">Proprietorship</span></td>
-          <td>Bikash Karki</td>
-          <td>Rupandehi</td>
-          <td><span class="cf-badge cf-badge-danger" dot="True">TDS Due</span></td>
-          <td style="text-align: right;">
-            <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('Client profile loaded', 'info')">View</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+              {# 3. PAN Column #}
+              <td>
+                {% if client.pan_number %}
+                  <span class="mono-font" style="font-size: 0.8125rem; font-weight: 600; color: var(--cf-primary-navy); background: rgba(11, 31, 51, 0.05); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--cf-border-subtle);">
+                    {{ client.pan_number }}
+                  </span>
+                {% else %}
+                  <span style="font-size: 0.75rem; color: var(--cf-text-muted);">&mdash;</span>
+                {% endif %}
+              </td>
+
+              {# 4. Services Column #}
+              <td style="max-width: 220px;">
+                <div style="display: flex; flex-wrap: wrap; gap: 3px;">
+                  {% for s in client.services_display|slice:":2" %}
+                    <span class="cf-badge cf-badge-primary" style="font-size: 0.6875rem; padding: 1px 6px;">{{ s }}</span>
+                  {% endfor %}
+                  {% if client.services_display|length > 2 %}
+                    <span class="cf-badge cf-badge-muted" style="font-size: 0.6875rem; padding: 1px 5px;" title="{{ client.services_display|join:', ' }}">
+                      +{{ client.services_display|length|add:"-2" }}
+                    </span>
+                  {% endif %}
+                </div>
+              </td>
+
+              {# 5. Assigned Staff Column #}
+              <td>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  {% if client.assigned_manager %}
+                    <div class="cf-avatar cf-avatar-xs" style="background-color: var(--cf-primary-navy); color: #fff; font-size: 0.625rem; font-weight: 700;" title="Engagement Lead: {{ client.assigned_manager.get_full_name }}">
+                      {{ client.assigned_manager.first_name|slice:":1" }}{{ client.assigned_manager.last_name|slice:":1" }}
+                    </div>
+                    <div>
+                      <div style="font-size: 0.8125rem; font-weight: 600; color: var(--cf-text-primary);">
+                        {{ client.assigned_manager.get_full_name }}
+                      </div>
+                      {% if client.assigned_staff.count > 0 %}
+                        <div style="font-size: 0.6875rem; color: var(--cf-text-muted);">
+                          +{{ client.assigned_staff.count }} associate{{ client.assigned_staff.count|pluralize }}
+                        </div>
+                      {% endif %}
+                    </div>
+                  {% else %}
+                    <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" style="font-size: 0.75rem; padding: 2px 6px;" onclick="openAssignStaffModal('{{ client.id }}', '{{ client.display_business_name|escapejs }}', '', [])">
+                      + Assign Lead
+                    </button>
+                  {% endif %}
+                </div>
+              </td>
+
+              {# 6. Status Column #}
+              <td>
+                {% if client.status == 'ACTIVE' %}
+                  <span class="cf-badge cf-badge-success">
+                    <span class="cf-status-dot success"></span>
+                    Active
+                  </span>
+                {% elif client.status == 'ONBOARDING' %}
+                  <span class="cf-badge cf-badge-warning">
+                    <span class="cf-status-dot warning"></span>
+                    Onboarding
+                  </span>
+                {% else %}
+                  <span class="cf-badge cf-badge-muted">
+                    <span class="cf-status-dot" style="background-color: var(--cf-text-muted);"></span>
+                    Inactive
+                  </span>
+                {% endif %}
+              </td>
+
+              {# 7. Next Deadline Column #}
+              <td>
+                {% if next_dl %}
+                  <div>
+                    <div style="font-size: 0.8125rem; font-weight: 600; color: {% if next_dl.is_urgent %}var(--cf-danger){% else %}var(--cf-primary-navy){% endif %}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;" title="{{ next_dl.title }}">
+                      {{ next_dl.title }}
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--cf-text-muted); display: flex; align-items: center; gap: 4px;">
+                      <span>{{ next_dl.date|date:"M d" }}</span>
+                      {% if next_dl.days_left == 0 %}
+                        <span class="cf-badge cf-badge-danger" style="font-size: 0.625rem; padding: 1px 4px;">Due Today</span>
+                      {% elif next_dl.days_left < 0 %}
+                        <span class="cf-badge cf-badge-danger" style="font-size: 0.625rem; padding: 1px 4px;">Overdue</span>
+                      {% elif next_dl.days_left <= 3 %}
+                        <span class="cf-badge cf-badge-warning" style="font-size: 0.625rem; padding: 1px 4px;">{{ next_dl.days_left }}d left</span>
+                      {% else %}
+                        <span>({{ next_dl.days_left }}d)</span>
+                      {% endif %}
+                    </div>
+                  </div>
+                {% else %}
+                  <span style="font-size: 0.75rem; color: var(--cf-text-muted);">All filings up-to-date</span>
+                {% endif %}
+              </td>
+
+              {# 8. Actions Column #}
+              <td style="text-align: right;">
+                <div class="cf-dropdown">
+                  <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" data-cf-dropdown-toggle aria-label="Client Actions">
+                    <span>Actions</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                  </button>
+
+                  <div class="cf-dropdown-menu" style="right: 0; min-width: 180px;">
+                    <a href="{% url 'clients:client_detail' client.id %}" class="cf-dropdown-item">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                      <span>View Full Profile</span>
+                    </a>
+
+                    <button type="button" class="cf-dropdown-item" onclick="openClientDrawer('{{ client.id }}')">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                      <span>Quick Drawer</span>
+                    </button>
+
+
+                    <button type="button" class="cf-dropdown-item" onclick="openEditClientModal('{{ client.id }}')">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      <span>Edit Details</span>
+                    </button>
+
+                    <button type="button" class="cf-dropdown-item" onclick="openAssignStaffModal('{{ client.id }}', '{{ client.display_business_name|escapejs }}', '{{ client.assigned_manager_id|default:'' }}', [{% for s in client.assigned_staff.all %}'{{ s.id }}'{% if not forloop.last %},{% endif %}{% endfor %}])">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                      <span>Assign Staff</span>
+                    </button>
+
+                    <div class="cf-dropdown-divider"></div>
+
+                    <button type="button" class="cf-dropdown-item" onclick="openRequestDocModal('{{ client.id }}', '{{ client.display_business_name|escapejs }}')">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                      <span>Request Documents</span>
+                    </button>
+
+                    <button type="button" class="cf-dropdown-item" onclick="openCreateTaskModal('{{ client.id }}', '{{ client.display_business_name|escapejs }}')">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                      <span>Create Task</span>
+                    </button>
+
+                    <button type="button" class="cf-dropdown-item" onclick="openSendMessageModal('{{ client.id }}', '{{ client.display_business_name|escapejs }}')">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                      <span>Send Message</span>
+                    </button>
+
+                    <div class="cf-dropdown-divider"></div>
+
+                    {% if client.status == 'ARCHIVED' %}
+                      <button type="button" class="cf-dropdown-item" style="color: var(--cf-success);" onclick="toggleClientStatus('{{ client.id }}', '{{ client.display_business_name|escapejs }}', 'restore')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                        <span>Restore Client</span>
+                      </button>
+                    {% elif client.status == 'INACTIVE' or client.status == 'SUSPENDED' %}
+                      <button type="button" class="cf-dropdown-item" style="color: var(--cf-success);" onclick="toggleClientStatus('{{ client.id }}', '{{ client.display_business_name|escapejs }}', 'activate')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                        <span>Activate Client</span>
+                      </button>
+                      <button type="button" class="cf-dropdown-item cf-dropdown-item-danger" onclick="toggleClientStatus('{{ client.id }}', '{{ client.display_business_name|escapejs }}', 'archive')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                        <span>Archive Client</span>
+                      </button>
+                    {% else %}
+                      <button type="button" class="cf-dropdown-item cf-dropdown-item-danger" onclick="toggleClientStatus('{{ client.id }}', '{{ client.display_business_name|escapejs }}', 'deactivate')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                        <span>Deactivate</span>
+                      </button>
+                      <button type="button" class="cf-dropdown-item cf-dropdown-item-danger" onclick="toggleClientStatus('{{ client.id }}', '{{ client.display_business_name|escapejs }}', 'archive')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                        <span>Archive Client</span>
+                      </button>
+                    {% endif %}
+                  </div>
+                </div>
+              </td>
+            </tr>
+            {% endwith %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {# Mobile Cards List View (< 768px) #}
+    <div class="d-md-none" style="display: flex; flex-direction: column; gap: 0.875rem; padding: 1rem;">
+      {% for client in clients %}
+        {% with next_dl=client.get_next_deadline %}
+        <div class="cf-card" style="padding: 1rem; border: 1px solid var(--cf-border);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+            <div>
+              <div style="font-weight: 700; color: var(--cf-primary-navy); font-size: 1rem;">
+                <a href="javascript:void(0)" onclick="openClientDrawer('{{ client.id }}')" style="color: inherit; text-decoration: none;">
+                  {{ client.display_business_name }}
+                </a>
+              </div>
+              <div style="font-size: 0.8125rem; color: var(--cf-text-muted);">
+                Contact: {{ client.display_contact_name }}
+              </div>
+            </div>
+
+            {% if client.status == 'ACTIVE' %}
+              <span class="cf-badge cf-badge-success" style="font-size: 0.6875rem;">Active</span>
+            {% elif client.status == 'ONBOARDING' %}
+              <span class="cf-badge cf-badge-warning" style="font-size: 0.6875rem;">Onboarding</span>
+            {% else %}
+              <span class="cf-badge cf-badge-muted" style="font-size: 0.6875rem;">Inactive</span>
+            {% endif %}
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.8125rem; margin-bottom: 0.75rem; background: var(--cf-surface-muted); padding: 6px 10px; border-radius: var(--cf-radius-sm);">
+            <div>
+              <span style="color: var(--cf-text-muted);">PAN: </span>
+              <span class="mono-font" style="font-weight: 600; color: var(--cf-primary-navy);">{{ client.pan_number|default:'N/A' }}</span>
+            </div>
+            <div>
+              <span class="cf-badge cf-badge-secondary" style="font-size: 0.6875rem;">{{ client.get_client_type_display }}</span>
+            </div>
+          </div>
+
+          <div style="font-size: 0.8125rem; margin-bottom: 0.75rem;">
+            <div style="color: var(--cf-text-muted); font-size: 0.75rem; margin-bottom: 2px;">Assigned Lead</div>
+            <div style="font-weight: 600; color: var(--cf-text-primary);">
+              {{ client.assigned_manager.get_full_name|default:'Unassigned' }}
+            </div>
+          </div>
+
+          {% if next_dl %}
+            <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-bottom: 0.75rem; padding: 6px 8px; border-radius: 4px; background: rgba(181, 138, 58, 0.08); border-left: 2px solid var(--cf-warning);">
+              <span style="font-weight: 600; color: var(--cf-warning-text);">Upcoming:</span> {{ next_dl.title }} ({{ next_dl.date|date:"M d" }})
+            </div>
+          {% endif %}
+
+          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--cf-border-subtle); padding-top: 0.75rem; margin-top: 0.5rem;">
+            <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" onclick="openClientDrawer('{{ client.id }}')">
+              View
+            </button>
+            <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" onclick="openEditClientModal('{{ client.id }}')">
+              Edit
+            </button>
+            <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" onclick="openRequestDocModal('{{ client.id }}', '{{ client.display_business_name|escapejs }}')">
+              Request Doc
+            </button>
+          </div>
+        </div>
+        {% endwith %}
+      {% endfor %}
+    </div>
+
+    {# Pagination #}
+    {% if is_paginated %}
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; border-top: 1px solid var(--cf-border-subtle); flex-wrap: wrap; gap: 0.75rem;">
+        <div style="font-size: 0.8125rem; color: var(--cf-text-muted);">
+          Page {{ page_obj.number }} of {{ paginator.num_pages }}
+        </div>
+
+        <div style="display: flex; gap: 0.25rem;">
+          {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}&q={{ current_q|urlencode }}&status={{ current_status|urlencode }}&service={{ current_service|urlencode }}&assigned_to={{ current_assigned_to|urlencode }}&client_type={{ current_client_type|urlencode }}&deadline={{ current_deadline|urlencode }}" class="cf-btn cf-btn-outline cf-btn-sm">
+              &larr; Previous
+            </a>
+          {% endif %}
+
+          {% for num in paginator.page_range %}
+            {% if num == page_obj.number %}
+              <span class="cf-btn cf-btn-primary cf-btn-sm" style="pointer-events: none;">{{ num }}</span>
+            {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+              <a href="?page={{ num }}&q={{ current_q|urlencode }}&status={{ current_status|urlencode }}&service={{ current_service|urlencode }}&assigned_to={{ current_assigned_to|urlencode }}&client_type={{ current_client_type|urlencode }}&deadline={{ current_deadline|urlencode }}" class="cf-btn cf-btn-outline cf-btn-sm">{{ num }}</a>
+            {% endif %}
+          {% endfor %}
+
+          {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}&q={{ current_q|urlencode }}&status={{ current_status|urlencode }}&service={{ current_service|urlencode }}&assigned_to={{ current_assigned_to|urlencode }}&client_type={{ current_client_type|urlencode }}&deadline={{ current_deadline|urlencode }}" class="cf-btn cf-btn-outline cf-btn-sm">
+              Next &rarr;
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+  {% else %}
+    {# ==================================================== #}
+    {# 6. EMPTY STATES #}
+    {# ==================================================== #}
+    {% if has_filters %}
+      <div class="cf-empty-state" style="padding: 3rem 1.5rem;">
+        <div class="cf-empty-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </div>
+        <h4 class="cf-empty-title">No matching clients found</h4>
+        <p class="cf-empty-desc">No clients in your practice match your selected search or filter criteria.</p>
+        <div style="margin-top: 1.25rem;">
+          <a href="{% url 'clients:client_list' %}" class="cf-btn cf-btn-outline">Clear All Filters</a>
+        </div>
+      </div>
+    {% else %}
+      <div class="cf-empty-state" style="padding: 4rem 1.5rem;">
+        <div class="cf-empty-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <h4 class="cf-empty-title">No clients yet</h4>
+        <p class="cf-empty-desc">Manage your firm's clients and relationships. Add your first business or individual client to begin tracking engagements.</p>
+        <div style="margin-top: 1.25rem;">
+          <button type="button" class="cf-btn cf-btn-primary" onclick="openAddClientWizard()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Add your first client</span>
+          </button>
+        </div>
+      </div>
+    {% endif %}
+  {% endif %}
 </div>
 
-{# Modal: Add Client #}
-<div class="cf-modal-backdrop" id="cf-add-client-modal">
-  <div class="cf-modal-dialog">
-    <div class="cf-modal-header">
-      <h3 class="cf-modal-title">Register New Client Entity</h3>
+{# ======================================================== #}
+{# 7. MULTI-STEP ADD CLIENT MODAL / WIZARD #}
+{# ======================================================== #}
+<div class="cf-modal-backdrop" id="cf-add-client-wizard-modal" role="dialog" aria-modal="true" aria-labelledby="cf-wizard-title">
+  <div class="cf-modal-dialog" style="max-width: 680px;">
+    <div class="cf-modal-header" style="border-bottom: 1px solid var(--cf-border);">
+      <div>
+        <h3 class="cf-modal-title" id="cf-wizard-title" style="margin: 0;">Add New Client</h3>
+        <div style="font-size: 0.8125rem; color: var(--cf-text-muted); margin-top: 2px;">
+          Register a new corporate or individual client into your firm's practice roster.
+        </div>
+      </div>
       <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
     </div>
-    <form onsubmit="event.preventDefault(); CAFlow.closeModal('#cf-add-client-modal'); CAFlow.toast('Client registered into master PAN database!', 'success');">
-      <div class="cf-modal-body">
-        <div class="cf-form-group">
-          <label class="cf-label">Client Name <span class="required-star">*</span></label>
-          <input type="text" class="cf-input" placeholder="e.g. Annapurna Agro Industries" required>
+
+    {# Stepper Progress Header #}
+    <div style="background: var(--cf-surface-muted); padding: 0.75rem 1.25rem; border-bottom: 1px solid var(--cf-border-subtle);">
+      <div style="display: flex; justify-content: space-between; align-items: center; position: relative;">
+        {# Step 1 #}
+        <div class="wizard-step-node active" id="wizard-node-1" onclick="jumpToWizardStep(1)" style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+          <span class="step-num" style="width: 24px; height: 24px; border-radius: 50%; background: var(--cf-primary-navy); color: #fff; font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;">1</span>
+          <span class="step-title" style="font-size: 0.75rem; font-weight: 700; color: var(--cf-primary-navy);">Basic</span>
         </div>
-        <div class="row g-2">
-          <div class="col-md-6 cf-form-group">
-            <label class="cf-label">Nepal IRD PAN <span class="required-star">*</span></label>
-            <input type="text" class="cf-input mono-font" placeholder="9 Digits" maxlength="9" required>
-          </div>
-          <div class="col-md-6 cf-form-group">
-            <label class="cf-label">Company Type</label>
-            <select class="cf-select">
-              <option>Private Limited Company</option>
-              <option>Public Limited Company</option>
-              <option>Proprietorship Business</option>
-              <option>Partnership Firm</option>
-            </select>
-          </div>
+        <div style="flex: 1; height: 2px; background: var(--cf-border); margin: 0 8px;"></div>
+
+        {# Step 2 #}
+        <div class="wizard-step-node" id="wizard-node-2" onclick="jumpToWizardStep(2)" style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+          <span class="step-num" style="width: 24px; height: 24px; border-radius: 50%; background: var(--cf-border); color: var(--cf-text-secondary); font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;">2</span>
+          <span class="step-title" style="font-size: 0.75rem; font-weight: 600; color: var(--cf-text-muted);">Business</span>
         </div>
-        <div class="cf-form-group">
-          <label class="cf-label">Director / Contact Person</label>
-          <input type="text" class="cf-input" placeholder="Primary Authorised Signatory">
+        <div style="flex: 1; height: 2px; background: var(--cf-border); margin: 0 8px;"></div>
+
+        {# Step 3 #}
+        <div class="wizard-step-node" id="wizard-node-3" onclick="jumpToWizardStep(3)" style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+          <span class="step-num" style="width: 24px; height: 24px; border-radius: 50%; background: var(--cf-border); color: var(--cf-text-secondary); font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;">3</span>
+          <span class="step-title" style="font-size: 0.75rem; font-weight: 600; color: var(--cf-text-muted);">Services</span>
+        </div>
+        <div style="flex: 1; height: 2px; background: var(--cf-border); margin: 0 8px;"></div>
+
+        {# Step 4 #}
+        <div class="wizard-step-node" id="wizard-node-4" onclick="jumpToWizardStep(4)" style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+          <span class="step-num" style="width: 24px; height: 24px; border-radius: 50%; background: var(--cf-border); color: var(--cf-text-secondary); font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;">4</span>
+          <span class="step-title" style="font-size: 0.75rem; font-weight: 600; color: var(--cf-text-muted);">Team</span>
+        </div>
+        <div style="flex: 1; height: 2px; background: var(--cf-border); margin: 0 8px;"></div>
+
+        {# Step 5 #}
+        <div class="wizard-step-node" id="wizard-node-5" onclick="jumpToWizardStep(5)" style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+          <span class="step-num" style="width: 24px; height: 24px; border-radius: 50%; background: var(--cf-border); color: var(--cf-text-secondary); font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;">5</span>
+          <span class="step-title" style="font-size: 0.75rem; font-weight: 600; color: var(--cf-text-muted);">Review</span>
         </div>
       </div>
-      <div class="cf-modal-footer">
-        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
-        <button type="submit" class="cf-btn cf-btn-primary">Save to Directory</button>
+    </div>
+
+    <form method="post" action="{% url 'clients:client_create' %}" id="cf-add-client-form" novalidate>
+      {% csrf_token %}
+      <div class="cf-modal-body" style="padding: 1.5rem; max-height: 60vh; overflow-y: auto;">
+        
+        {# ============================== #}
+        {# STEP 1: BASIC INFORMATION #}
+        {# ============================== #}
+        <div class="wizard-step-panel" id="wizard-panel-1">
+          <h4 style="font-size: 1.0625rem; font-weight: 700; color: var(--cf-primary-navy); margin-bottom: 0.5rem;">
+            Step 1: Basic Information
+          </h4>
+          <p style="font-size: 0.8125rem; color: var(--cf-text-muted); margin-bottom: 1.25rem;">
+            Enter the primary contact person and communication details for this client.
+          </p>
+
+          <div class="cf-form-group">
+            <label class="cf-label" for="wz-name">Primary Contact Name <span class="required-star">*</span></label>
+            <input type="text" name="name" id="wz-name" class="cf-input" placeholder="e.g. Ramesh Adhikari">
+            <div class="cf-help-text">Director, Proprietor, or Authorized Representative</div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6 cf-form-group">
+              <label class="cf-label" for="wz-email">Email Address <span class="required-star">*</span></label>
+              <input type="email" name="email" id="wz-email" class="cf-input" placeholder="contact@company.com.np">
+            </div>
+            <div class="col-md-6 cf-form-group">
+              <label class="cf-label" for="wz-phone">Phone / Mobile <span class="required-star">*</span></label>
+              <input type="text" name="phone" id="wz-phone" class="cf-input" placeholder="+977-98XXXXXXXX">
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-8 cf-form-group">
+              <label class="cf-label" for="wz-address">Registered Address</label>
+              <input type="text" name="address" id="wz-address" class="cf-input" placeholder="e.g. Ward No. 28, Putalisadak">
+            </div>
+            <div class="col-md-4 cf-form-group">
+              <label class="cf-label" for="wz-city">City / District</label>
+              <input type="text" name="city" id="wz-city" class="cf-input" value="Kathmandu">
+            </div>
+          </div>
+        </div>
+
+        {# ============================== #}
+        {# STEP 2: BUSINESS INFORMATION #}
+        {# ============================== #}
+        <div class="wizard-step-panel" id="wizard-panel-2" style="display: none;">
+          <h4 style="font-size: 1.0625rem; font-weight: 700; color: var(--cf-primary-navy); margin-bottom: 0.5rem;">
+            Step 2: Business Information
+          </h4>
+          <p style="font-size: 0.8125rem; color: var(--cf-text-muted); margin-bottom: 1.25rem;">
+            Legal registration details, Inland Revenue Department PAN, and active fiscal year.
+          </p>
+
+          <div class="cf-form-group">
+            <label class="cf-label" for="wz-biz-name">Business / Company Name <span class="required-star">*</span></label>
+            <input type="text" name="business_name" id="wz-biz-name" class="cf-input" placeholder="e.g. Himalayan Enterprises Pvt. Ltd.">
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6 cf-form-group">
+              <label class="cf-label" for="wz-biz-type">Business Type <span class="required-star">*</span></label>
+              <select name="client_type" id="wz-biz-type" class="cf-select">
+                {% for code, label in business_type_choices %}
+                  <option value="{{ code }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6 cf-form-group">
+              <label class="cf-label" for="wz-pan">Nepal IRD PAN <span class="required-star">*</span></label>
+              <input type="text" name="pan_number" id="wz-pan" class="cf-input mono-font" placeholder="9 Digits" maxlength="15">
+              <div class="cf-help-text">9-Digit Inland Revenue Department PAN</div>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6 cf-form-group">
+              <label class="cf-label" for="wz-ocr-reg">OCR Registration No.</label>
+              <input type="text" name="registration_number" id="wz-ocr-reg" class="cf-input" placeholder="Company Registrar No. (e.g. 19284/074)">
+            </div>
+            <div class="col-md-6 cf-form-group">
+              <label class="cf-label" for="wz-fy">Active Fiscal Year</label>
+              <select name="fiscal_year" id="wz-fy" class="cf-select">
+                {% for code, label in fiscal_year_choices %}
+                  <option value="{{ code }}" {% if code == '2081/82' %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {# ============================== #}
+        {# STEP 3: SERVICES #}
+        {# ============================== #}
+        <div class="wizard-step-panel" id="wizard-panel-3" style="display: none;">
+          <h4 style="font-size: 1.0625rem; font-weight: 700; color: var(--cf-primary-navy); margin-bottom: 0.5rem;">
+            Step 3: Services
+          </h4>
+          <p style="font-size: 0.8125rem; color: var(--cf-text-muted); margin-bottom: 1.25rem;">
+            Select all CA services your firm will provide to this client.
+          </p>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.75rem;">
+            {% for code, label in service_choices %}
+              <label class="cf-service-checkbox-card" style="display: flex; align-items: flex-start; gap: 0.625rem; padding: 0.75rem 0.875rem; border: 1px solid var(--cf-border); border-radius: var(--cf-radius-sm); cursor: pointer; background: var(--cf-surface); transition: all var(--cf-transition-fast);">
+                <input type="checkbox" name="services" value="{{ code }}" class="cf-checkbox" style="margin-top: 3px;" {% if code == 'STATUTORY_AUDIT' or code == 'TAX_VAT' %}checked{% endif %}>
+                <div>
+                  <div style="font-size: 0.875rem; font-weight: 600; color: var(--cf-primary-navy);">{{ label }}</div>
+                  <div style="font-size: 0.6875rem; color: var(--cf-text-muted); margin-top: 2px;">Nepal practice standard engagement</div>
+                </div>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        {# ============================== #}
+        {# STEP 4: ASSIGN TEAM #}
+        {# ============================== #}
+        <div class="wizard-step-panel" id="wizard-panel-4" style="display: none;">
+          <h4 style="font-size: 1.0625rem; font-weight: 700; color: var(--cf-primary-navy); margin-bottom: 0.5rem;">
+            Step 4: Assign Team
+          </h4>
+          <p style="font-size: 0.8125rem; color: var(--cf-text-muted); margin-bottom: 1.25rem;">
+            Assign an Engagement Lead (CA / Partner) and associate staff to manage this account.
+          </p>
+
+          <div class="cf-form-group">
+            <label class="cf-label" for="wz-manager">Engagement Lead / Manager (CA)</label>
+            <select name="assigned_manager" id="wz-manager" class="cf-select">
+              <option value="">Select Engagement Lead</option>
+              {% for member in team_members %}
+                <option value="{{ member.id }}">{{ member.get_full_name|default:member.email }} ({{ member.email }})</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="cf-form-group">
+            <label class="cf-label" for="wz-staff">Assigned Audit &amp; Tax Associates</label>
+            <select name="assigned_staff" id="wz-staff" class="cf-select" multiple size="4">
+              {% for member in team_members %}
+                <option value="{{ member.id }}">{{ member.get_full_name|default:member.email }}</option>
+              {% endfor %}
+            </select>
+            <div class="cf-help-text">Hold Cmd / Ctrl to select multiple associates</div>
+          </div>
+
+          <div style="margin-top: 1.25rem; padding: 0.875rem; background: var(--cf-surface-muted); border-radius: var(--cf-radius-sm); border: 1px solid var(--cf-border-subtle);">
+            <label style="display: flex; align-items: flex-start; gap: 0.625rem; margin: 0; cursor: pointer;">
+              <input type="checkbox" name="create_onboarding_tasks" value="true" class="cf-checkbox" checked style="margin-top: 2px;">
+              <div>
+                <strong style="font-size: 0.8125rem; color: var(--cf-primary-navy);">Auto-generate onboarding compliance &amp; KYC tasks</strong>
+                <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 2px;">
+                  Automatically creates initial tasks for Collecting IRD PAN / OCR MOA documents, prior year tax clearance, and executing CA engagement letters.
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        {# ============================== #}
+        {# STEP 5: REVIEW #}
+        {# ============================== #}
+        <div class="wizard-step-panel" id="wizard-panel-5" style="display: none;">
+          <h4 style="font-size: 1.0625rem; font-weight: 700; color: var(--cf-primary-navy); margin-bottom: 0.5rem;">
+            Step 5: Review &amp; Confirm
+          </h4>
+          <p style="font-size: 0.8125rem; color: var(--cf-text-muted); margin-bottom: 1.25rem;">
+            Please verify all client information before completing onboarding.
+          </p>
+
+          <div class="cf-card" style="padding: 1.25rem; border: 1px solid var(--cf-border); background: var(--cf-surface);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--cf-border-subtle); padding-bottom: 0.75rem; margin-bottom: 0.75rem;">
+              <div>
+                <div style="font-size: 1.125rem; font-weight: 700; color: var(--cf-primary-navy);" id="rev-biz-name">Himalayan Enterprises Pvt Ltd</div>
+                <div style="font-size: 0.8125rem; color: var(--cf-text-muted);" id="rev-contact-info">Ramesh Adhikari &bull; contact@company.com.np</div>
+              </div>
+              <span class="cf-badge cf-badge-warning" id="rev-status-badge">Onboarding</span>
+            </div>
+
+            <div class="row g-2" style="font-size: 0.8125rem;">
+              <div class="col-6">
+                <span style="color: var(--cf-text-muted);">IRD PAN:</span>
+                <strong class="mono-font" style="margin-left: 4px; color: var(--cf-primary-navy);" id="rev-pan">601928374</strong>
+              </div>
+              <div class="col-6">
+                <span style="color: var(--cf-text-muted);">Entity Type:</span>
+                <strong style="margin-left: 4px; color: var(--cf-text-primary);" id="rev-type">Private Limited</strong>
+              </div>
+              <div class="col-6">
+                <span style="color: var(--cf-text-muted);">Fiscal Year:</span>
+                <strong style="margin-left: 4px; color: var(--cf-text-primary);" id="rev-fy">2081/82</strong>
+              </div>
+              <div class="col-6">
+                <span style="color: var(--cf-text-muted);">Engagement Lead:</span>
+                <strong style="margin-left: 4px; color: var(--cf-text-primary);" id="rev-manager">Unassigned</strong>
+              </div>
+            </div>
+
+            <div style="margin-top: 1rem; border-top: 1px solid var(--cf-border-subtle); padding-top: 0.75rem;">
+              <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--cf-text-muted); margin-bottom: 4px;">Services Subscribed:</div>
+              <div id="rev-services-pills" style="display: flex; flex-wrap: wrap; gap: 4px;">
+                <span class="cf-badge cf-badge-primary">Statutory Audit</span>
+              </div>
+            </div>
+
+            <div style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--cf-success); display: flex; align-items: center; gap: 4px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Onboarding tasks will be automatically scheduled for your team.</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {# Modal Footer with Stepper Controls #}
+      <div class="cf-modal-footer" style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--cf-border);">
+        <button type="button" class="cf-btn cf-btn-outline" id="wizard-btn-prev" onclick="changeWizardStep(-1)" style="display: none;">
+          &larr; Back
+        </button>
+        <button type="button" class="cf-btn cf-btn-outline" id="wizard-btn-cancel" data-cf-modal-close>
+          Cancel
+        </button>
+
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="button" class="cf-btn cf-btn-primary" id="wizard-btn-next" onclick="changeWizardStep(1)">
+            Next: Business Info &rarr;
+          </button>
+          <button type="button" class="cf-btn cf-btn-primary" id="wizard-btn-submit" onclick="submitWizardClientForm()" style="display: none;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Complete &amp; Add Client</span>
+          </button>
+        </div>
       </div>
     </form>
   </div>
 </div>
+
+{# ======================================================== #}
+{# 8. CLIENT INSPECTION SLIDE-OVER DRAWER #}
+{# ======================================================== #}
+<div class="cf-drawer-backdrop" id="cf-client-drawer" role="dialog" aria-modal="true" aria-labelledby="cf-client-drawer-title">
+  <div class="cf-drawer cf-drawer-right cf-drawer-lg" style="display: flex; flex-direction: column;">
+    {# Drawer Header #}
+    <div class="cf-drawer-header" style="background: var(--cf-primary-navy); color: #fff; padding: 1.25rem 1.5rem;">
+      <div style="flex: 1; min-width: 0;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+          <span class="cf-badge cf-badge-secondary" id="drawer-status-badge" style="background: rgba(255,255,255,0.15); color: #fff; border: none;">Active</span>
+          <span class="mono-font" id="drawer-pan-badge" style="font-size: 0.75rem; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; color: #FCD34D;">PAN: &mdash;</span>
+        </div>
+        <h3 class="cf-drawer-title" id="drawer-biz-name" style="color: #fff; font-size: 1.25rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Client Details</h3>
+        <div class="cf-drawer-subtitle" id="drawer-contact-sub" style="color: var(--cf-text-on-navy-muted); font-size: 0.8125rem;">&mdash;</div>
+      </div>
+      <button type="button" class="cf-modal-close-btn" data-cf-drawer-close aria-label="Close drawer" style="color: #fff;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    {# Drawer Body #}
+    <div class="cf-drawer-body" style="padding: 1.5rem; flex: 1; overflow-y: auto;">
+      
+      {# Quick Action Ribbon #}
+      <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+        <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" id="drawer-btn-edit">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <span>Edit Client</span>
+        </button>
+        <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" id="drawer-btn-assign">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/></svg>
+          <span>Assign Staff</span>
+        </button>
+        <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" id="drawer-btn-request-doc">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/></svg>
+          <span>Request Doc</span>
+        </button>
+        <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" id="drawer-btn-create-task">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          <span>New Task</span>
+        </button>
+        <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" id="drawer-btn-send-message">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span>Send Message</span>
+        </button>
+      </div>
+
+      {# Section: Entity & Contact Profile #}
+      <div class="cf-card" style="padding: 1.25rem; margin-bottom: 1.25rem;">
+        <h5 style="font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--cf-text-muted); margin-bottom: 0.75rem;">
+          Business &amp; Statutory Profile
+        </h5>
+        <div class="row g-2" style="font-size: 0.8125rem;">
+          <div class="col-6">
+            <span style="color: var(--cf-text-muted);">Entity Category:</span>
+            <div style="font-weight: 600; color: var(--cf-primary-navy);" id="drawer-client-type">&mdash;</div>
+          </div>
+          <div class="col-6">
+            <span style="color: var(--cf-text-muted);">OCR Reg No:</span>
+            <div style="font-weight: 600; color: var(--cf-primary-navy);" id="drawer-ocr-reg">&mdash;</div>
+          </div>
+          <div class="col-6">
+            <span style="color: var(--cf-text-muted);">Fiscal Year:</span>
+            <div style="font-weight: 600; color: var(--cf-primary-navy);" id="drawer-fy">&mdash;</div>
+          </div>
+          <div class="col-6">
+            <span style="color: var(--cf-text-muted);">City / District:</span>
+            <div style="font-weight: 600; color: var(--cf-primary-navy);" id="drawer-city">&mdash;</div>
+          </div>
+          <div class="col-12" style="margin-top: 4px;">
+            <span style="color: var(--cf-text-muted);">Registered Address:</span>
+            <div style="font-weight: 500; color: var(--cf-text-primary);" id="drawer-address">&mdash;</div>
+          </div>
+          <div class="col-6" style="margin-top: 4px;">
+            <span style="color: var(--cf-text-muted);">Email:</span>
+            <div style="font-weight: 500; color: var(--cf-text-primary);" id="drawer-email">&mdash;</div>
+          </div>
+          <div class="col-6" style="margin-top: 4px;">
+            <span style="color: var(--cf-text-muted);">Phone:</span>
+            <div style="font-weight: 500; color: var(--cf-text-primary);" id="drawer-phone">&mdash;</div>
+          </div>
+        </div>
+      </div>
+
+      {# Section: Engagement Team #}
+      <div class="cf-card" style="padding: 1.25rem; margin-bottom: 1.25rem;">
+        <h5 style="font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--cf-text-muted); margin-bottom: 0.75rem;">
+          Assigned Engagement Team
+        </h5>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+          <div>
+            <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Engagement Lead / Manager</div>
+            <div style="font-size: 0.9375rem; font-weight: 700; color: var(--cf-primary-navy);" id="drawer-manager-name">Unassigned</div>
+          </div>
+          <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" id="drawer-lead-assign-btn" style="font-size: 0.75rem;">
+            Change
+          </button>
+        </div>
+        <div style="border-top: 1px solid var(--cf-border-subtle); padding-top: 0.5rem; margin-top: 0.5rem;">
+          <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-bottom: 4px;">Assigned Associates</div>
+          <div id="drawer-staff-list" style="display: flex; flex-wrap: wrap; gap: 4px;">
+            <span style="font-size: 0.8125rem; color: var(--cf-text-muted);">None assigned yet.</span>
+          </div>
+        </div>
+      </div>
+
+      {# Section: Services #}
+      <div class="cf-card" style="padding: 1.25rem; margin-bottom: 1.25rem;">
+        <h5 style="font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--cf-text-muted); margin-bottom: 0.75rem;">
+          Contracted Practice Services
+        </h5>
+        <div id="drawer-services-list" style="display: flex; flex-wrap: wrap; gap: 6px;">
+          <span class="cf-badge cf-badge-primary">Statutory Audit</span>
+        </div>
+      </div>
+
+      {# Section: Upcoming Statutory Deadlines #}
+      <div class="cf-card" style="padding: 1.25rem; margin-bottom: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <h5 style="font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--cf-text-muted); margin: 0;">
+            Statutory Deadlines &amp; Filings
+          </h5>
+          <a href="{% url 'compliance:compliance_list' %}" class="cf-btn cf-btn-ghost cf-btn-sm" style="font-size: 0.75rem;">All &rarr;</a>
+        </div>
+        <div id="drawer-deadlines-container">
+          <span style="font-size: 0.8125rem; color: var(--cf-text-muted);">No upcoming compliance filings recorded.</span>
+        </div>
+      </div>
+
+      {# Section: Active Tasks #}
+      <div class="cf-card" style="padding: 1.25rem; margin-bottom: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <h5 style="font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--cf-text-muted); margin: 0;">
+            Assigned Engagement Tasks
+          </h5>
+          <a href="{% url 'tasks:task_list' %}" class="cf-btn cf-btn-ghost cf-btn-sm" style="font-size: 0.75rem;">All &rarr;</a>
+        </div>
+        <div id="drawer-tasks-container">
+          <span style="font-size: 0.8125rem; color: var(--cf-text-muted);">No pending tasks for this client.</span>
+        </div>
+      </div>
+
+      {# Section: Timeline Activity #}
+      <div class="cf-card" style="padding: 1.25rem;">
+        <h5 style="font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--cf-text-muted); margin-bottom: 0.75rem;">
+          Recent Client Activity &amp; Audit Trail
+        </h5>
+        <div id="drawer-activity-container" style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <span style="font-size: 0.8125rem; color: var(--cf-text-muted);">No recorded activities yet.</span>
+        </div>
+      </div>
+
+    </div>
+
+    {# Drawer Footer #}
+    <div class="cf-drawer-footer" style="padding: 1rem 1.5rem; background: var(--cf-surface-muted); border-top: 1px solid var(--cf-border); display: flex; justify-content: space-between; align-items: center;">
+      <button type="button" class="cf-btn cf-btn-outline" data-cf-drawer-close>
+        Close Drawer
+      </button>
+      <button type="button" class="cf-btn cf-btn-primary" id="drawer-primary-action">
+        Edit Profile
+      </button>
+    </div>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# 9. EDIT CLIENT MODAL #}
+{# ======================================================== #}
+<div class="cf-modal-backdrop" id="cf-edit-client-modal" role="dialog" aria-modal="true" aria-labelledby="cf-edit-modal-title">
+  <div class="cf-modal-dialog" style="max-width: 650px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title" id="cf-edit-modal-title">Edit Client Details</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form method="post" id="cf-edit-client-form">
+      {% csrf_token %}
+      <div class="cf-modal-body" style="max-height: 65vh; overflow-y: auto;">
+        <div class="row g-3">
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label" for="edit-name">Primary Contact Name <span class="required-star">*</span></label>
+            <input type="text" name="name" id="edit-name" class="cf-input" required>
+          </div>
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label" for="edit-business-name">Business / Company Name <span class="required-star">*</span></label>
+            <input type="text" name="business_name" id="edit-business-name" class="cf-input" required>
+          </div>
+
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label" for="edit-pan">Inland Revenue PAN <span class="required-star">*</span></label>
+            <input type="text" name="pan_number" id="edit-pan" class="cf-input mono-font" maxlength="15" required>
+          </div>
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label" for="edit-type">Business Category</label>
+            <select name="client_type" id="edit-type" class="cf-select">
+              {% for code, label in business_type_choices %}
+                <option value="{{ code }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label" for="edit-email">Email Address</label>
+            <input type="email" name="email" id="edit-email" class="cf-input">
+          </div>
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label" for="edit-phone">Phone Number</label>
+            <input type="text" name="phone" id="edit-phone" class="cf-input">
+          </div>
+
+          <div class="col-md-8 cf-form-group">
+            <label class="cf-label" for="edit-address">Registered Address</label>
+            <input type="text" name="address" id="edit-address" class="cf-input">
+          </div>
+          <div class="col-md-4 cf-form-group">
+            <label class="cf-label" for="edit-city">City / District</label>
+            <input type="text" name="city" id="edit-city" class="cf-input">
+          </div>
+
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label" for="edit-status">Client Status</label>
+            <select name="status" id="edit-status" class="cf-select">
+              <option value="ACTIVE">Active</option>
+              <option value="ONBOARDING">Onboarding</option>
+              <option value="INACTIVE">Inactive</option>
+            </select>
+          </div>
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label" for="edit-fy">Fiscal Year</label>
+            <select name="fiscal_year" id="edit-fy" class="cf-select">
+              {% for code, label in fiscal_year_choices %}
+                <option value="{{ code }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-12 cf-form-group">
+            <label class="cf-label">Subscribed Services</label>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px; margin-top: 4px;">
+              {% for code, label in service_choices %}
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8125rem; font-weight: 500; cursor: pointer;">
+                  <input type="checkbox" name="services" value="{{ code }}" class="cf-checkbox edit-service-checkbox" id="edit-service-{{ code }}">
+                  <span>{{ label }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# 10. ASSIGN STAFF MODAL #}
+{# ======================================================== #}
+<div class="cf-modal-backdrop" id="cf-assign-staff-modal" role="dialog" aria-modal="true" aria-labelledby="cf-assign-modal-title">
+  <div class="cf-modal-dialog" style="max-width: 480px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title" id="cf-assign-modal-title">Assign Engagement Team</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form method="post" id="cf-assign-staff-form">
+      {% csrf_token %}
+      <div class="cf-modal-body">
+        <div style="font-size: 0.875rem; color: var(--cf-text-secondary); margin-bottom: 1rem;">
+          Assigning team members to: <strong id="assign-client-name" style="color: var(--cf-primary-navy);">Client</strong>
+        </div>
+
+        <div class="cf-form-group">
+          <label class="cf-label" for="assign-manager-select">Engagement Lead (CA / Partner)</label>
+          <select name="assigned_manager" id="assign-manager-select" class="cf-select">
+            <option value="">Unassigned</option>
+            {% for member in team_members %}
+              <option value="{{ member.id }}">{{ member.get_full_name|default:member.email }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="cf-form-group">
+          <label class="cf-label" for="assign-staff-select">Assigned Associates &amp; Trainees</label>
+          <select name="assigned_staff" id="assign-staff-select" class="cf-select" multiple size="4">
+            {% for member in team_members %}
+              <option value="{{ member.id }}">{{ member.get_full_name|default:member.email }}</option>
+            {% endfor %}
+          </select>
+          <div class="cf-help-text">Hold Cmd / Ctrl to select multiple associates</div>
+        </div>
+      </div>
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Update Assignments</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# 11. REQUEST DOCUMENTS MODAL #}
+{# ======================================================== #}
+<div class="cf-modal-backdrop" id="cf-request-doc-modal" role="dialog" aria-modal="true" aria-labelledby="cf-req-doc-title">
+  <div class="cf-modal-dialog" style="max-width: 520px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title" id="cf-req-doc-title">Request Documents from Client</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form method="post" id="cf-request-doc-form">
+      {% csrf_token %}
+      <div class="cf-modal-body">
+        <div style="font-size: 0.875rem; color: var(--cf-text-secondary); margin-bottom: 1rem;">
+          Requesting from: <strong id="req-doc-client-name" style="color: var(--cf-primary-navy);">Client</strong>
+        </div>
+
+        <div class="cf-form-group">
+          <label class="cf-label" for="req-doc-input">Requested Documents / Vouchers <span class="required-star">*</span></label>
+          <input type="text" name="requested_documents" id="req-doc-input" class="cf-input" placeholder="e.g. Bank Statements (Ashoj 2081), Trial Balance, VAT Purchase Book" required>
+        </div>
+
+        <div class="cf-form-group">
+          <label class="cf-label" for="req-doc-deadline">Submission Deadline <span class="required-star">*</span></label>
+          <input type="date" name="due_date" id="req-doc-deadline" class="cf-input" required>
+        </div>
+
+        <div class="cf-form-group">
+          <label class="cf-label" for="req-doc-notes">Instructions / Client Notes</label>
+          <textarea name="notes" id="req-doc-notes" class="cf-input" rows="3" placeholder="Provide instructions regarding signatures, scan quality, or ledger formats..."></textarea>
+        </div>
+      </div>
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Send Request</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# 12. CREATE CLIENT TASK MODAL #}
+{# ======================================================== #}
+<div class="cf-modal-backdrop" id="cf-create-task-modal" role="dialog" aria-modal="true" aria-labelledby="cf-new-task-title">
+  <div class="cf-modal-dialog" style="max-width: 520px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title" id="cf-new-task-title">Create Engagement Task</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form method="post" id="cf-create-task-form">
+      {% csrf_token %}
+      <div class="cf-modal-body">
+        <div style="font-size: 0.875rem; color: var(--cf-text-secondary); margin-bottom: 1rem;">
+          Client: <strong id="task-client-name" style="color: var(--cf-primary-navy);">Client</strong>
+        </div>
+
+        <div class="cf-form-group">
+          <label class="cf-label" for="task-title-input">Task Title <span class="required-star">*</span></label>
+          <input type="text" name="title" id="task-title-input" class="cf-input" placeholder="e.g. NAS 2 Inventory Valuation Reconciliation" required>
+        </div>
+
+        <div class="row g-2">
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label" for="task-assignee">Assign Auditor / Trainee</label>
+            <select name="assigned_to" id="task-assignee" class="cf-select">
+              <option value="">Unassigned</option>
+              {% for member in team_members %}
+                <option value="{{ member.id }}">{{ member.get_full_name|default:member.email }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label" for="task-priority">Priority</label>
+            <select name="priority" id="task-priority" class="cf-select">
+              <option value="MEDIUM" selected>Medium</option>
+              <option value="HIGH">High</option>
+              <option value="URGENT">Urgent</option>
+              <option value="LOW">Low</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="cf-form-group">
+          <label class="cf-label" for="task-due-date">Due Date</label>
+          <input type="date" name="due_date" id="task-due-date" class="cf-input">
+        </div>
+
+        <div class="cf-form-group">
+          <label class="cf-label" for="task-desc">Instructions / Notes</label>
+          <textarea name="description" id="task-desc" class="cf-input" rows="3" placeholder="Working paper references, ICAN compliance checklists..."></textarea>
+        </div>
+      </div>
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Create Task</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# 13. SEND MESSAGE MODAL #}
+{# ======================================================== #}
+<div class="cf-modal-backdrop" id="cf-send-message-modal" role="dialog" aria-modal="true" aria-labelledby="cf-msg-modal-title">
+  <div class="cf-modal-dialog" style="max-width: 500px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title" id="cf-msg-modal-title">Send Message to Client</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form method="post" id="cf-send-message-form">
+      {% csrf_token %}
+      <div class="cf-modal-body">
+        <div style="font-size: 0.875rem; color: var(--cf-text-secondary); margin-bottom: 1rem;">
+          Recipient Client: <strong id="message-client-name" style="color: var(--cf-primary-navy);">Client</strong>
+        </div>
+
+        <div class="cf-form-group">
+          <label class="cf-label" for="msg-subject-input">Subject <span class="required-star">*</span></label>
+          <input type="text" name="subject" id="msg-subject-input" class="cf-input" placeholder="e.g. VAT Annexure Query / Audit Observation" required>
+        </div>
+
+        <div class="cf-form-group">
+          <label class="cf-label" for="msg-body-input">Message Body <span class="required-star">*</span></label>
+          <textarea name="body" id="msg-body-input" class="cf-input" rows="4" placeholder="Write message or compliance notice..." required></textarea>
+        </div>
+      </div>
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Send Message</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# Hidden Form for Status Toggle #}
+<form id="cf-toggle-status-form" method="post" style="display: none;">
+  {% csrf_token %}
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/**
+ * CAFlow Client CRM Module Controller
+ * Fully functional interactions matching the locked CAFlow Design System.
+ */
+let currentWizardStep = 1;
+
+function executeSearch(query) {
+  const url = new URL(window.location.href);
+  if (query) {
+    url.searchParams.set('q', query);
+  } else {
+    url.searchParams.delete('q');
+  }
+  url.searchParams.delete('page');
+  window.location.href = url.toString();
+}
+
+function toggleFilterPanel() {
+  const panel = document.getElementById('cf-filter-panel');
+  if (panel) {
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    if (panel.style.display === 'block') {
+      const qInput = document.getElementById('filter-q');
+      if (qInput) qInput.focus();
+    }
+  }
+}
+
+// -------------------------------------------------------------
+// Multi-Step Add Client Wizard Controller
+// -------------------------------------------------------------
+function openAddClientWizard() {
+  currentWizardStep = 1;
+  updateWizardUI();
+  CAFlow.openModal('#cf-add-client-wizard-modal');
+}
+
+function changeWizardStep(delta) {
+  const nextStep = currentWizardStep + delta;
+  if (delta > 0 && !validateWizardStep(currentWizardStep)) {
+    return;
+  }
+  if (nextStep >= 1 && nextStep <= 5) {
+    currentWizardStep = nextStep;
+    if (currentWizardStep === 5) {
+      populateWizardReview();
+    }
+    updateWizardUI();
+  }
+}
+
+function jumpToWizardStep(step) {
+  if (step < currentWizardStep) {
+    currentWizardStep = step;
+    updateWizardUI();
+  } else if (step > currentWizardStep) {
+    // Validate current step first
+    if (validateWizardStep(currentWizardStep)) {
+      currentWizardStep = step;
+      if (currentWizardStep === 5) {
+        populateWizardReview();
+      }
+      updateWizardUI();
+    }
+  }
+}
+
+function validateWizardStep(step) {
+  if (step === 1) {
+    const name = document.getElementById('wz-name').value.trim();
+    const email = document.getElementById('wz-email').value.trim();
+    const phone = document.getElementById('wz-phone').value.trim();
+    if (!name) {
+      CAFlow.toast('Please enter the primary contact name.', 'warning');
+      document.getElementById('wz-name').focus();
+      return false;
+    }
+    if (!email) {
+      CAFlow.toast('Please enter a valid email address.', 'warning');
+      document.getElementById('wz-email').focus();
+      return false;
+    }
+    if (!phone) {
+      CAFlow.toast('Please enter a contact phone number.', 'warning');
+      document.getElementById('wz-phone').focus();
+      return false;
+    }
+  } else if (step === 2) {
+    const biz = document.getElementById('wz-biz-name').value.trim();
+    const pan = document.getElementById('wz-pan').value.trim();
+    if (!biz) {
+      CAFlow.toast('Please enter the registered business/company name.', 'warning');
+      document.getElementById('wz-biz-name').focus();
+      return false;
+    }
+    if (!pan) {
+      CAFlow.toast('Please enter the 9-digit IRD PAN number.', 'warning');
+      document.getElementById('wz-pan').focus();
+      return false;
+    }
+  }
+  return true;
+}
+
+function updateWizardUI() {
+  // Toggle panels
+  for (let i = 1; i <= 5; i++) {
+    const panel = document.getElementById(`wizard-panel-${i}`);
+    const node = document.getElementById(`wizard-node-${i}`);
+    if (panel) panel.style.display = i === currentWizardStep ? 'block' : 'none';
+
+    if (node) {
+      const numSpan = node.querySelector('.step-num');
+      const titleSpan = node.querySelector('.step-title');
+      if (i === currentWizardStep) {
+        numSpan.style.background = 'var(--cf-primary-navy)';
+        numSpan.style.color = '#fff';
+        titleSpan.style.color = 'var(--cf-primary-navy)';
+        titleSpan.style.fontWeight = '700';
+      } else if (i < currentWizardStep) {
+        numSpan.style.background = 'var(--cf-success)';
+        numSpan.style.color = '#fff';
+        numSpan.innerHTML = '&#10003;';
+        titleSpan.style.color = 'var(--cf-success)';
+      } else {
+        numSpan.style.background = 'var(--cf-border)';
+        numSpan.style.color = 'var(--cf-text-secondary)';
+        numSpan.innerHTML = i;
+        titleSpan.style.color = 'var(--cf-text-muted)';
+        titleSpan.style.fontWeight = '600';
+      }
+    }
+  }
+
+  // Toggle footer buttons
+  const prevBtn = document.getElementById('wizard-btn-prev');
+  const cancelBtn = document.getElementById('wizard-btn-cancel');
+  const nextBtn = document.getElementById('wizard-btn-next');
+  const submitBtn = document.getElementById('wizard-btn-submit');
+
+  if (currentWizardStep === 1) {
+    prevBtn.style.display = 'none';
+    cancelBtn.style.display = 'inline-flex';
+  } else {
+    prevBtn.style.display = 'inline-flex';
+    cancelBtn.style.display = 'none';
+  }
+
+  if (currentWizardStep === 5) {
+    nextBtn.style.display = 'none';
+    submitBtn.style.display = 'inline-flex';
+  } else {
+    nextBtn.style.display = 'inline-flex';
+    submitBtn.style.display = 'none';
+
+    const stepLabels = ['', 'Next: Business Info &rarr;', 'Next: Services &rarr;', 'Next: Assign Team &rarr;', 'Next: Review &rarr;'];
+    nextBtn.innerHTML = stepLabels[currentWizardStep] || 'Next &rarr;';
+  }
+}
+
+function populateWizardReview() {
+  const contactName = document.getElementById('wz-name').value.trim();
+  const email = document.getElementById('wz-email').value.trim();
+  const bizName = document.getElementById('wz-biz-name').value.trim();
+  const pan = document.getElementById('wz-pan').value.trim();
+  const typeSelect = document.getElementById('wz-biz-type');
+  const fySelect = document.getElementById('wz-fy');
+  const managerSelect = document.getElementById('wz-manager');
+
+  document.getElementById('rev-biz-name').textContent = bizName || 'New Business Entity';
+  document.getElementById('rev-contact-info').textContent = `${contactName} • ${email}`;
+  document.getElementById('rev-pan').textContent = pan || 'N/A';
+  document.getElementById('rev-type').textContent = typeSelect.options[typeSelect.selectedIndex]?.text || 'Private Limited';
+  document.getElementById('rev-fy').textContent = fySelect.options[fySelect.selectedIndex]?.text || '2081/82';
+  document.getElementById('rev-manager').textContent = managerSelect.options[managerSelect.selectedIndex]?.text || 'Unassigned';
+
+  // Services
+  const checkedServices = Array.from(document.querySelectorAll('#wizard-panel-3 input[name="services"]:checked'));
+  const pillsContainer = document.getElementById('rev-services-pills');
+  pillsContainer.innerHTML = '';
+  if (checkedServices.length > 0) {
+    checkedServices.forEach((cb) => {
+      const pill = document.createElement('span');
+      pill.className = 'cf-badge cf-badge-primary';
+      pill.textContent = cb.parentElement.querySelector('div div').textContent;
+      pillsContainer.appendChild(pill);
+    });
+  } else {
+    pillsContainer.innerHTML = '<span class="cf-badge cf-badge-muted">General CA Consultation</span>';
+  }
+}
+
+function submitWizardClientForm() {
+  if (!validateWizardStep(1)) {
+    jumpToWizardStep(1);
+    return;
+  }
+  if (!validateWizardStep(2)) {
+    jumpToWizardStep(2);
+    return;
+  }
+  const form = document.getElementById('cf-add-client-form');
+  const submitBtn = document.getElementById('wizard-btn-submit');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="cf-spinner"></span> <span>Onboarding Client...</span>';
+  }
+  form.submit();
+}
+
+// -------------------------------------------------------------
+// Slide-Over Client Inspection Drawer
+// -------------------------------------------------------------
+function openClientDrawer(clientId) {
+  CAFlow.openDrawer('#cf-client-drawer');
+
+  // Set loading placeholder
+  document.getElementById('drawer-biz-name').textContent = 'Loading client profile...';
+  document.getElementById('drawer-contact-sub').textContent = 'Fetching confidential records...';
+
+  fetch(`/clients/${clientId}/detail/`, {
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(res => {
+    if (!res.ok) throw new Error('Client not found or inaccessible');
+    return res.json();
+  })
+  .then(c => {
+    // Populate header
+    document.getElementById('drawer-biz-name').textContent = c.business_name;
+    document.getElementById('drawer-contact-sub').textContent = `Contact: ${c.contact_person} • ${c.email}`;
+    document.getElementById('drawer-pan-badge').textContent = `PAN: ${c.pan_number}`;
+
+    const statusBadge = document.getElementById('drawer-status-badge');
+    statusBadge.textContent = c.status_display;
+    if (c.status === 'ACTIVE') {
+      statusBadge.style.background = 'var(--cf-success)';
+    } else if (c.status === 'ONBOARDING') {
+      statusBadge.style.background = 'var(--cf-warning)';
+    } else {
+      statusBadge.style.background = 'var(--cf-text-muted)';
+    }
+
+    // Entity details
+    document.getElementById('drawer-client-type').textContent = c.client_type;
+    document.getElementById('drawer-ocr-reg').textContent = c.registration_number;
+    document.getElementById('drawer-fy').textContent = c.fiscal_year;
+    document.getElementById('drawer-city').textContent = c.city;
+    document.getElementById('drawer-address').textContent = c.address;
+    document.getElementById('drawer-email').textContent = c.email;
+    document.getElementById('drawer-phone').textContent = c.phone;
+
+    // Team
+    const managerName = c.assigned_manager ? c.assigned_manager.name : 'Unassigned';
+    document.getElementById('drawer-manager-name').textContent = managerName;
+
+    const staffContainer = document.getElementById('drawer-staff-list');
+    staffContainer.innerHTML = '';
+    if (c.assigned_staff && c.assigned_staff.length > 0) {
+      c.assigned_staff.forEach(s => {
+        const span = document.createElement('span');
+        span.className = 'cf-badge cf-badge-secondary';
+        span.textContent = s.name;
+        staffContainer.appendChild(span);
+      });
+    } else {
+      staffContainer.innerHTML = '<span style="font-size: 0.8125rem; color: var(--cf-text-muted);">No associates assigned.</span>';
+    }
+
+    // Services
+    const servicesContainer = document.getElementById('drawer-services-list');
+    servicesContainer.innerHTML = '';
+    if (c.services && c.services.length > 0) {
+      c.services.forEach(s => {
+        const badge = document.createElement('span');
+        badge.className = 'cf-badge cf-badge-primary';
+        badge.textContent = s.name;
+        servicesContainer.appendChild(badge);
+      });
+    } else {
+      servicesContainer.innerHTML = '<span class="cf-badge cf-badge-muted">General CA Services</span>';
+    }
+
+    // Deadlines
+    const dlContainer = document.getElementById('drawer-deadlines-container');
+    dlContainer.innerHTML = '';
+    if (c.deadlines && c.deadlines.length > 0) {
+      c.deadlines.forEach(d => {
+        const item = document.createElement('div');
+        item.style.padding = '8px 10px';
+        item.style.borderBottom = '1px solid var(--cf-border-subtle)';
+        item.style.display = 'flex';
+        item.style.justifyContent = 'space-between';
+        item.style.alignItems = 'center';
+        item.innerHTML = `
+          <div>
+            <div style="font-weight: 600; color: var(--cf-primary-navy); font-size: 0.8125rem;">${d.title}</div>
+            <div style="font-size: 0.75rem; color: var(--cf-text-muted);">${d.due_date_bs || d.due_date_ad}</div>
+          </div>
+          <span class="cf-badge cf-badge-${d.days_left <= 3 ? 'danger' : 'warning'}" style="font-size: 0.6875rem;">
+            ${d.days_left <= 0 ? 'Due' : d.days_left + 'd left'}
+          </span>
+        `;
+        dlContainer.appendChild(item);
+      });
+    } else {
+      dlContainer.innerHTML = '<span style="font-size: 0.8125rem; color: var(--cf-text-muted);">No statutory filings pending.</span>';
+    }
+
+    // Tasks
+    const taskContainer = document.getElementById('drawer-tasks-container');
+    taskContainer.innerHTML = '';
+    if (c.tasks && c.tasks.length > 0) {
+      c.tasks.forEach(t => {
+        const item = document.createElement('div');
+        item.style.padding = '8px 10px';
+        item.style.borderBottom = '1px solid var(--cf-border-subtle)';
+        item.style.display = 'flex';
+        item.style.justifyContent = 'space-between';
+        item.style.alignItems = 'center';
+        item.innerHTML = `
+          <div>
+            <div style="font-weight: 600; color: var(--cf-primary-navy); font-size: 0.8125rem;">${t.title}</div>
+            <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Assignee: ${t.assigned_to} &bull; Due: ${t.due_date}</div>
+          </div>
+          <span class="cf-badge cf-badge-secondary" style="font-size: 0.6875rem;">${t.status}</span>
+        `;
+        taskContainer.appendChild(item);
+      });
+    } else {
+      taskContainer.innerHTML = '<span style="font-size: 0.8125rem; color: var(--cf-text-muted);">No pending tasks for this client.</span>';
+    }
+
+    // Activities
+    const actContainer = document.getElementById('drawer-activity-container');
+    actContainer.innerHTML = '';
+    if (c.activities && c.activities.length > 0) {
+      c.activities.forEach(a => {
+        const row = document.createElement('div');
+        row.style.padding = '6px 0';
+        row.style.borderBottom = '1px solid var(--cf-border-subtle)';
+        row.innerHTML = `
+          <div style="font-size: 0.8125rem; color: var(--cf-text-primary); font-weight: 500;">${a.description}</div>
+          <div style="font-size: 0.6875rem; color: var(--cf-text-muted); margin-top: 2px;">
+            ${a.created_at} &bull; by ${a.performed_by}
+          </div>
+        `;
+        actContainer.appendChild(row);
+      });
+    } else {
+      actContainer.innerHTML = '<span style="font-size: 0.8125rem; color: var(--cf-text-muted);">No recorded activities yet.</span>';
+    }
+
+    // Attach quick actions to this specific client
+    const staffIds = c.assigned_staff ? c.assigned_staff.map(s => s.id) : [];
+    const mgrId = c.assigned_manager ? c.assigned_manager.id : '';
+
+    document.getElementById('drawer-btn-edit').onclick = () => openEditClientModal(c.id);
+    document.getElementById('drawer-primary-action').onclick = () => openEditClientModal(c.id);
+    document.getElementById('drawer-btn-assign').onclick = () => openAssignStaffModal(c.id, c.business_name, mgrId, staffIds);
+    document.getElementById('drawer-lead-assign-btn').onclick = () => openAssignStaffModal(c.id, c.business_name, mgrId, staffIds);
+    document.getElementById('drawer-btn-request-doc').onclick = () => openRequestDocModal(c.id, c.business_name);
+    document.getElementById('drawer-btn-create-task').onclick = () => openCreateTaskModal(c.id, c.business_name);
+    document.getElementById('drawer-btn-send-message').onclick = () => openSendMessageModal(c.id, c.business_name);
+  })
+  .catch(err => {
+    CAFlow.toast('Could not load client details: ' + err.message, 'danger');
+  });
+}
+
+// -------------------------------------------------------------
+// Edit Client Modal
+// -------------------------------------------------------------
+function openEditClientModal(clientId) {
+  fetch(`/clients/${clientId}/detail/`, {
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(res => res.json())
+  .then(c => {
+    document.getElementById('cf-edit-client-form').action = `/clients/${clientId}/edit/`;
+    document.getElementById('edit-name').value = c.name;
+    document.getElementById('edit-business-name').value = c.business_name;
+    document.getElementById('edit-pan').value = c.pan_number === 'N/A' ? '' : c.pan_number;
+    document.getElementById('edit-type').value = c.client_type_code;
+    document.getElementById('edit-email').value = c.email === 'N/A' ? '' : c.email;
+    document.getElementById('edit-phone').value = c.phone === 'N/A' ? '' : c.phone;
+    document.getElementById('edit-address').value = c.address === 'N/A' ? '' : c.address;
+    document.getElementById('edit-city').value = c.city;
+    document.getElementById('edit-status').value = c.status;
+    document.getElementById('edit-fy').value = c.fiscal_year;
+
+    // Checkboxes
+    const currentServiceCodes = (c.services || []).map(s => s.code);
+    document.querySelectorAll('.edit-service-checkbox').forEach(cb => {
+      cb.checked = currentServiceCodes.includes(cb.value);
+    });
+
+    CAFlow.openModal('#cf-edit-client-modal');
+  })
+  .catch(err => {
+    CAFlow.toast('Could not load client for editing: ' + err.message, 'danger');
+  });
+}
+
+// -------------------------------------------------------------
+// Assign Staff Modal
+// -------------------------------------------------------------
+function openAssignStaffModal(clientId, clientName, managerId, staffIds) {
+  document.getElementById('cf-assign-staff-form').action = `/clients/${clientId}/assign/`;
+  document.getElementById('assign-client-name').textContent = clientName;
+  document.getElementById('assign-manager-select').value = managerId || '';
+
+  const staffSelect = document.getElementById('assign-staff-select');
+  Array.from(staffSelect.options).forEach(opt => {
+    opt.selected = staffIds.includes(opt.value);
+  });
+
+  CAFlow.openModal('#cf-assign-staff-modal');
+}
+
+// -------------------------------------------------------------
+// Request Document Modal
+// -------------------------------------------------------------
+function openRequestDocModal(clientId, clientName) {
+  document.getElementById('cf-request-doc-form').action = `/clients/${clientId}/request-document/`;
+  document.getElementById('req-doc-client-name').textContent = clientName;
+  document.getElementById('req-doc-input').value = '';
+  document.getElementById('req-doc-notes').value = '';
+
+  // Default deadline to 7 days from today
+  const d = new Date();
+  d.setDate(d.getDate() + 7);
+  document.getElementById('req-doc-deadline').value = d.toISOString().split('T')[0];
+
+  CAFlow.openModal('#cf-request-doc-modal');
+}
+
+// -------------------------------------------------------------
+// Create Task Modal
+// -------------------------------------------------------------
+function openCreateTaskModal(clientId, clientName) {
+  document.getElementById('cf-create-task-form').action = `/clients/${clientId}/create-task/`;
+  document.getElementById('task-client-name').textContent = clientName;
+  document.getElementById('task-title-input').value = '';
+  document.getElementById('task-desc').value = '';
+
+  const d = new Date();
+  d.setDate(d.getDate() + 5);
+  document.getElementById('task-due-date').value = d.toISOString().split('T')[0];
+
+  CAFlow.openModal('#cf-create-task-modal');
+}
+
+// -------------------------------------------------------------
+// Send Message Modal
+// -------------------------------------------------------------
+function openSendMessageModal(clientId, clientName) {
+  document.getElementById('cf-send-message-form').action = `/clients/${clientId}/send-message/`;
+  document.getElementById('message-client-name').textContent = clientName;
+  document.getElementById('msg-subject-input').value = '';
+  document.getElementById('msg-body-input').value = '';
+
+  CAFlow.openModal('#cf-send-message-modal');
+}
+
+// -------------------------------------------------------------
+// Deactivate / Activate Status Toggle
+// -------------------------------------------------------------
+function toggleClientStatus(clientId, clientName, targetAction) {
+  let title = 'Activate Client Entity';
+  let message = `Re-activate '${clientName}' to resume engagement workflows?`;
+  let confirmText = 'Activate Client';
+  let variant = 'primary';
+  let endpoint = `/clients/${clientId}/deactivate/`;
+
+  if (targetAction === 'archive') {
+    title = 'Archive Client Entity';
+    message = `Are you sure you want to archive '${clientName}'? Their active workflows will be paused and the client moved to archived status.`;
+    confirmText = 'Archive Client';
+    variant = 'danger';
+    endpoint = `/clients/${clientId}/archive/`;
+  } else if (targetAction === 'restore') {
+    title = 'Restore Client Entity';
+    message = `Restore '${clientName}' to active engagement status?`;
+    confirmText = 'Restore Client';
+    variant = 'primary';
+    endpoint = `/clients/${clientId}/restore/`;
+  } else if (targetAction === 'deactivate') {
+    title = 'Deactivate Client Entity';
+    message = `Are you sure you want to deactivate '${clientName}'? Their statutory tracking will be marked inactive.`;
+    confirmText = 'Deactivate Client';
+    variant = 'danger';
+    endpoint = `/clients/${clientId}/deactivate/`;
+  }
+
+  CAFlow.confirm({
+    title: title,
+    message: message,
+    confirmText: confirmText,
+    cancelText: 'Cancel',
+    variant: variant,
+    onConfirm: () => {
+      const form = document.getElementById('cf-toggle-status-form');
+      form.action = endpoint;
+      form.submit();
+    }
+  });
+}
+</script>
 {% endblock %}

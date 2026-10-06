@@ -1,109 +1,1264 @@
 {% extends "layouts/app.html" %}
 {% load static %}
 
-{% block title %}Audit &amp; Compliance Tasks &mdash; {{ APP_NAME }}{% endblock %}
+{% block title %}Tasks &mdash; {{ APP_NAME }}{% endblock %}
 
 {% block app_content %}
 {% include "components/breadcrumbs.html" with items=breadcrumbs %}
 
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+{# ======================================================== #}
+{# 1. PAGE HEADER                                           #}
+{# ======================================================== #}
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
   <div>
-    <h1>Task Board &amp; Audit Workflows</h1>
-    <p style="font-size: 0.875rem; color: var(--cf-text-muted);">
-      Track engagement assignments, partner reviews, and statutory tax preparation milestones.
+    <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0 0 0.25rem 0;">Tasks</h1>
+    <p style="font-size: 0.875rem; color: var(--cf-text-muted); margin: 0;">
+      Manage your firm's work and deadlines.
     </p>
   </div>
 
-  <button type="button" class="cf-btn cf-btn-primary" onclick="CAFlow.toast('New task creator opened', 'info')">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    <span>Create Engagement Task</span>
-  </button>
+  <div style="display: flex; align-items: center; gap: 0.625rem; flex-wrap: wrap;">
+    {# 1. Search #}
+    <div style="position: relative; width: 220px;" class="d-none d-sm-block">
+      <input type="search" 
+             class="cf-input" 
+             id="header-task-search" 
+             placeholder="Search tasks, clients..." 
+             value="{{ current_q }}" 
+             style="height: 38px; font-size: 0.8125rem; padding-left: 32px;"
+             onkeydown="if(event.key==='Enter') executeTaskSearch(this.value)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 10px; top: 11px; color: var(--cf-text-muted); pointer-events: none;">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+    </div>
+
+    {# 2. Filter Button #}
+    <button type="button" 
+            class="cf-btn {% if active_filters_count > 0 %}cf-btn-secondary{% else %}cf-btn-outline{% endif %}" 
+            id="cf-toggle-task-filters"
+            onclick="toggleTaskFilterPanel()"
+            style="height: 38px;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+      </svg>
+      <span>Filter</span>
+      {% if active_filters_count > 0 %}
+        <span class="cf-badge cf-badge-warning" style="padding: 2px 6px; font-size: 0.6875rem; margin-left: 2px;">{{ active_filters_count }}</span>
+      {% endif %}
+    </button>
+
+    {# 3. Workflow Templates Shortcut #}
+    <a href="{% url 'tasks:template_list' %}" 
+       class="cf-btn cf-btn-outline" 
+       style="height: 38px;"
+       title="View &amp; manage reusable workflow templates">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+      </svg>
+      <span class="d-none d-md-inline">Workflow Templates</span>
+      <span class="d-md-none">Templates</span>
+    </a>
+
+    {# 4. View Toggle (List, Board, Calendar) #}
+    <div class="cf-view-toggle">
+      <a href="?view=board{% if current_q %}&q={{ current_q|urlencode }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_priority %}&priority={{ current_priority }}{% endif %}{% if current_assigned_to %}&assigned_to={{ current_assigned_to }}{% endif %}" 
+         class="cf-view-toggle-btn {% if current_view == 'board' %}active{% endif %}" 
+         title="Board View">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="18"/><rect x="14" y="3" width="7" height="10"/>
+        </svg>
+        <span class="d-none d-lg-inline">Board</span>
+      </a>
+      <a href="?view=list{% if current_q %}&q={{ current_q|urlencode }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_priority %}&priority={{ current_priority }}{% endif %}{% if current_assigned_to %}&assigned_to={{ current_assigned_to }}{% endif %}" 
+         class="cf-view-toggle-btn {% if current_view == 'list' %}active{% endif %}" 
+         title="List View">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+        </svg>
+        <span class="d-none d-lg-inline">List</span>
+      </a>
+      <a href="?view=calendar{% if current_q %}&q={{ current_q|urlencode }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_priority %}&priority={{ current_priority }}{% endif %}{% if current_assigned_to %}&assigned_to={{ current_assigned_to }}{% endif %}" 
+         class="cf-view-toggle-btn {% if current_view == 'calendar' %}active{% endif %}" 
+         title="Calendar View">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        <span class="d-none d-lg-inline">Calendar</span>
+      </a>
+    </div>
+
+    {# 5. Create Task Button #}
+    <button type="button" 
+            class="cf-btn cf-btn-primary" 
+            id="cf-btn-create-task"
+            onclick="openCreateTaskModal()"
+            style="height: 38px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      <span>Create Task</span>
+    </button>
+  </div>
 </div>
 
-<!-- Task Status Summary Pills -->
-<div class="row g-3 mb-4">
-  <div class="col-sm-6 col-md-3">
-    <div class="cf-card" style="padding: 1rem;">
-      <div style="font-size: 0.75rem; font-weight: 700; color: var(--cf-text-muted); text-transform: uppercase;">To Do</div>
-      <div style="font-size: 1.5rem; font-weight: 800; color: var(--cf-primary-navy);">8</div>
+{# ======================================================== #}
+{# 2. STATS OVERVIEW RIBBON                                 #}
+{# ======================================================== #}
+<div class="row g-3" style="margin-bottom: 1.5rem;">
+  <div class="col-6 col-md-3 col-xl-2">
+    <div class="cf-card cf-stat-card" style="padding: 1rem 1.15rem; border-left: 3px solid var(--cf-text-muted);">
+      <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--cf-text-muted); font-weight: 700; letter-spacing: 0.04em;">Pending</div>
+      <div style="font-size: 1.5rem; font-weight: 800; color: var(--cf-primary-navy); margin-top: 0.25rem;">
+        {{ pending_count }}
+      </div>
     </div>
   </div>
-  <div class="col-sm-6 col-md-3">
-    <div class="cf-card" style="padding: 1rem;">
-      <div style="font-size: 0.75rem; font-weight: 700; color: var(--cf-text-muted); text-transform: uppercase;">In Progress</div>
-      <div style="font-size: 1.5rem; font-weight: 800; color: var(--cf-warning);">10</div>
+  <div class="col-6 col-md-3 col-xl-2">
+    <div class="cf-card cf-stat-card" style="padding: 1rem 1.15rem; border-left: 3px solid var(--cf-warning);">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--cf-text-muted); font-weight: 700; letter-spacing: 0.04em;">In Progress</div>
+        <span class="cf-status-dot warning"></span>
+      </div>
+      <div style="font-size: 1.5rem; font-weight: 800; color: var(--cf-warning); margin-top: 0.25rem;">
+        {{ in_progress_count }}
+      </div>
     </div>
   </div>
-  <div class="col-sm-6 col-md-3">
-    <div class="cf-card" style="padding: 1rem;">
-      <div style="font-size: 0.75rem; font-weight: 700; color: var(--cf-text-muted); text-transform: uppercase;">Partner Review</div>
-      <div style="font-size: 1.5rem; font-weight: 800; color: var(--cf-secondary-navy);">6</div>
+  <div class="col-6 col-md-3 col-xl-2">
+    <div class="cf-card cf-stat-card" style="padding: 1rem 1.15rem; border-left: 3px solid var(--cf-secondary-navy);">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--cf-text-muted); font-weight: 700; letter-spacing: 0.04em;">Review</div>
+        <span class="cf-status-dot pending"></span>
+      </div>
+      <div style="font-size: 1.5rem; font-weight: 800; color: var(--cf-secondary-navy); margin-top: 0.25rem;">
+        {{ review_count }}
+      </div>
     </div>
   </div>
-  <div class="col-sm-6 col-md-3">
-    <div class="cf-card" style="padding: 1rem;">
-      <div style="font-size: 0.75rem; font-weight: 700; color: var(--cf-text-muted); text-transform: uppercase;">Completed (This FY)</div>
-      <div style="font-size: 1.5rem; font-weight: 800; color: var(--cf-success);">42</div>
+  <div class="col-6 col-md-3 col-xl-3">
+    <div class="cf-card cf-stat-card" style="padding: 1rem 1.15rem; border-left: 3px solid var(--cf-success);">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--cf-text-muted); font-weight: 700; letter-spacing: 0.04em;">Completed</div>
+        <span class="cf-status-dot success"></span>
+      </div>
+      <div style="font-size: 1.5rem; font-weight: 800; color: var(--cf-success); margin-top: 0.25rem;">
+        {{ completed_count }}
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-12 col-xl-3">
+    <div class="cf-card cf-stat-card" style="padding: 1rem 1.15rem; border-left: 3px solid {% if overdue_count > 0 %}var(--cf-danger){% else %}var(--cf-border){% endif %};">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--cf-text-muted); font-weight: 700; letter-spacing: 0.04em;">Overdue Deadlines</div>
+        {% if overdue_count > 0 %}<span class="cf-status-dot danger"></span>{% endif %}
+      </div>
+      <div style="font-size: 1.5rem; font-weight: 800; color: {% if overdue_count > 0 %}var(--cf-danger){% else %}var(--cf-text-muted){% endif %}; margin-top: 0.25rem;">
+        {{ overdue_count }}
+        {% if overdue_count > 0 %}
+          <a href="?overdue=1" style="font-size: 0.75rem; font-weight: 600; color: var(--cf-danger); margin-left: 0.5rem; text-decoration: underline;">View &rarr;</a>
+        {% endif %}
+      </div>
     </div>
   </div>
 </div>
 
-<div class="cf-table-container">
-  <div class="cf-table-toolbar">
-    <div style="display: flex; gap: 0.5rem;">
-      <button class="cf-btn cf-btn-secondary cf-btn-sm">All Tasks (24)</button>
-      <button class="cf-btn cf-btn-outline cf-btn-sm">My Assignments (7)</button>
-      <button class="cf-btn cf-btn-outline cf-btn-sm">Urgent &bull; 4</button>
+{# ======================================================== #}
+{# 3. COLLAPSIBLE FILTER PANEL                              #}
+{# ======================================================== #}
+<div id="cf-task-filter-panel" class="cf-card" style="margin-bottom: 1.5rem; padding: 1.25rem; display: {% if active_filters_count > 0 %}block{% else %}none{% endif %};">
+  <form method="get" action="{% url 'tasks:task_list' %}" id="task-filter-form">
+    <input type="hidden" name="view" value="{{ current_view }}">
+    {% if current_q %}<input type="hidden" name="q" value="{{ current_q }}">{% endif %}
+
+    <div class="row g-3">
+      <div class="col-sm-6 col-md-3">
+        <label class="cf-form-label" style="font-size: 0.75rem;">Status</label>
+        <select name="status" class="cf-select" style="height: 36px; font-size: 0.8125rem;">
+          <option value="">All Statuses</option>
+          {% for val, label in status_choices %}
+            <option value="{{ val }}" {% if current_status == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-sm-6 col-md-3">
+        <label class="cf-form-label" style="font-size: 0.75rem;">Priority</label>
+        <select name="priority" class="cf-select" style="height: 36px; font-size: 0.8125rem;">
+          <option value="">All Priorities</option>
+          {% for val, label in priority_choices %}
+            <option value="{{ val }}" {% if current_priority == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-sm-6 col-md-3">
+        <label class="cf-form-label" style="font-size: 0.75rem;">Assigned Staff</label>
+        <select name="assigned_to" class="cf-select" style="height: 36px; font-size: 0.8125rem;">
+          <option value="">All Team Members</option>
+          <option value="me" {% if current_assigned_to == 'me' %}selected{% endif %}>Assigned to Me</option>
+          <option value="unassigned" {% if current_assigned_to == 'unassigned' %}selected{% endif %}>Unassigned</option>
+          {% for s in staff_members %}
+            <option value="{{ s.id }}" {% if current_assigned_to == s.id|stringformat:"s" %}selected{% endif %}>{{ s.get_full_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-sm-6 col-md-3">
+        <label class="cf-form-label" style="font-size: 0.75rem;">Client Entity</label>
+        <select name="client" class="cf-select" style="height: 36px; font-size: 0.8125rem;">
+          <option value="">All Clients</option>
+          {% for c in clients %}
+            <option value="{{ c.id }}" {% if current_client == c.id|stringformat:"s" %}selected{% endif %}>{{ c.business_name|default:c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-sm-6 col-md-3">
+        <label class="cf-form-label" style="font-size: 0.75rem;">Practice Service</label>
+        <select name="service" class="cf-select" style="height: 36px; font-size: 0.8125rem;">
+          <option value="">All Services</option>
+          {% for val, label in service_choices %}
+            <option value="{{ val }}" {% if current_service == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-sm-6 col-md-3">
+        <label class="cf-form-label" style="font-size: 0.75rem;">Deadline Filter</label>
+        <select name="due" class="cf-select" style="height: 36px; font-size: 0.8125rem;">
+          <option value="">Any Due Date</option>
+          <option value="today" {% if current_due == 'today' %}selected{% endif %}>Due Today</option>
+          <option value="7days" {% if current_due == '7days' %}selected{% endif %}>Due in Next 7 Days</option>
+          <option value="month" {% if current_due == 'month' %}selected{% endif %}>Due in Next 30 Days</option>
+        </select>
+      </div>
+
+      <div class="col-sm-6 col-md-3 d-flex align-items-end" style="gap: 1rem;">
+        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; cursor: pointer; margin-bottom: 8px;">
+          <input type="checkbox" name="overdue" value="1" {% if current_overdue == '1' %}checked{% endif %} class="cf-checkbox">
+          <span>Overdue Only</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; cursor: pointer; margin-bottom: 8px;">
+          <input type="checkbox" name="recurring" value="1" {% if current_recurring == '1' %}checked{% endif %} class="cf-checkbox">
+          <span>Recurring Only</span>
+        </label>
+      </div>
+
+      <div class="col-sm-6 col-md-3 d-flex align-items-end justify-content-end" style="gap: 0.5rem;">
+        <a href="{% url 'tasks:task_list' %}?view={{ current_view }}" class="cf-btn cf-btn-outline cf-btn-sm" style="height: 36px;">Reset</a>
+        <button type="submit" class="cf-btn cf-btn-primary cf-btn-sm" style="height: 36px;">Apply Filters</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+{# ======================================================== #}
+{# 4. VIEW RENDER: BOARD VIEW                               #}
+{# ======================================================== #}
+{% if current_view == 'board' %}
+  <div class="cf-task-board" id="cf-task-board">
+    
+    {# ---------------- COLUMN 1: PENDING ---------------- #}
+    <div class="cf-board-column" data-status="TODO" id="column-pending">
+      <div class="cf-board-column-header">
+        <div class="cf-board-column-title">
+          <span class="cf-status-dot muted"></span>
+          <span>Pending</span>
+          <span class="cf-badge cf-badge-muted" style="padding: 2px 7px; font-size: 0.6875rem;">{{ pending_tasks.count }}</span>
+        </div>
+        <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" onclick="openCreateTaskWithStatus('TODO')" title="Add Task in Pending" style="padding: 2px 6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+
+      <div class="cf-board-cards" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'TODO')">
+        {% for task in pending_tasks %}
+          {% include "tasks/partials/task_card.html" with task=task %}
+        {% empty %}
+          <div style="padding: 2rem 1rem; text-align: center; color: var(--cf-text-muted); font-size: 0.8125rem;">
+            No pending tasks
+          </div>
+        {% endfor %}
+      </div>
     </div>
 
-    <input type="search" class="cf-input" placeholder="Search tasks..." style="height: 36px; width: 220px; font-size: 0.8125rem;" onkeyup="CAFlow.filterTable('tasks-table', this.value)">
+    {# ---------------- COLUMN 2: IN PROGRESS ---------------- #}
+    <div class="cf-board-column" data-status="IN_PROGRESS" id="column-in-progress">
+      <div class="cf-board-column-header">
+        <div class="cf-board-column-title">
+          <span class="cf-status-dot warning"></span>
+          <span>In Progress</span>
+          <span class="cf-badge cf-badge-warning" style="padding: 2px 7px; font-size: 0.6875rem;">{{ in_progress_tasks.count }}</span>
+        </div>
+        <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" onclick="openCreateTaskWithStatus('IN_PROGRESS')" title="Add Task in Progress" style="padding: 2px 6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+
+      <div class="cf-board-cards" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'IN_PROGRESS')">
+        {% for task in in_progress_tasks %}
+          {% include "tasks/partials/task_card.html" with task=task %}
+        {% empty %}
+          <div style="padding: 2rem 1rem; text-align: center; color: var(--cf-text-muted); font-size: 0.8125rem;">
+            No tasks in progress
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {# ---------------- COLUMN 3: REVIEW ---------------- #}
+    <div class="cf-board-column" data-status="UNDER_REVIEW" id="column-review">
+      <div class="cf-board-column-header">
+        <div class="cf-board-column-title">
+          <span class="cf-status-dot pending"></span>
+          <span>Review</span>
+          <span class="cf-badge cf-badge-primary" style="padding: 2px 7px; font-size: 0.6875rem;">{{ review_tasks.count }}</span>
+        </div>
+        <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" onclick="openCreateTaskWithStatus('UNDER_REVIEW')" title="Add Task in Review" style="padding: 2px 6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+
+      <div class="cf-board-cards" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'UNDER_REVIEW')">
+        {% for task in review_tasks %}
+          {% include "tasks/partials/task_card.html" with task=task %}
+        {% empty %}
+          <div style="padding: 2rem 1rem; text-align: center; color: var(--cf-text-muted); font-size: 0.8125rem;">
+            No tasks under review
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {# ---------------- COLUMN 4: COMPLETED ---------------- #}
+    <div class="cf-board-column" data-status="COMPLETED" id="column-completed">
+      <div class="cf-board-column-header">
+        <div class="cf-board-column-title">
+          <span class="cf-status-dot success"></span>
+          <span>Completed</span>
+          <span class="cf-badge cf-badge-success" style="padding: 2px 7px; font-size: 0.6875rem;">{{ completed_tasks.count }}</span>
+        </div>
+        <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" onclick="openCreateTaskWithStatus('COMPLETED')" title="Add Task in Completed" style="padding: 2px 6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+
+      <div class="cf-board-cards" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'COMPLETED')">
+        {% for task in completed_tasks %}
+          {% include "tasks/partials/task_card.html" with task=task %}
+        {% empty %}
+          <div style="padding: 2rem 1rem; text-align: center; color: var(--cf-text-muted); font-size: 0.8125rem;">
+            No completed tasks
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
   </div>
 
-  <div class="cf-table-responsive">
-    <table class="cf-table" id="tasks-table">
-      <thead>
-        <tr>
-          <th>Task Title</th>
-          <th>Client</th>
-          <th>Assignee</th>
-          <th>Priority</th>
-          <th>Due Date</th>
-          <th>Status</th>
-          <th style="text-align: right;">Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>
-            <strong style="color: var(--cf-primary-navy);">Trial Balance &amp; General Ledger Scrutiny</strong>
-            <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Verify opening balances against prior audited accounts</div>
-          </td>
-          <td>Himalayan Traders Pvt Ltd</td>
-          <td>Bikash Karki</td>
-          <td><span class="cf-badge cf-badge-danger">Urgent</span></td>
-          <td><span class="mono-font" style="font-size: 0.8125rem;">2081-06-24</span></td>
-          <td><span class="cf-badge cf-badge-warning" dot="True">In Progress</span></td>
-          <td style="text-align: right;">
-            <button class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('Working paper opened', 'info')">Open</button>
-          </td>
-        </tr>
+{# ======================================================== #}
+{# 5. VIEW RENDER: LIST VIEW                                #}
+{# ======================================================== #}
+{% elif current_view == 'list' %}
+  <div class="cf-table-container">
+    <div class="cf-table-responsive">
+      <table class="cf-table">
+        <thead>
+          <tr>
+            <th style="width: 40px;"></th>
+            <th>Task Title</th>
+            <th>Client</th>
+            <th>Service</th>
+            <th>Assignee</th>
+            <th>Priority</th>
+            <th>Due Date</th>
+            <th>Progress</th>
+            <th>Status</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for task in tasks %}
+            <tr id="task-row-{{ task.id }}">
+              <td>
+                <form method="post" action="{% url 'tasks:task_complete' task.id %}" style="margin: 0;">
+                  {% csrf_token %}
+                  <input type="checkbox" 
+                         class="cf-checkbox" 
+                         {% if task.status == 'COMPLETED' %}checked{% endif %}
+                         onchange="this.form.submit()"
+                         title="Mark complete / reopen">
+                </form>
+              </td>
+              <td>
+                <a href="{% url 'tasks:task_detail' task.id %}" style="text-decoration: none; font-weight: 700; color: var(--cf-primary-navy);">
+                  {{ task.title }}
+                </a>
+                {% if task.is_recurring %}
+                  <span class="cf-recurrence-pill" style="margin-left: 4px;">⟳ {{ task.get_recurrence_interval_display }}</span>
+                {% endif %}
+                {% if task.checklist_items.count > 0 %}
+                  <div style="font-size: 0.75rem; color: var(--cf-text-muted);">
+                    {{ task.checklist_stats.completed }}/{{ task.checklist_stats.total }} steps completed
+                  </div>
+                {% endif %}
+              </td>
+              <td>
+                {% if task.client %}
+                  <a href="{% url 'clients:client_detail' task.client.id %}" style="color: var(--cf-secondary-navy); font-weight: 600; text-decoration: none;">
+                    {{ task.client.business_name|default:task.client.name }}
+                  </a>
+                {% else %}
+                  <span style="color: var(--cf-text-muted);">&mdash;</span>
+                {% endif %}
+              </td>
+              <td>
+                <span style="font-size: 0.8125rem; color: var(--cf-text-secondary);">
+                  {{ task.service|default:"General Accounting" }}
+                </span>
+              </td>
+              <td>
+                {% if task.assigned_to %}
+                  <div style="display: flex; align-items: center; gap: 0.35rem;">
+                    <div class="cf-avatar" style="width: 24px; height: 24px; font-size: 0.6875rem;">
+                      {{ task.assigned_to.first_name|slice:":1" }}{{ task.assigned_to.last_name|slice:":1" }}
+                    </div>
+                    <span style="font-size: 0.8125rem;">{{ task.assigned_to.get_full_name }}</span>
+                  </div>
+                {% else %}
+                  <span style="font-size: 0.8125rem; color: var(--cf-text-muted);">Unassigned</span>
+                {% endif %}
+              </td>
+              <td>
+                <span class="cf-badge {{ task.priority_badge_class }}">
+                  {{ task.get_priority_display }}
+                </span>
+              </td>
+              <td>
+                {% if task.due_date %}
+                  <span class="mono-font {% if task.is_overdue %}cf-task-due overdue{% elif task.days_remaining == 0 %}cf-task-due today{% endif %}" style="font-size: 0.8125rem;">
+                    {{ task.due_date|date:"Y-m-d" }}
+                  </span>
+                  {% if task.is_overdue %}
+                    <span class="cf-badge cf-badge-danger" style="font-size: 0.625rem; padding: 1px 4px;">Overdue</span>
+                  {% endif %}
+                {% else %}
+                  <span style="color: var(--cf-text-muted);">&mdash;</span>
+                {% endif %}
+              </td>
+              <td style="min-width: 100px;">
+                <div class="cf-task-progress-wrap" style="margin: 0;">
+                  <div class="cf-task-progress-bar">
+                    <div class="cf-task-progress-fill {% if task.status == 'COMPLETED' %}completed{% endif %}" style="width: {{ task.progress_percent }}%;"></div>
+                  </div>
+                  <span style="font-size: 0.6875rem; color: var(--cf-text-muted);">{{ task.progress_percent }}%</span>
+                </div>
+              </td>
+              <td>
+                <span class="cf-badge {{ task.status_badge_class }}" dot="True">
+                  {{ task.get_status_display }}
+                </span>
+              </td>
+              <td style="text-align: right; white-space: nowrap;">
+                <a href="{% url 'tasks:task_detail' task.id %}" class="cf-btn cf-btn-ghost cf-btn-sm">Open</a>
+                <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" onclick="openTaskQuickDrawer('{{ task.id }}')">Preview</button>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="10" style="text-align: center; padding: 3rem 1rem;">
+                {% include "components/empty_state.html" with title="No tasks found" description="Try broadening your filter criteria or create a new task." %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
 
-        <tr>
-          <td>
-            <strong style="color: var(--cf-primary-navy);">TDS Reconciliation with IRD Portal</strong>
-            <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Section 88, 88A, 89 deduction audit</div>
-          </td>
-          <td>Apex Hydropower Ltd</td>
-          <td>Pooja Regmi</td>
-          <td><span class="cf-badge cf-badge-warning">High</span></td>
-          <td><span class="mono-font" style="font-size: 0.8125rem;">2081-06-25</span></td>
-          <td><span class="cf-badge cf-badge-primary" dot="True">Under Review</span></td>
-          <td style="text-align: right;">
-            <button class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('Working paper opened', 'info')">Open</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    {# Pagination #}
+    {% if page_obj.has_other_pages %}
+      <div style="padding: 1rem; border-top: 1px solid var(--cf-border); display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-size: 0.8125rem; color: var(--cf-text-muted);">
+          Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} tasks
+        </div>
+        <div style="display: flex; gap: 0.35rem;">
+          {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}&view=list{% if current_q %}&q={{ current_q|urlencode }}{% endif %}" class="cf-btn cf-btn-outline cf-btn-sm">&larr; Previous</a>
+          {% endif %}
+          {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}&view=list{% if current_q %}&q={{ current_q|urlencode }}{% endif %}" class="cf-btn cf-btn-outline cf-btn-sm">Next &rarr;</a>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+{# ======================================================== #}
+{# 6. VIEW RENDER: CALENDAR VIEW                            #}
+{# ======================================================== #}
+{% elif current_view == 'calendar' %}
+  <div class="cf-card" style="padding: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <h3 style="font-size: 1.125rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0;">
+        Upcoming Deadlines Calendar (FY {{ CURRENT_FISCAL_YEAR }})
+      </h3>
+      <div style="font-size: 0.8125rem; color: var(--cf-text-muted);">
+        Tasks organized chronologically by statutory &amp; engagement milestones.
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 1rem;">
+      {% for date_str, cal_tasks in calendar_days.items %}
+        <div class="cf-card" style="padding: 1rem 1.25rem; background: var(--cf-surface); border: 1px solid var(--cf-border);">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; border-bottom: 1px solid rgba(11, 31, 51, 0.06); padding-bottom: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--cf-secondary-navy);">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              <strong class="mono-font" style="font-size: 0.9375rem; color: var(--cf-primary-navy);">{{ date_str }}</strong>
+            </div>
+            <span class="cf-badge cf-badge-secondary" style="font-size: 0.75rem;">{{ cal_tasks|length }} task{% if cal_tasks|length > 1 %}s{% endif %} due</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.75rem;">
+            {% for task in cal_tasks %}
+              <div class="cf-task-card" onclick="openTaskQuickDrawer('{{ task.id }}')" style="cursor: pointer;">
+                <div class="cf-task-card-header">
+                  <span class="cf-badge {{ task.priority_badge_class }}">{{ task.get_priority_display }}</span>
+                  <span class="cf-badge {{ task.status_badge_class }}">{{ task.get_status_display }}</span>
+                </div>
+                <div class="cf-task-card-title">{{ task.title }}</div>
+                <div class="cf-task-card-client">
+                  <span>🏢</span>
+                  <span>{{ task.client.business_name|default:task.client.name|default:"General Practice" }}</span>
+                </div>
+                <div class="cf-task-card-footer">
+                  <div class="cf-task-assignee">
+                    {% if task.assigned_to %}
+                      <div class="cf-avatar" style="width: 20px; height: 20px; font-size: 0.625rem;">
+                        {{ task.assigned_to.first_name|slice:":1" }}{{ task.assigned_to.last_name|slice:":1" }}
+                      </div>
+                      <span>{{ task.assigned_to.get_full_name }}</span>
+                    {% else %}
+                      <span>Unassigned</span>
+                    {% endif %}
+                  </div>
+                  <span style="font-size: 0.75rem; color: var(--cf-text-muted);">{{ task.progress_percent }}%</span>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% empty %}
+        <div style="text-align: center; padding: 4rem 1rem;">
+          {% include "components/empty_state.html" with title="No dated tasks found" description="Create a task with a due date to visualize it on this timeline." %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endif %}
+
+{# ======================================================== #}
+{# 7. CREATE TASK MODAL (FULL CAPABILITIES)                 #}
+{# ======================================================== #}
+<div class="cf-modal-backdrop" id="cf-create-task-modal">
+  <div class="cf-modal-dialog" style="max-width: 680px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title">Create Engagement Task</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form method="post" action="{% url 'tasks:task_create' %}" id="cf-create-task-form">
+      {% csrf_token %}
+      <input type="hidden" name="checklist_raw" id="modal-checklist-raw" value="">
+
+      <div class="cf-modal-body" style="max-height: 75vh; overflow-y: auto; padding: 1.5rem;">
+        
+        {# Template preset selector #}
+        <div style="background: rgba(11, 31, 51, 0.03); border: 1px dashed var(--cf-border); border-radius: var(--cf-radius-md); padding: 0.875rem; margin-bottom: 1.25rem;">
+          <label class="cf-form-label" style="font-weight: 700; color: var(--cf-secondary-navy);">
+            📋 Apply Workflow Template (Optional)
+          </label>
+          {{ task_form.template_id }}
+          <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 4px;">
+            Selecting a template pre-fills statutory checklist items (e.g. Monthly VAT, Quarterly TDS, Statutory Audit).
+          </div>
+        </div>
+
+        {# Task Title #}
+        <div class="mb-3">
+          <label class="cf-form-label" style="font-weight: 600;">Task Title <span style="color: var(--cf-danger);">*</span></label>
+          {{ task_form.title }}
+        </div>
+
+        {# Client & Service #}
+        <div class="row g-3 mb-3">
+          <div class="col-sm-6">
+            <label class="cf-form-label" style="font-weight: 600;">Client Entity</label>
+            {{ task_form.client }}
+          </div>
+          <div class="col-sm-6">
+            <label class="cf-form-label" style="font-weight: 600;">Accounting Service</label>
+            {{ task_form.service }}
+          </div>
+        </div>
+
+        {# Assignee & Priority #}
+        <div class="row g-3 mb-3">
+          <div class="col-sm-6">
+            <label class="cf-form-label" style="font-weight: 600;">Assigned Staff</label>
+            {{ task_form.assigned_to }}
+          </div>
+          <div class="col-sm-6">
+            <label class="cf-form-label" style="font-weight: 600;">Priority</label>
+            {{ task_form.priority }}
+          </div>
+        </div>
+
+        {# Dates & Estimation #}
+        <div class="row g-3 mb-3">
+          <div class="col-sm-4">
+            <label class="cf-form-label" style="font-weight: 600;">Start Date</label>
+            {{ task_form.start_date }}
+          </div>
+          <div class="col-sm-4">
+            <label class="cf-form-label" style="font-weight: 600;">Due Date</label>
+            {{ task_form.due_date }}
+          </div>
+          <div class="col-sm-4">
+            <label class="cf-form-label" style="font-weight: 600;">Est. Hours</label>
+            {{ task_form.estimated_hours }}
+          </div>
+        </div>
+
+        {# Category & Initial Status #}
+        <div class="row g-3 mb-3">
+          <div class="col-sm-6">
+            <label class="cf-form-label" style="font-weight: 600;">Category</label>
+            {{ task_form.category }}
+          </div>
+          <div class="col-sm-6">
+            <label class="cf-form-label" style="font-weight: 600;">Initial Stage</label>
+            {{ task_form.status }}
+          </div>
+        </div>
+
+        {# Description #}
+        <div class="mb-3">
+          <label class="cf-form-label" style="font-weight: 600;">Instructions / Working Notes</label>
+          {{ task_form.description }}
+        </div>
+
+        {# Checklist Steps Builder #}
+        <div class="mb-3" style="border-top: 1px solid var(--cf-border); padding-top: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <label class="cf-form-label" style="font-weight: 700; margin: 0;">Checklist Steps</label>
+            <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" onclick="addChecklistStepInput()" style="font-size: 0.75rem;">
+              + Add Step
+            </button>
+          </div>
+          <div id="modal-checklist-container" style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <!-- Dynamic checklist item rows will appear here -->
+          </div>
+        </div>
+
+        {# Recurrence Options #}
+        <div style="border-top: 1px solid var(--cf-border); padding-top: 1rem;">
+          <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; cursor: pointer; color: var(--cf-primary-navy);">
+            {{ task_form.is_recurring }}
+            <span>Make this a Recurring Task</span>
+          </label>
+          
+          <div id="modal-recurrence-options" style="display: none; margin-top: 0.75rem; padding: 0.75rem; background: var(--cf-bg); border-radius: var(--cf-radius-md);">
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="cf-form-label" style="font-size: 0.75rem;">Frequency</label>
+                {{ task_form.recurrence_interval }}
+              </div>
+              <div class="col-sm-6" id="modal-custom-days-col" style="display: none;">
+                <label class="cf-form-label" style="font-size: 0.75rem;">Custom Days</label>
+                {{ task_form.custom_recurrence_days }}
+              </div>
+              <div class="col-sm-6">
+                <label class="cf-form-label" style="font-size: 0.75rem;">End Date (Optional)</label>
+                {{ task_form.recurrence_end_date }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Create Task</button>
+      </div>
+    </form>
   </div>
 </div>
+
+{# ======================================================== #}
+{# 8. QUICK TASK DETAIL DRAWER (SLIDE-OVER INSPECTION)     #}
+{# ======================================================== #}
+<div class="cf-drawer-backdrop" id="cf-task-detail-drawer">
+  <div class="cf-drawer cf-drawer-lg cf-drawer-right" style="display: flex; flex-direction: column;">
+    
+    {# Drawer Header #}
+    <div class="cf-drawer-header" style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--cf-border); display: flex; align-items: center; justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <span id="drawer-priority-badge" class="cf-badge cf-badge-secondary">Medium</span>
+        <span id="drawer-status-badge" class="cf-badge cf-badge-muted">Pending</span>
+        <span id="drawer-recurrence-badge" class="cf-recurrence-pill" style="display: none;">⟳ Monthly</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <a id="drawer-full-page-link" href="#" class="cf-btn cf-btn-ghost cf-btn-sm" title="Open full detail view">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          <span class="d-none d-sm-inline">Full Page</span>
+        </a>
+        <button type="button" class="cf-modal-close-btn" data-cf-drawer-close aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    {# Drawer Content #}
+    <div class="cf-drawer-body" style="padding: 1.5rem; flex: 1; overflow-y: auto;">
+      
+      {# Title & Meta #}
+      <h2 id="drawer-task-title" style="font-size: 1.35rem; font-weight: 700; color: var(--cf-primary-navy); margin-bottom: 0.5rem;">
+        Task Details
+      </h2>
+      <div id="drawer-client-line" style="font-size: 0.875rem; color: var(--cf-text-secondary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.35rem;">
+        <span>🏢</span> <span id="drawer-client-name">Himalayan Traders Pvt Ltd</span>
+      </div>
+
+      {# Metadata Ribbon #}
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; background: var(--cf-bg); padding: 0.875rem 1rem; border-radius: var(--cf-radius-md); margin-bottom: 1.25rem;">
+        <div>
+          <div style="font-size: 0.6875rem; text-transform: uppercase; color: var(--cf-text-muted); font-weight: 600;">Assigned To</div>
+          <div id="drawer-assigned-name" style="font-size: 0.8125rem; font-weight: 700; color: var(--cf-primary-navy); margin-top: 2px;">
+            Unassigned
+          </div>
+        </div>
+        <div>
+          <div style="font-size: 0.6875rem; text-transform: uppercase; color: var(--cf-text-muted); font-weight: 600;">Due Date</div>
+          <div id="drawer-due-date" class="mono-font" style="font-size: 0.8125rem; font-weight: 700; color: var(--cf-primary-navy); margin-top: 2px;">
+            &mdash;
+          </div>
+        </div>
+        <div>
+          <div style="font-size: 0.6875rem; text-transform: uppercase; color: var(--cf-text-muted); font-weight: 600;">Service</div>
+          <div id="drawer-service-name" style="font-size: 0.8125rem; font-weight: 600; color: var(--cf-secondary-navy); margin-top: 2px;">
+            Tax &amp; VAT
+          </div>
+        </div>
+        <div>
+          <div style="font-size: 0.6875rem; text-transform: uppercase; color: var(--cf-text-muted); font-weight: 600;">Progress</div>
+          <div id="drawer-progress-percent" style="font-size: 0.8125rem; font-weight: 700; color: var(--cf-success); margin-top: 2px;">
+            0%
+          </div>
+        </div>
+      </div>
+
+      {# Description #}
+      <div style="margin-bottom: 1.5rem;">
+        <h4 style="font-size: 0.8125rem; text-transform: uppercase; color: var(--cf-text-muted); font-weight: 700; margin-bottom: 0.35rem;">Instructions</h4>
+        <div id="drawer-task-desc" style="font-size: 0.875rem; line-height: 1.6; color: var(--cf-text-primary); background: var(--cf-surface); border: 1px solid var(--cf-border); padding: 0.75rem 1rem; border-radius: var(--cf-radius-md);">
+          No instructions provided.
+        </div>
+      </div>
+
+      {# Quick Status Actions #}
+      <div style="margin-bottom: 1.5rem;">
+        <h4 style="font-size: 0.8125rem; text-transform: uppercase; color: var(--cf-text-muted); font-weight: 700; margin-bottom: 0.5rem;">Quick Move Stage</h4>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" onclick="drawerChangeStatus('TODO')">Pending</button>
+          <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" onclick="drawerChangeStatus('IN_PROGRESS')">In Progress</button>
+          <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" onclick="drawerChangeStatus('UNDER_REVIEW')">Review</button>
+          <button type="button" class="cf-btn cf-btn-success cf-btn-sm" onclick="drawerChangeStatus('COMPLETED')">&#10003; Complete</button>
+        </div>
+      </div>
+
+      {# Checklist Steps #}
+      <div style="margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <h4 style="font-size: 0.8125rem; text-transform: uppercase; color: var(--cf-text-muted); font-weight: 700; margin: 0;">
+            Checklist (<span id="drawer-checklist-count">0/0</span>)
+          </h4>
+        </div>
+        
+        <div id="drawer-checklist-items" style="display: flex; flex-direction: column; gap: 0.35rem;">
+          <!-- Dynamically inserted checklist items -->
+        </div>
+
+        {# Add checklist item inline #}
+        <form id="drawer-add-checklist-form" onsubmit="handleDrawerAddChecklist(event)" style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
+          <input type="text" id="drawer-new-checklist-title" class="cf-input" placeholder="Add checklist step..." style="height: 36px; font-size: 0.8125rem;" required>
+          <button type="submit" class="cf-btn cf-btn-secondary cf-btn-sm" style="height: 36px;">Add</button>
+        </form>
+      </div>
+
+      {# Activity Timeline Snippet #}
+      <div>
+        <h4 style="font-size: 0.8125rem; text-transform: uppercase; color: var(--cf-text-muted); font-weight: 700; margin-bottom: 0.75rem;">Recent Activity</h4>
+        <div class="cf-activity-timeline" id="drawer-activity-list">
+          <!-- Dynamically loaded activities -->
+        </div>
+      </div>
+
+    </div>
+
+    {# Drawer Footer #}
+    <div class="cf-drawer-footer" style="padding: 1rem 1.5rem; border-top: 1px solid var(--cf-border); display: flex; justify-content: space-between; align-items: center;">
+      <button type="button" class="cf-btn cf-btn-danger cf-btn-sm" onclick="drawerDeleteTask()">Delete Task</button>
+      <a id="drawer-open-full-btn" href="#" class="cf-btn cf-btn-primary cf-btn-sm">Open Full Page &rarr;</a>
+    </div>
+
+  </div>
+</div>
+
+{# ======================================================== #}
+{# JAVASCRIPT LOGIC FOR BOARD, DRAG & DROP, AND MODALS     #}
+{# ======================================================== #}
+<script>
+  let activeDrawerTaskId = null;
+
+  // 1. Search execution
+  function executeTaskSearch(term) {
+    const url = new URL(window.location.href);
+    if (term.trim()) {
+      url.searchParams.set('q', term.trim());
+    } else {
+      url.searchParams.delete('q');
+    }
+    window.location.href = url.toString();
+  }
+
+  // 2. Toggle filter panel
+  function toggleTaskFilterPanel() {
+    const panel = document.getElementById('cf-task-filter-panel');
+    if (panel.style.display === 'none' || !panel.style.display) {
+      panel.style.display = 'block';
+    } else {
+      panel.style.display = 'none';
+    }
+  }
+
+  // 3. Open Create Task Modal
+  function openCreateTaskModal() {
+    CAFlow.openModal('#cf-create-task-modal');
+  }
+
+  function openCreateTaskWithStatus(status) {
+    const statusSelect = document.querySelector('#cf-create-task-modal select[name="status"]');
+    if (statusSelect) {
+      statusSelect.value = status;
+    }
+    openCreateTaskModal();
+  }
+
+  // 4. Dynamic checklist inputs in creation modal
+  function addChecklistStepInput(title = '') {
+    const container = document.getElementById('modal-checklist-container');
+    const div = document.createElement('div');
+    div.className = 'modal-checklist-row';
+    div.style = 'display: flex; gap: 0.5rem; align-items: center;';
+    div.innerHTML = `
+      <span style="color: var(--cf-text-muted); font-size: 0.75rem;">&bull;</span>
+      <input type="text" class="cf-input modal-step-input" value="${title.replace(/"/g, '&quot;')}" placeholder="Checklist step description..." style="height: 34px; font-size: 0.8125rem; flex: 1;">
+      <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" onclick="this.parentElement.remove()" style="padding: 2px 6px; color: var(--cf-danger);">
+        &times;
+      </button>
+    `;
+    container.appendChild(div);
+  }
+
+  // Template select listener to pre-fill steps
+  const templateMap = {
+    {% for tpl in workflow_templates %}
+      "{{ tpl.id }}": {
+        "service": "{{ tpl.service }}",
+        "priority": "{{ tpl.default_priority }}",
+        "steps": [
+          {% for item in tpl.items.all %}
+            "{{ item.title|escapejs }}",
+          {% endfor %}
+        ]
+      },
+    {% endfor %}
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const tplSelect = document.getElementById('task-template-select');
+    if (tplSelect) {
+      tplSelect.addEventListener('change', function() {
+        const tplId = this.value;
+        const container = document.getElementById('modal-checklist-container');
+        container.innerHTML = '';
+
+        if (tplId && templateMap[tplId]) {
+          const tpl = templateMap[tplId];
+          if (tpl.service) {
+            const svcSelect = document.querySelector('#cf-create-task-modal select[name="service"]');
+            if (svcSelect) svcSelect.value = tpl.service;
+          }
+          if (tpl.priority) {
+            const priSelect = document.querySelector('#cf-create-task-modal select[name="priority"]');
+            if (priSelect) priSelect.value = tpl.priority;
+          }
+          tpl.steps.forEach(step => addChecklistStepInput(step));
+          CAFlow.toast(`Applied template steps (${tpl.steps.length} steps)`, 'info');
+        }
+      });
+    }
+
+    // Recurrence checkbox toggle
+    const recurCheck = document.getElementById('id_is_recurring');
+    const recurPanel = document.getElementById('modal-recurrence-options');
+    const recurInterval = document.getElementById('id_recurrence_interval');
+    const customDaysCol = document.getElementById('modal-custom-days-col');
+
+    if (recurCheck && recurPanel) {
+      recurCheck.addEventListener('change', function() {
+        recurPanel.style.display = this.checked ? 'block' : 'none';
+      });
+      if (recurInterval && customDaysCol) {
+        recurInterval.addEventListener('change', function() {
+          customDaysCol.style.display = (this.value === 'CUSTOM') ? 'block' : 'none';
+        });
+      }
+    }
+
+    // Capture checklist rows into hidden input before submit
+    const createForm = document.getElementById('cf-create-task-form');
+    if (createForm) {
+      createForm.addEventListener('submit', function(e) {
+        const stepInputs = document.querySelectorAll('.modal-step-input');
+        const steps = [];
+        stepInputs.forEach(inp => {
+          if (inp.value.trim()) steps.push(inp.value.trim());
+        });
+        document.getElementById('modal-checklist-raw').value = JSON.stringify(steps);
+      });
+    }
+
+    // Auto-open modal if ?template= or ?create=1 in URL query
+    const urlParams = new URLSearchParams(window.location.search);
+    const templateParam = urlParams.get('template');
+    if (templateParam) {
+      CAFlow.openModal('#cf-create-task-modal');
+      const tplSelect = document.getElementById('task-template-select');
+      if (tplSelect) {
+        tplSelect.value = templateParam;
+        tplSelect.dispatchEvent(new Event('change'));
+      }
+    } else if (urlParams.get('create') === '1') {
+      CAFlow.openModal('#cf-create-task-modal');
+    }
+  });
+
+  // ========================================================
+  // 5. DRAG & DROP INTERACTION
+  // ========================================================
+  let draggedCardId = null;
+
+  function handleDragStart(event, taskId) {
+    draggedCardId = taskId;
+    event.dataTransfer.setData('text/plain', taskId);
+    event.dataTransfer.effectAllowed = 'move';
+    event.target.classList.add('is-dragging');
+  }
+
+  function handleDragEnd(event) {
+    event.target.classList.remove('is-dragging');
+    document.querySelectorAll('.cf-board-cards').forEach(el => el.classList.remove('is-drag-over'));
+  }
+
+  function handleDragOver(event) {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    const targetCards = event.currentTarget;
+    if (!targetCards.classList.contains('is-drag-over')) {
+      targetCards.classList.add('is-drag-over');
+    }
+  }
+
+  function handleDragLeave(event) {
+    event.currentTarget.classList.remove('is-drag-over');
+  }
+
+  function handleDrop(event, targetStatus) {
+    event.preventDefault();
+    event.currentTarget.classList.remove('is-drag-over');
+
+    const taskId = event.dataTransfer.getData('text/plain') || draggedCardId;
+    if (!taskId) return;
+
+    const cardElem = document.getElementById(`task-card-${taskId}`);
+    if (cardElem) {
+      event.currentTarget.appendChild(cardElem);
+    }
+
+    // Post update to server
+    const csrfToken = '{{ csrf_token }}';
+    fetch(`/tasks/${taskId}/status/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      body: `status=${encodeURIComponent(targetStatus)}`
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        CAFlow.toast(`Task moved to ${data.status_display}`, 'success');
+      } else {
+        CAFlow.toast('Failed to move task: ' + (data.error || 'Server error'), 'danger');
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      CAFlow.toast('Network error updating task status', 'danger');
+    });
+  }
+
+  // ========================================================
+  // 6. QUICK TASK DRAWER
+  // ========================================================
+  function openTaskQuickDrawer(taskId) {
+    activeDrawerTaskId = taskId;
+    CAFlow.openDrawer('#cf-task-detail-drawer');
+
+    // Fetch Task JSON
+    fetch(`/tasks/${taskId}/json/`, {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(t => {
+      document.getElementById('drawer-task-title').textContent = t.title;
+      document.getElementById('drawer-priority-badge').className = `cf-badge ${t.priority_badge_class}`;
+      document.getElementById('drawer-priority-badge').textContent = t.priority_display;
+      document.getElementById('drawer-status-badge').className = `cf-badge ${t.status_badge_class}`;
+      document.getElementById('drawer-status-badge').textContent = t.status_display;
+
+      const recurBadge = document.getElementById('drawer-recurrence-badge');
+      if (t.is_recurring) {
+        recurBadge.style.display = 'inline-flex';
+        recurBadge.textContent = `⟳ ${t.recurrence_interval}`;
+      } else {
+        recurBadge.style.display = 'none';
+      }
+
+      document.getElementById('drawer-client-name').textContent = t.client_name || 'General Practice / Internal';
+      document.getElementById('drawer-assigned-name').textContent = t.assigned_to_name || 'Unassigned';
+      
+      const dueElem = document.getElementById('drawer-due-date');
+      dueElem.textContent = t.due_date || 'No deadline';
+      dueElem.className = `mono-font ${t.is_overdue ? 'cf-task-due overdue' : ''}`;
+
+      document.getElementById('drawer-service-name').textContent = t.service || 'General Accounting';
+      document.getElementById('drawer-progress-percent').textContent = `${t.progress_percent}%`;
+      document.getElementById('drawer-task-desc').textContent = t.description || 'No detailed instructions recorded.';
+
+      document.getElementById('drawer-full-page-link').href = t.detail_url;
+      document.getElementById('drawer-open-full-btn').href = t.detail_url;
+
+      // Render Checklist
+      renderDrawerChecklist(t.checklist, t.checklist_stats);
+
+      // Render Activity
+      renderDrawerActivities(t.activities);
+    })
+    .catch(err => {
+      console.error(err);
+      CAFlow.toast('Failed to load task details', 'danger');
+    });
+  }
+
+  function renderDrawerChecklist(items, stats) {
+    const container = document.getElementById('drawer-checklist-items');
+    document.getElementById('drawer-checklist-count').textContent = `${stats.completed}/${stats.total}`;
+    container.innerHTML = '';
+
+    if (!items || items.length === 0) {
+      container.innerHTML = '<div style="font-size: 0.8125rem; color: var(--cf-text-muted); padding: 0.5rem 0;">No checklist items added yet.</div>';
+      return;
+    }
+
+    items.forEach(item => {
+      const row = document.createElement('div');
+      row.className = `cf-checklist-item ${item.is_completed ? 'is-completed' : ''}`;
+      row.id = `drawer-check-${item.id}`;
+
+      const chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.className = 'cf-checklist-checkbox';
+      if (item.is_completed) chk.checked = true;
+      chk.onchange = function() { toggleChecklistItem(item.id, chk); };
+
+      const span = document.createElement('span');
+      span.className = 'cf-checklist-title';
+      span.textContent = item.title;
+
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'cf-btn cf-btn-ghost cf-btn-sm';
+      delBtn.style.padding = '1px 4px';
+      delBtn.style.color = 'var(--cf-text-muted)';
+      delBtn.textContent = '×';
+      delBtn.onclick = function() { deleteChecklistItem(item.id); };
+
+      row.appendChild(chk);
+      row.appendChild(span);
+      row.appendChild(delBtn);
+      container.appendChild(row);
+    });
+  }
+
+  function renderDrawerActivities(activities) {
+    const list = document.getElementById('drawer-activity-list');
+    list.innerHTML = '';
+    if (!activities || activities.length === 0) {
+      list.innerHTML = '<div style="font-size: 0.75rem; color: var(--cf-text-muted);">No activity recorded yet.</div>';
+      return;
+    }
+
+    activities.forEach(act => {
+      const node = document.createElement('div');
+      node.className = 'cf-activity-node';
+
+      const desc = document.createElement('div');
+      desc.className = 'cf-activity-desc';
+      desc.textContent = act.description;
+
+      const meta = document.createElement('div');
+      meta.className = 'cf-activity-time';
+      meta.textContent = `${act.user_name} • ${act.created_at}`;
+
+      node.appendChild(desc);
+      node.appendChild(meta);
+      list.appendChild(node);
+    });
+  }
+
+  // Drawer Toggle Checklist Item
+  function toggleChecklistItem(itemId, checkboxElem) {
+    const csrfToken = '{{ csrf_token }}';
+    fetch(`/tasks/checklist/${itemId}/toggle/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest',
+      }
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        const itemRow = document.getElementById(`drawer-check-${itemId}`);
+        if (itemRow) {
+          itemRow.classList.toggle('is-completed', data.is_completed);
+        }
+        document.getElementById('drawer-checklist-count').textContent = `${data.stats.completed}/${data.stats.total}`;
+        document.getElementById('drawer-progress-percent').textContent = `${data.stats.percent}%`;
+        CAFlow.toast(data.is_completed ? 'Step completed' : 'Step reopened', 'info');
+      }
+    });
+  }
+
+  // Drawer Delete Checklist Item
+  function deleteChecklistItem(itemId) {
+    const csrfToken = '{{ csrf_token }}';
+    fetch(`/tasks/checklist/${itemId}/delete/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest',
+      }
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        const itemRow = document.getElementById(`drawer-check-${itemId}`);
+        if (itemRow) itemRow.remove();
+        document.getElementById('drawer-checklist-count').textContent = `${data.stats.completed}/${data.stats.total}`;
+        document.getElementById('drawer-progress-percent').textContent = `${data.stats.percent}%`;
+        CAFlow.toast('Checklist item removed', 'info');
+      }
+    });
+  }
+
+  // Drawer Add Checklist Item
+  function handleDrawerAddChecklist(e) {
+    e.preventDefault();
+    if (!activeDrawerTaskId) return;
+
+    const inp = document.getElementById('drawer-new-checklist-title');
+    const title = inp.value.trim();
+    if (!title) return;
+
+    const csrfToken = '{{ csrf_token }}';
+    fetch(`/tasks/${activeDrawerTaskId}/checklist/add/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      body: `title=${encodeURIComponent(title)}`
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        inp.value = '';
+        openTaskQuickDrawer(activeDrawerTaskId); // Refresh drawer
+        CAFlow.toast('Step added to checklist', 'success');
+      }
+    });
+  }
+
+  // Drawer Quick Status Change
+  function drawerChangeStatus(status) {
+    if (!activeDrawerTaskId) return;
+    const csrfToken = '{{ csrf_token }}';
+    fetch(`/tasks/${activeDrawerTaskId}/status/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      body: `status=${encodeURIComponent(status)}`
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        CAFlow.toast(`Task status updated to ${data.status_display}`, 'success');
+        openTaskQuickDrawer(activeDrawerTaskId);
+      }
+    });
+  }
+
+  // Drawer Delete Task
+  function drawerDeleteTask() {
+    if (!activeDrawerTaskId) return;
+    CAFlow.confirm({
+      title: 'Delete Task',
+      message: 'Are you sure you want to permanently delete this task? This action cannot be undone and will be recorded in the firm audit trail.',
+      confirmText: 'Delete Task',
+      confirmClass: 'cf-btn-danger',
+      onConfirm: function() {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/tasks/${activeDrawerTaskId}/delete/`;
+        form.innerHTML = `<input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">`;
+        document.body.appendChild(form);
+        form.submit();
+      }
+    });
+  }
+</script>
 {% endblock %}

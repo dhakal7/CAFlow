@@ -1,0 +1,178 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}Requested Documents &mdash; Client Portal &mdash; {{ APP_NAME }}{% endblock %}
+
+{% block app_content %}
+{% include "components/breadcrumbs.html" with items=breadcrumbs %}
+
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1 style="font-size: 1.625rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0 0 0.25rem 0;">
+      Requested Documents &amp; Vouchers
+    </h1>
+    <p style="font-size: 0.875rem; color: var(--cf-text-muted); margin: 0;">
+      {% if client %}
+        Client Workspace: <strong>{{ client.display_business_name }}</strong> (PAN: {{ client.pan_number|default:'N/A' }})
+      {% else %}
+        Client Document Portal
+      {% endif %}
+    </p>
+  </div>
+
+  <div style="display: flex; gap: 0.5rem;">
+    <a href="{% url 'documents:portal_documents' %}" class="cf-btn cf-btn-outline cf-btn-sm">
+      View Company Files
+    </a>
+  </div>
+</div>
+
+{% if error_message %}
+  <div style="background: #FEF2F2; border: 1px solid #F87171; border-radius: var(--cf-radius-sm); padding: 1rem; color: #991B1B; margin-bottom: 1.5rem;">
+    {{ error_message }}
+  </div>
+{% endif %}
+
+<div class="cf-card">
+  <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--cf-border); display: flex; justify-content: space-between; align-items: center;">
+    <h2 style="font-size: 1rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0;">
+      Document Requests from Your Accounting Practice ({{ requests.count }})
+    </h2>
+    <span style="font-size: 0.75rem; color: var(--cf-text-muted);">
+      Please submit files before the indicated deadlines
+    </span>
+  </div>
+
+  <div class="cf-table-responsive">
+    <table class="cf-table">
+      <thead>
+        <tr>
+          <th>Requested Document</th>
+          <th>Requested Date</th>
+          <th>Submission Deadline</th>
+          <th>Status</th>
+          <th>Uploaded Submission</th>
+          <th>Instructions</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for req in requests %}
+          <tr>
+            <td>
+              <strong style="color: var(--cf-primary-navy);">{{ req.requested_documents }}</strong>
+              <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Requested by {{ req.requested_by.get_full_name|default:'Accountant' }}</div>
+            </td>
+            <td style="font-size: 0.8125rem;">
+              {{ req.requested_date|date:"M d, Y" }}
+            </td>
+            <td>
+              <span class="mono-font" style="font-size: 0.8125rem; {% if req.is_overdue %}color: var(--cf-danger); font-weight: 700;{% endif %}">
+                {{ req.due_date|date:"M d, Y" }}
+                {% if req.is_overdue %}
+                  <span class="cf-badge cf-badge-danger" style="font-size: 0.625rem; margin-left: 4px;">Overdue</span>
+                {% endif %}
+              </span>
+            </td>
+            <td>
+              {% if req.status == 'RECEIVED' %}
+                <span class="cf-badge cf-badge-success">Received</span>
+              {% elif req.status == 'PARTIALLY_RECEIVED' %}
+                <span class="cf-badge cf-badge-warning">Partially Received</span>
+              {% elif req.status == 'OVERDUE' %}
+                <span class="cf-badge cf-badge-danger">Overdue</span>
+              {% elif req.status == 'REJECTED' %}
+                <span class="cf-badge cf-badge-danger">Rejected</span>
+              {% elif req.status == 'CANCELLED' %}
+                <span class="cf-badge cf-badge-muted">Cancelled</span>
+              {% elif req.status == 'REMINDED' %}
+                <span class="cf-badge cf-badge-warning">Action Required</span>
+              {% else %}
+                <span class="cf-badge cf-badge-primary">Requested</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if req.uploaded_document %}
+                <a href="{% url 'documents:document_download' req.uploaded_document.id %}" class="cf-btn cf-btn-ghost cf-btn-sm" style="font-size: 0.75rem;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <span>{{ req.uploaded_document.title|truncatechars:18 }}</span>
+                </a>
+                <div style="font-size: 0.6875rem; color: var(--cf-text-muted);">{{ req.received_date|date:"M d, Y H:i" }}</div>
+              {% else %}
+                <span style="font-size: 0.75rem; color: var(--cf-text-muted);">Not yet submitted</span>
+              {% endif %}
+            </td>
+            <td style="font-size: 0.75rem; color: var(--cf-text-secondary); max-width: 240px;">
+              {{ req.notes|default:'None' }}
+            </td>
+            <td style="text-align: right;">
+              {% if req.status != 'RECEIVED' and req.status != 'CANCELLED' %}
+                <button type="button" class="cf-btn cf-btn-primary cf-btn-sm" style="font-size: 0.75rem;" onclick="openFulfillModal('{{ req.id }}', '{{ req.requested_documents|escapejs }}')">
+                  Upload File
+                </button>
+              {% else %}
+                <span class="cf-badge cf-badge-success" style="font-size: 0.6875rem;">Completed</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--cf-text-muted);">
+              No document requests currently pending for your account.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{# FULFILL REQUEST MODAL #}
+<div class="cf-modal-backdrop" id="cf-fulfill-modal" role="dialog" aria-modal="true" aria-labelledby="cf-fulfill-title">
+  <div class="cf-modal-dialog" style="max-width: 500px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title" id="cf-fulfill-title">Submit Requested Document</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close dialog">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form id="fulfill-form" method="post" action="" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="cf-modal-body">
+        <div style="background: var(--cf-bg-subtle, #F8F9FA); border: 1px solid var(--cf-border); border-radius: var(--cf-radius-sm); padding: 0.75rem; margin-bottom: 1rem;">
+          <div style="font-size: 0.75rem; color: var(--cf-text-muted); text-transform: uppercase;">Requesting:</div>
+          <strong id="fulfill-item-name" style="color: var(--cf-primary-navy); font-size: 0.875rem;"></strong>
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <label class="cf-label" for="fulfill-file-input">Select Document File (PDF, XLSX, DOCX, Images, ZIP &bull; Max 25 MB) *</label>
+          <input type="file" id="fulfill-file-input" name="file" class="cf-input" required>
+        </div>
+
+        <div>
+          <label class="cf-label" for="fulfill-notes-input">Notes or Explanations for Accountant (Optional)</label>
+          <textarea id="fulfill-notes-input" name="notes" class="cf-input" rows="3" placeholder="Add any details, period clarifications, or questions..."></textarea>
+        </div>
+      </div>
+
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Submit Document</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openFulfillModal(reqId, reqName) {
+  const form = document.getElementById('fulfill-form');
+  form.action = `/documents/portal/requests/${reqId}/fulfill/`;
+  document.getElementById('fulfill-item-name').textContent = reqName;
+  const modal = document.getElementById('cf-fulfill-modal');
+  if (modal) {
+    modal.classList.add('active');
+  }
+}
+</script>
+{% endblock %}

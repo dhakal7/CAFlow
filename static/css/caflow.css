@@ -646,6 +646,33 @@ code, kbd, samp, pre {
   border-color: var(--cf-border-dark);
 }
 
+.cf-card-interactive {
+  cursor: pointer;
+  transition: transform var(--cf-transition-fast), box-shadow var(--cf-transition-fast), border-color var(--cf-transition-fast);
+}
+
+.cf-card-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--cf-shadow-lg);
+  border-color: var(--cf-border-dark);
+}
+
+.cf-card-interactive:focus-visible {
+  outline: 2px solid var(--cf-primary-navy);
+  outline-offset: 2px;
+}
+
+/* Accent Card Stripes */
+.cf-card-accent-primary { border-top: 3px solid var(--cf-primary-navy); }
+.cf-card-accent-success { border-top: 3px solid var(--cf-success); }
+.cf-card-accent-warning { border-top: 3px solid var(--cf-warning); }
+.cf-card-accent-danger  { border-top: 3px solid var(--cf-danger); }
+
+/* Card Body Utility */
+.cf-card-body {
+  padding: 0;
+}
+
 .cf-card-header {
   display: flex;
   align-items: center;
@@ -752,6 +779,31 @@ code, kbd, samp, pre {
   color: var(--cf-text-muted);
 }
 
+.cf-trend-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: var(--cf-radius-full);
+}
+
+.cf-trend-pill.positive {
+  background-color: var(--cf-success-bg);
+  color: var(--cf-success);
+}
+
+.cf-trend-pill.negative {
+  background-color: var(--cf-danger-bg);
+  color: var(--cf-danger);
+}
+
+.cf-trend-pill.neutral {
+  background-color: var(--cf-surface-muted);
+  color: var(--cf-text-muted);
+}
+
 /* ==========================================================================
    5. TABLE SYSTEM
    ========================================================================== */
@@ -813,8 +865,86 @@ code, kbd, samp, pre {
   background-color: #F8FAFC;
 }
 
+.cf-table tbody tr.is-selected td {
+  background-color: #EFF6FC;
+}
+
+.cf-table tbody tr.is-clickable {
+  cursor: pointer;
+}
+
 .cf-table tbody tr:last-child td {
   border-bottom: none;
+}
+
+/* Density Variants */
+.cf-table-compact th {
+  padding: 0.5rem 0.85rem;
+  font-size: 0.6875rem;
+}
+
+.cf-table-compact td {
+  padding: 0.5rem 0.85rem;
+  font-size: 0.8125rem;
+}
+
+.cf-table-spacious th {
+  padding: 1rem 1.5rem;
+  font-size: 0.8125rem;
+}
+
+.cf-table-spacious td {
+  padding: 1.15rem 1.5rem;
+  font-size: 0.9375rem;
+}
+
+/* Sticky Header */
+.cf-table-sticky-header {
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+.cf-table-sticky-header th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 1px 0 var(--cf-border);
+}
+
+/* Sortable Table Columns */
+.cf-table th.is-sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color var(--cf-transition-fast), color var(--cf-transition-fast);
+}
+
+.cf-table th.is-sortable:hover {
+  background-color: #EEF2F6;
+  color: var(--cf-primary-navy);
+}
+
+.cf-table th .cf-sort-icon {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-left: 0.35rem;
+  color: var(--cf-text-light);
+  transition: color var(--cf-transition-fast);
+}
+
+.cf-table th.is-sorted .cf-sort-icon {
+  color: var(--cf-primary-navy);
+}
+
+/* Cell Utilities */
+.cf-table .cf-table-actions {
+  text-align: right;
+  width: 1%;
+  white-space: nowrap;
+}
+
+.cf-table .cf-table-status {
+  width: 1%;
+  white-space: nowrap;
 }
 
 /* ==========================================================================
@@ -858,6 +988,14 @@ code, kbd, samp, pre {
   resize: vertical;
 }
 
+/* Hover state */
+.cf-input:hover:not(:disabled),
+.cf-select:hover:not(:disabled),
+.cf-textarea:hover:not(:disabled) {
+  border-color: var(--cf-border-dark);
+}
+
+/* Focus state */
 .cf-input:focus,
 .cf-select:focus,
 .cf-textarea:focus {
@@ -866,19 +1004,76 @@ code, kbd, samp, pre {
   box-shadow: 0 0 0 3px rgba(11, 31, 51, 0.12);
 }
 
+/* Active state */
+.cf-input:active:not(:disabled),
+.cf-select:active:not(:disabled),
+.cf-textarea:active:not(:disabled) {
+  border-color: var(--cf-primary-navy);
+}
+
+/* Disabled state */
 .cf-input:disabled,
 .cf-select:disabled,
 .cf-textarea:disabled {
   background-color: var(--cf-surface-muted);
   cursor: not-allowed;
-  opacity: 0.7;
+  opacity: 0.65;
+  border-color: var(--cf-border);
 }
 
+/* Success / Valid state */
+.cf-input.is-valid,
+.cf-select.is-valid,
+.cf-textarea.is-valid {
+  border-color: var(--cf-success);
+  box-shadow: 0 0 0 3px rgba(63, 125, 90, 0.12);
+}
+
+.cf-input.is-valid:focus,
+.cf-select.is-valid:focus,
+.cf-textarea.is-valid:focus {
+  border-color: var(--cf-success);
+  box-shadow: 0 0 0 3px rgba(63, 125, 90, 0.2);
+}
+
+/* Error / Invalid state */
 .cf-input.is-invalid,
 .cf-select.is-invalid,
 .cf-textarea.is-invalid {
   border-color: var(--cf-danger);
   box-shadow: 0 0 0 3px rgba(185, 74, 72, 0.12);
+}
+
+.cf-input.is-invalid:focus,
+.cf-select.is-invalid:focus,
+.cf-textarea.is-invalid:focus {
+  border-color: var(--cf-danger);
+  box-shadow: 0 0 0 3px rgba(185, 74, 72, 0.2);
+}
+
+/* Input Wrapper & Loading state */
+.cf-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.cf-input-wrapper.is-loading .cf-input {
+  padding-right: 2.5rem;
+}
+
+.cf-input-wrapper.is-loading::after {
+  content: '';
+  position: absolute;
+  right: 0.85rem;
+  top: 50%;
+  margin-top: -7px;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--cf-border-dark);
+  border-right-color: var(--cf-primary-navy);
+  border-radius: 50%;
+  animation: cf-spin 0.75s linear infinite;
+  pointer-events: none;
 }
 
 .cf-help-text {
@@ -897,7 +1092,18 @@ code, kbd, samp, pre {
   gap: 0.25rem;
 }
 
-.cf-checkbox-label {
+.cf-success-text {
+  font-size: 0.75rem;
+  color: var(--cf-success);
+  font-weight: 500;
+  margin-top: 0.35rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.cf-checkbox-label,
+.cf-radio-label {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -913,6 +1119,120 @@ code, kbd, samp, pre {
   accent-color: var(--cf-primary-navy);
   cursor: pointer;
   border-radius: 4px;
+}
+
+.cf-radio {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--cf-primary-navy);
+  cursor: pointer;
+}
+
+/* Switch / Toggle Component */
+.cf-switch-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.875rem;
+  color: var(--cf-text-primary);
+}
+
+.cf-switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+}
+
+.cf-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.cf-switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--cf-border-dark);
+  transition: var(--cf-transition-fast);
+  border-radius: 22px;
+}
+
+.cf-switch-slider::before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #FFFFFF;
+  transition: var(--cf-transition-fast);
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.cf-switch input:checked + .cf-switch-slider {
+  background-color: var(--cf-success);
+}
+
+.cf-switch input:focus + .cf-switch-slider {
+  box-shadow: 0 0 0 3px rgba(63, 125, 90, 0.2);
+}
+
+.cf-switch input:checked + .cf-switch-slider::before {
+  transform: translateX(18px);
+}
+
+.cf-switch input:disabled + .cf-switch-slider {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Input Groups (e.g. Currency prefix, search addons) */
+.cf-input-group {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+}
+
+.cf-input-group-text {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--cf-text-secondary);
+  background-color: var(--cf-surface-muted);
+  border: 1px solid var(--cf-border);
+  white-space: nowrap;
+}
+
+.cf-input-group > .cf-input-group-text:first-child {
+  border-right: none;
+  border-top-left-radius: var(--cf-radius-md);
+  border-bottom-left-radius: var(--cf-radius-md);
+}
+
+.cf-input-group > .cf-input:not(:first-child) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.cf-input-group > .cf-input:not(:last-child) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.cf-input-group > .cf-input-group-text:last-child {
+  border-left: none;
+  border-top-right-radius: var(--cf-radius-md);
+  border-bottom-right-radius: var(--cf-radius-md);
 }
 
 /* ==========================================================================
@@ -1340,7 +1660,297 @@ code, kbd, samp, pre {
 }
 
 /* ==========================================================================
-   11. RESPONSIVE DESIGN BREAKPOINTS
+   11. DRAWERS & SLIDE-OVER PANELS
+   ========================================================================== */
+.cf-drawer-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(11, 31, 51, 0.6);
+  backdrop-filter: blur(2px);
+  z-index: 1060;
+  opacity: 0;
+  transition: opacity var(--cf-transition-base);
+}
+
+.cf-drawer-backdrop.is-open {
+  display: flex;
+  opacity: 1;
+}
+
+.cf-drawer {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  background-color: var(--cf-surface);
+  box-shadow: var(--cf-shadow-xl);
+  display: flex;
+  flex-direction: column;
+  z-index: 1070;
+  transition: transform var(--cf-transition-base);
+  max-width: 100vw;
+}
+
+.cf-drawer-right {
+  right: 0;
+  transform: translateX(100%);
+  border-left: 1px solid var(--cf-border);
+}
+
+.cf-drawer-left {
+  left: 0;
+  transform: translateX(-100%);
+  border-right: 1px solid var(--cf-border);
+}
+
+.cf-drawer-backdrop.is-open .cf-drawer {
+  transform: translateX(0);
+}
+
+/* Width options */
+.cf-drawer-sm { width: var(--cf-drawer-width-sm); }
+.cf-drawer-md { width: var(--cf-drawer-width-md); }
+.cf-drawer-lg { width: var(--cf-drawer-width-lg); }
+
+.cf-drawer-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--cf-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--cf-surface);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.cf-drawer-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--cf-primary-navy);
+  margin: 0;
+}
+
+.cf-drawer-subtitle {
+  font-size: 0.8125rem;
+  color: var(--cf-text-muted);
+  margin-top: 2px;
+}
+
+.cf-drawer-body {
+  padding: 1.5rem;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.cf-drawer-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--cf-border);
+  background-color: var(--cf-surface-hover);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+}
+
+/* ==========================================================================
+   12. LOADING STATES & SKELETONS
+   ========================================================================== */
+@keyframes cf-shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+.cf-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--cf-surface-muted) 0px,
+    #E8EDF2 50%,
+    var(--cf-surface-muted) 100%
+  );
+  background-size: 800px 100%;
+  animation: cf-shimmer 1.6s ease-in-out infinite;
+  border-radius: var(--cf-radius-sm);
+  display: inline-block;
+}
+
+.cf-skeleton-text {
+  height: 14px;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.cf-skeleton-title {
+  height: 22px;
+  width: 60%;
+  margin-bottom: 0.75rem;
+  border-radius: var(--cf-radius-md);
+}
+
+.cf-skeleton-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.cf-skeleton-btn {
+  height: 38px;
+  width: 100px;
+  border-radius: var(--cf-radius-md);
+}
+
+.cf-skeleton-card {
+  background-color: var(--cf-surface);
+  border: 1px solid var(--cf-border);
+  border-radius: var(--cf-radius-lg);
+  padding: 1.5rem;
+}
+
+/* Loading Overlay for Cards & Containers */
+.cf-loading-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(1.5px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  z-index: 30;
+  border-radius: inherit;
+}
+
+.cf-loading-overlay-text {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--cf-text-secondary);
+}
+
+.cf-spinner-sm {
+  width: 12px;
+  height: 12px;
+  border-width: 1.5px;
+}
+
+.cf-spinner-lg {
+  width: 28px;
+  height: 28px;
+  border-width: 3px;
+}
+
+/* ==========================================================================
+   13. ERROR STATES
+   ========================================================================== */
+.cf-error-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background-color: var(--cf-surface);
+  border-radius: var(--cf-radius-lg);
+  border: 1px solid var(--cf-border);
+}
+
+.cf-error-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 1.25rem;
+  border-radius: 50%;
+  background-color: var(--cf-danger-bg);
+  border: 1px solid var(--cf-danger-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cf-danger);
+}
+
+.cf-error-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--cf-primary-navy);
+  margin-bottom: 0.35rem;
+}
+
+.cf-error-desc {
+  font-size: 0.875rem;
+  color: var(--cf-text-muted);
+  max-width: 440px;
+  margin: 0 auto 1.25rem;
+}
+
+.cf-error-code {
+  display: inline-block;
+  font-family: var(--cf-font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  background-color: var(--cf-danger-bg);
+  color: var(--cf-danger);
+  border-radius: var(--cf-radius-sm);
+  margin-bottom: 0.75rem;
+}
+
+/* ==========================================================================
+   14. PILL TABS & TAB BADGES
+   ========================================================================== */
+.cf-nav-pills {
+  display: inline-flex;
+  background-color: var(--cf-surface-muted);
+  padding: 4px;
+  border-radius: var(--cf-radius-md);
+  gap: 4px;
+  list-style: none;
+  margin: 0 0 1.5rem 0;
+  border: 1px solid var(--cf-border-subtle);
+}
+
+.cf-pill-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--cf-text-secondary);
+  border-radius: var(--cf-radius-sm);
+  text-decoration: none;
+  transition: all var(--cf-transition-fast);
+}
+
+.cf-pill-link:hover {
+  color: var(--cf-primary-navy);
+  background-color: rgba(255, 255, 255, 0.6);
+}
+
+.cf-pill-link.active {
+  background-color: var(--cf-surface);
+  color: var(--cf-primary-navy);
+  box-shadow: var(--cf-shadow-xs);
+}
+
+.cf-tab-badge {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: var(--cf-radius-full);
+  background-color: rgba(11, 31, 51, 0.08);
+  color: var(--cf-primary-navy);
+}
+
+.cf-tab-link.active .cf-tab-badge,
+.cf-pill-link.active .cf-tab-badge {
+  background-color: var(--cf-primary-navy);
+  color: #FFFFFF;
+}
+
+/* ==========================================================================
+   15. RESPONSIVE DESIGN BREAKPOINTS
    ========================================================================== */
 @media (max-width: 991.98px) {
   .cf-sidebar {
@@ -1393,4 +2003,375 @@ code, kbd, samp, pre {
   .cf-card {
     padding: 1.15rem;
   }
+
+  /* Drawers full width on mobile */
+  .cf-drawer-sm,
+  .cf-drawer-md,
+  .cf-drawer-lg {
+    width: 100vw;
+  }
+
+  /* Modals full width with small margin on mobile */
+  .cf-modal-backdrop {
+    padding: 0.5rem;
+    align-items: flex-end; /* Slide up from bottom on mobile for app feel */
+  }
+
+  .cf-modal-dialog {
+    max-width: 100%;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  /* Table toolbar flex-direction column on mobile */
+  .cf-table-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .cf-table-toolbar > div {
+    width: 100%;
+  }
+
+  /* Form actions full-width on mobile */
+  .cf-btn-mobile-block {
+    width: 100%;
+  }
+}
+
+/* ==========================================================================
+   14. TASK & WORKFLOW MANAGEMENT MODULE
+   ========================================================================== */
+
+/* View Toggle (List, Board, Calendar) */
+.cf-view-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: var(--cf-surface);
+  border: 1px solid var(--cf-border);
+  border-radius: var(--cf-radius-md);
+  padding: 3px;
+  gap: 2px;
+}
+
+.cf-view-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--cf-text-muted);
+  border: none;
+  background: transparent;
+  border-radius: var(--cf-radius-sm);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--cf-transition-fast);
+}
+
+.cf-view-toggle-btn:hover {
+  color: var(--cf-primary-navy);
+  background: rgba(11, 31, 51, 0.04);
+}
+
+.cf-view-toggle-btn.active {
+  background: var(--cf-primary-navy);
+  color: #FFFFFF;
+  box-shadow: var(--cf-shadow-xs);
+}
+
+/* Task Board Container */
+.cf-task-board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (min-width: 768px) and (max-width: 1199.98px) {
+  .cf-task-board {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 1.25rem;
+    gap: 1rem;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .cf-board-column {
+    min-width: 300px;
+    flex: 0 0 300px;
+    scroll-snap-align: start;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .cf-task-board {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .cf-board-column {
+    width: 100%;
+  }
+}
+
+/* Board Column */
+.cf-board-column {
+  background: rgba(11, 31, 51, 0.02);
+  border: 1px solid var(--cf-border);
+  border-radius: var(--cf-radius-lg);
+  display: flex;
+  flex-direction: column;
+  min-height: 520px;
+  transition: border-color var(--cf-transition-fast), background var(--cf-transition-fast);
+}
+
+.cf-board-column-header {
+  padding: 1rem 1.15rem;
+  border-bottom: 1px solid var(--cf-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--cf-surface);
+  border-top-left-radius: var(--cf-radius-lg);
+  border-top-right-radius: var(--cf-radius-lg);
+}
+
+.cf-board-column-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--cf-primary-navy);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cf-board-cards {
+  padding: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  flex: 1;
+  min-height: 280px;
+  transition: background-color var(--cf-transition-fast), border-color var(--cf-transition-fast);
+}
+
+.cf-board-cards.is-drag-over {
+  background: rgba(11, 31, 51, 0.05);
+  border: 2px dashed var(--cf-secondary-navy);
+  border-radius: var(--cf-radius-md);
+}
+
+/* Task Card (Unified Card Spec) */
+.cf-task-card {
+  background: var(--cf-surface);
+  border: 1px solid var(--cf-border);
+  border-radius: var(--cf-radius-md);
+  padding: 1rem;
+  cursor: grab;
+  position: relative;
+  transition: transform var(--cf-transition-fast), box-shadow var(--cf-transition-fast), border-color var(--cf-transition-fast);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.cf-task-card:hover {
+  border-color: #B2BEC3;
+  transform: translateY(-2px);
+  box-shadow: var(--cf-shadow-sm);
+}
+
+.cf-task-card.is-dragging {
+  opacity: 0.45;
+  cursor: grabbing;
+}
+
+.cf-task-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  gap: 0.5rem;
+}
+
+.cf-task-card-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--cf-primary-navy);
+  line-height: 1.35;
+  margin-bottom: 0.35rem;
+  word-break: break-word;
+}
+
+.cf-task-card-client {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  color: var(--cf-text-secondary);
+  margin-bottom: 0.65rem;
+}
+
+.cf-task-progress-wrap {
+  margin: 0.65rem 0;
+}
+
+.cf-task-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--cf-text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.cf-task-progress-bar {
+  width: 100%;
+  height: 5px;
+  background: var(--cf-bg);
+  border-radius: var(--cf-radius-full);
+  overflow: hidden;
+}
+
+.cf-task-progress-fill {
+  height: 100%;
+  background: var(--cf-primary-navy);
+  border-radius: var(--cf-radius-full);
+  transition: width 0.3s ease;
+}
+
+.cf-task-progress-fill.completed {
+  background: var(--cf-success);
+}
+
+.cf-task-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.75rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid rgba(11, 31, 51, 0.06);
+  font-size: 0.75rem;
+}
+
+.cf-task-assignee {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.cf-task-due {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 600;
+  color: var(--cf-text-muted);
+}
+
+.cf-task-due.overdue {
+  color: var(--cf-danger);
+  font-weight: 700;
+}
+
+.cf-task-due.today {
+  color: var(--cf-warning);
+  font-weight: 700;
+}
+
+/* Recurrence Badge */
+.cf-recurrence-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.45rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--cf-secondary-navy);
+  background: rgba(23, 59, 87, 0.08);
+  border-radius: var(--cf-radius-sm);
+}
+
+/* Interactive Checklist Items */
+.cf-checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--cf-radius-md);
+  border: 1px solid var(--cf-border);
+  background: var(--cf-surface);
+  margin-bottom: 0.5rem;
+  transition: background var(--cf-transition-fast);
+}
+
+.cf-checklist-item:hover {
+  background: var(--cf-surface-muted);
+}
+
+.cf-checklist-item.is-completed {
+  background: rgba(63, 125, 90, 0.04);
+  border-color: rgba(63, 125, 90, 0.2);
+}
+
+.cf-checklist-item.is-completed .cf-checklist-title {
+  text-decoration: line-through;
+  color: var(--cf-text-muted);
+}
+
+.cf-checklist-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--cf-success);
+  margin-top: 2px;
+  cursor: pointer;
+}
+
+.cf-checklist-title {
+  font-size: 0.875rem;
+  color: var(--cf-text-primary);
+  flex: 1;
+  word-break: break-word;
+}
+
+/* Activity Audit Timeline */
+.cf-activity-timeline {
+  position: relative;
+  padding-left: 1.5rem;
+  border-left: 2px solid var(--cf-border);
+  margin-left: 0.5rem;
+}
+
+.cf-activity-node {
+  position: relative;
+  margin-bottom: 1.25rem;
+}
+
+.cf-activity-node::before {
+  content: '';
+  position: absolute;
+  left: -1.85rem;
+  top: 3px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--cf-secondary-navy);
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 0 0 2px var(--cf-border);
+}
+
+.cf-activity-desc {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--cf-text-primary);
+}
+
+.cf-activity-time {
+  font-size: 0.75rem;
+  color: var(--cf-text-muted);
+  margin-top: 2px;
 }

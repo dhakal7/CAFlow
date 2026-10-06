@@ -1,0 +1,167 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}Workflow Templates &mdash; Tasks &mdash; {{ APP_NAME }}{% endblock %}
+
+{% block app_content %}
+{% include "components/breadcrumbs.html" with items=breadcrumbs %}
+
+{# ======================================================== #}
+{# 1. PAGE HEADER                                           #}
+{# ======================================================== #}
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0 0 0.25rem 0;">
+      Workflow Templates
+    </h1>
+    <p style="font-size: 0.875rem; color: var(--cf-text-muted); margin: 0;">
+      Standardize engagement checklists, statutory filings, and recurring audit procedures.
+    </p>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 0.625rem;">
+    <a href="{% url 'tasks:task_list' %}" class="cf-btn cf-btn-outline" style="height: 38px;">
+      &larr; Back to Tasks
+    </a>
+    <button type="button" class="cf-btn cf-btn-primary" onclick="CAFlow.openModal('#cf-create-template-modal')" style="height: 38px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      <span>Create Workflow Template</span>
+    </button>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# 2. TEMPLATES GRID                                        #}
+{# ======================================================== #}
+<div class="row g-4">
+  {% for template in templates %}
+    <div class="col-md-6 col-xl-4">
+      <div class="cf-card" style="padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
+        <div>
+          {# Card Header #}
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+            <span class="cf-badge cf-badge-secondary" style="font-size: 0.6875rem;">
+              {{ template.service|default:"General Practice" }}
+            </span>
+            <span class="cf-badge {% if template.default_priority == 'URGENT' %}cf-badge-danger{% elif template.default_priority == 'HIGH' %}cf-badge-warning{% else %}cf-badge-muted{% endif %}" style="font-size: 0.6875rem;">
+              {{ template.get_default_priority_display|default:template.default_priority }} Priority
+            </span>
+          </div>
+
+          <h3 style="font-size: 1.125rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0 0 0.35rem 0;">
+            {{ template.title }}
+          </h3>
+
+          <p style="font-size: 0.8125rem; color: var(--cf-text-secondary); line-height: 1.45; margin-bottom: 0.875rem;">
+            {{ template.description|default:"Standard operating checklist for engagement execution." }}
+          </p>
+
+          {# Checklist preview #}
+          <div style="background: var(--cf-bg); border-radius: var(--cf-radius-md); padding: 0.75rem 0.875rem; border: 1px solid var(--cf-border); margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <span style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; color: var(--cf-text-muted);">
+                Checklist Steps ({{ template.items.count }})
+              </span>
+              <span style="font-size: 0.6875rem; color: var(--cf-text-muted);">Est. {{ template.estimated_days }} days</span>
+            </div>
+
+            <ol style="margin: 0; padding-left: 1.15rem; font-size: 0.8125rem; color: var(--cf-text-primary); display: flex; flex-direction: column; gap: 0.25rem;">
+              {% for item in template.items.all|slice:":6" %}
+                <li>{{ item.title }}</li>
+              {% endfor %}
+              {% if template.items.count > 6 %}
+                <li style="color: var(--cf-text-muted); list-style-type: none; font-size: 0.75rem; margin-top: 2px;">
+                  + {{ template.items.count|add:"-6" }} more steps...
+                </li>
+              {% endif %}
+            </ol>
+          </div>
+        </div>
+
+        {# Card Actions #}
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--cf-border); padding-top: 0.875rem; margin-top: 0.5rem;">
+          <a href="{% url 'tasks:task_list' %}?template={{ template.id }}" class="cf-btn cf-btn-primary cf-btn-sm" style="flex: 1; justify-content: center;">
+            Apply to Task &rarr;
+          </a>
+          {% if not template.is_system %}
+            <form method="post" action="{% url 'tasks:template_delete' template.id %}" onsubmit="return confirm('Delete this custom workflow template?');" style="margin: 0 0 0 0.5rem;">
+              {% csrf_token %}
+              <button type="submit" class="cf-btn cf-btn-ghost cf-btn-sm" style="color: var(--cf-danger);" title="Delete Template">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
+            </form>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+  {% empty %}
+    <div class="col-12" style="text-align: center; padding: 4rem 1rem;">
+      {% include "components/empty_state.html" with title="No workflow templates found" description="Create standard procedures for your team to replicate on recurring client engagements." %}
+    </div>
+  {% endfor %}
+</div>
+
+{# ======================================================== #}
+{# CREATE WORKFLOW TEMPLATE MODAL                           #}
+{# ======================================================== #}
+<div class="cf-modal-backdrop" id="cf-create-template-modal">
+  <div class="cf-modal-dialog" style="max-width: 600px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title">Create Workflow Template</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form method="post" action="{% url 'tasks:template_create' %}">
+      {% csrf_token %}
+      <div class="cf-modal-body" style="max-height: 75vh; overflow-y: auto; padding: 1.5rem;">
+        
+        <div class="mb-3">
+          <label class="cf-form-label" style="font-weight: 600;">Template Title <span style="color: var(--cf-danger);">*</span></label>
+          {{ form.title }}
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-sm-6">
+            <label class="cf-form-label" style="font-weight: 600;">Service Category</label>
+            {{ form.service }}
+          </div>
+          <div class="col-sm-6">
+            <label class="cf-form-label" style="font-weight: 600;">Default Priority</label>
+            {{ form.default_priority }}
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-sm-6">
+            <label class="cf-form-label" style="font-weight: 600;">Estimated Duration (Days)</label>
+            {{ form.estimated_days }}
+          </div>
+          <div class="col-sm-6">
+            <label class="cf-form-label" style="font-weight: 600;">Description</label>
+            {{ form.description }}
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="cf-form-label" style="font-weight: 600;">Checklist Steps (One per line) <span style="color: var(--cf-danger);">*</span></label>
+          {{ form.checklist_lines }}
+          <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 4px;">
+            Example steps: Request documents &rarr; Receive sales data &rarr; Receive purchase data &rarr; Review documents &rarr; Prepare working papers &rarr; CA review &rarr; Finalize &rarr; Notify client
+          </div>
+        </div>
+
+      </div>
+
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Save Workflow Template</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

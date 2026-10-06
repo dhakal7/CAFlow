@@ -1,0 +1,103 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}Company Documents &mdash; Client Portal &mdash; {{ APP_NAME }}{% endblock %}
+
+{% block app_content %}
+{% include "components/breadcrumbs.html" with items=breadcrumbs %}
+
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1 style="font-size: 1.625rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0 0 0.25rem 0;">
+      Company Document Repository
+    </h1>
+    <p style="font-size: 0.875rem; color: var(--cf-text-muted); margin: 0;">
+      {% if client %}
+        Repository for <strong>{{ client.display_business_name }}</strong> (PAN: {{ client.pan_number|default:'N/A' }})
+      {% else %}
+        Client Document Portal
+      {% endif %}
+    </p>
+  </div>
+
+  <div style="display: flex; gap: 0.5rem;">
+    <a href="{% url 'documents:portal_requests' %}" class="cf-btn cf-btn-outline cf-btn-sm">
+      &larr; Back to Document Requests
+    </a>
+  </div>
+</div>
+
+<div class="cf-card">
+  <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--cf-border); display: flex; justify-content: space-between; align-items: center;">
+    <h2 style="font-size: 1rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0;">
+      All Uploaded Documents ({{ documents.count }})
+    </h2>
+    <span style="font-size: 0.75rem; color: var(--cf-text-muted);">
+      Read &amp; Download Access
+    </span>
+  </div>
+
+  <div class="cf-table-responsive">
+    <table class="cf-table">
+      <thead>
+        <tr>
+          <th>Document Title</th>
+          <th>Category</th>
+          <th>Fiscal Year</th>
+          <th>File Size</th>
+          <th>Date Uploaded</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for doc in documents %}
+          <tr>
+            <td>
+              <div style="display: flex; align-items: center; gap: 0.625rem;">
+                <div style="width: 28px; height: 28px; border-radius: 4px; background: rgba(11,31,51,0.08); color: var(--cf-primary-navy); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.625rem;">
+                  {{ doc.file_extension|upper|default:'FILE' }}
+                </div>
+                <div>
+                  <strong style="color: var(--cf-primary-navy); font-size: 0.875rem;">{{ doc.title }}</strong>
+                  {% if doc.description %}
+                    <div style="font-size: 0.75rem; color: var(--cf-text-muted);">{{ doc.description|truncatechars:40 }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="cf-badge cf-badge-secondary" style="font-size: 0.6875rem;">
+                {{ doc.get_category_display }}
+              </span>
+            </td>
+            <td class="mono-font">{{ doc.fiscal_year }}</td>
+            <td class="mono-font" style="font-size: 0.75rem; color: var(--cf-text-muted);">
+              {{ doc.file_size_bytes|filesizeformat }}
+            </td>
+            <td style="font-size: 0.8125rem;">{{ doc.created_at|date:"M d, Y" }}</td>
+            <td style="text-align: right;">
+              <div style="display: flex; gap: 0.35rem; justify-content: flex-end;">
+                {% if doc.can_preview %}
+                  <a href="{% url 'documents:document_preview' doc.id %}" target="_blank" class="cf-btn cf-btn-ghost cf-btn-sm" style="font-size: 0.75rem;">
+                    Preview
+                  </a>
+                {% endif %}
+                <a href="{% url 'documents:document_download' doc.id %}" class="cf-btn cf-btn-ghost cf-btn-sm" style="font-size: 0.75rem;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <span>Download</span>
+                </a>
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 2.5rem; color: var(--cf-text-muted);">
+              No documents available in this repository.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

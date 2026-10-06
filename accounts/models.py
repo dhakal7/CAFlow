@@ -1,5 +1,7 @@
+import uuid
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 
@@ -8,7 +10,7 @@ class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
             raise ValueError(_('The Email must be set'))
-        email = self.normalize_email(email)
+        email = self.normalize_email(email).lower()
         extra_fields.setdefault('is_active', True)
         user = self.model(email=email, **extra_fields)
         if password:
@@ -34,41 +36,20 @@ class UserManager(BaseUserManager):
 class User(AbstractUser):
     """
     Custom user model for CAFlow.
-    Supports practice partners, managers, trainees, and client users.
+    Email is the primary login identifier; usernames are not used.
     """
-    class Role(models.TextChoices):
-        MANAGING_PARTNER = 'MANAGING_PARTNER', _('Managing Partner / FCA')
-        PARTNER = 'PARTNER', _('Partner / FCA / ACA')
-        AUDIT_MANAGER = 'AUDIT_MANAGER', _('Audit & Tax Manager')
-        SENIOR_AUDITOR = 'SENIOR_AUDITOR', _('Senior Audit Associate')
-        ARTICLE_TRAINEE = 'ARTICLE_TRAINEE', _('Article Trainee (ICAN)')
-        CLIENT_ADMIN = 'CLIENT_ADMIN', _('Client Representative')
-        CLIENT_STAFF = 'CLIENT_STAFF', _('Client Accounting Staff')
+    username = None  # Completely disable username in favor of email
+    email = models.EmailField(_('email address'), unique=True, db_index=True)
+    first_name = models.CharField(_('first name'), max_length=150, blank=True)
+    last_name = models.CharField(_('last name'), max_length=150, blank=True)
+    phone = models.CharField(_('Phone Number'), max_length=30, blank=True)
+    profile_photo = models.ImageField(upload_to='profile_photos/', blank=True, null=True)
 
-    username = models.CharField(_('username'), max_length=150, blank=True, null=True)
-    email = models.EmailField(_('email address'), unique=True)
-    full_name = models.CharField(_('Full Name'), max_length=255, blank=True)
-    phone = models.CharField(_('Mobile / Phone Number'), max_length=20, blank=True)
-    role = models.CharField(
-        _('Firm Role'),
-        max_length=30,
-        choices=Role.choices,
-        default=Role.SENIOR_AUDITOR,
-    )
-    firm = models.ForeignKey(
-        'firms.Firm',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='members',
-        help_text=_('Primary Chartered Accountancy firm this user belongs to.'),
-    )
-    is_firm_owner = models.BooleanField(
-        _('Firm Owner / Licensee'),
-        default=False,
-        help_text=_('Whether this user holds primary subscription authority for the firm.'),
-    )
-    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    # Email verification & security
+    is_email_verified = models.BooleanField(_('Email Verified'), default=False)
+    email_verification_token = models.CharField(_('Verification Token'), max_length=100, blank=True, default='')
+
+    # Nepal CA Professional Accreditation
     ican_membership_no = models.CharField(
         _('ICAN Membership / Reg No'),
         max_length=50,
@@ -76,31 +57,64 @@ class User(AbstractUser):
         help_text=_('Institute of Chartered Accountants of Nepal Membership or Registration Number.'),
     )
 
+    # Legacy/compatibility field (multi-tenant relationships are primary through FirmMembership)
+    firm = models.ForeignKey(
+        'firms.Firm',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='legacy_users',
+        help_text=_('Cached or legacy default firm.'),
+    )
+
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = ['first_name', 'last_name']
 
     class Meta:
         verbose_name = _('User')
         verbose_name_plural = _('Users')
-        ordering = ['full_name', 'email']
+        ordering = ['first_name', 'last_name', 'email']
 
     def __str__(self):
         return self.get_display_name()
 
-    def get_display_name(self):
-        return self.full_name or self.email.split('@')[0].replace('.', ' ').title()
+    @property
+    def full_name(self):
+        name = f"{self.first_name} {self.last_name}".strip()
+        return name if name else self.email.split('@')[0].replace('.', ' ').title()
 
     @property
-    def role_badge_class(self):
-        badges = {
-            self.Role.MANAGING_PARTNER: 'badge-primary',
-            self.Role.PARTNER: 'badge-primary',
-            self.Role.AUDIT_MANAGER: 'badge-warning',
-            self.Role.SENIOR_AUDITOR: 'badge-secondary',
-            self.Role.ARTICLE_TRAINEE: 'badge-muted',
-            self.Role.CLIENT_ADMIN: 'badge-success',
-            self.Role.CLIENT_STAFF: 'badge-muted',
-        }
-        return badges.get(self.role, 'badge-secondary')
+    def avatar(self):
+        """Backwards compatibility alias for profile_photo."""
+        return self.profile_photo
+
+    def get_full_name(self):
+        return self.full_name
+
+    def get_short_name(self):
+        return self.first_name or self.email.split('@')[0]
+
+    def get_display_name(self):
+        return self.full_name
+
+    def get_role_display(self):
+        """Returns the display role for the user in their active firm."""
+        membership = getattr(self, '_active_membership', None)
+        if membership:
+            return membership.get_role_display()
+        active_m = self.firm_memberships.filter(status='ACTIVE').first()
+        if active_m:
+            return active_m.get_role_display()
+        if self.is_superuser:
+            return 'Platform Superuser'
+        return 'Team Member'
+
+    @property
+    def is_client_user(self):
+        """Checks if user represents an external client rather than internal firm staff."""
+        membership = getattr(self, '_active_membership', None)
+        if membership:
+            return membership.role == 'CLIENT'
+        return self.firm_memberships.filter(role='CLIENT').exists()

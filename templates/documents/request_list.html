@@ -1,0 +1,212 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}Document Requests &mdash; {{ APP_NAME }}{% endblock %}
+
+{% block app_content %}
+{% include "components/breadcrumbs.html" with items=breadcrumbs %}
+
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0 0 0.35rem 0;">
+      Client Document Requests
+    </h1>
+    <p style="font-size: 0.875rem; color: var(--cf-text-muted); margin: 0;">
+      Track pending submissions, deadlines, and client fulfillment statuses across all practice engagements.
+    </p>
+  </div>
+
+  <div style="display: flex; gap: 0.625rem; flex-wrap: wrap;">
+    <a href="{% url 'documents:document_list' %}" class="cf-btn cf-btn-outline">
+      &larr; Document Vault
+    </a>
+    <button type="button" class="cf-btn cf-btn-primary" data-cf-modal-trigger="cf-request-doc-modal">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+      <span>Request Documents</span>
+    </button>
+  </div>
+</div>
+
+<div class="cf-card" style="margin-bottom: 1.5rem;">
+  {# Filters #}
+  <div style="padding: 1rem 1.25rem; background: var(--cf-bg-subtle, #FAFAFA); border-bottom: 1px solid var(--cf-border);">
+    <form method="get" action="" style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+      <div style="flex: 1; min-width: 220px;">
+        <input type="search" name="q" value="{{ current_q }}" class="cf-input" placeholder="Search requests or clients..." style="height: 36px; font-size: 0.8125rem;">
+      </div>
+
+      <div style="min-width: 170px;">
+        <select name="client" class="cf-select" style="height: 36px; font-size: 0.8125rem;">
+          <option value="ALL">All Clients</option>
+          {% for cl in clients_list %}
+            <option value="{{ cl.id }}" {% if current_client == cl.id|stringformat:"s" %}selected{% endif %}>
+              {{ cl.display_business_name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div style="min-width: 160px;">
+        <select name="status" class="cf-select" style="height: 36px; font-size: 0.8125rem;">
+          <option value="ALL">All Statuses</option>
+          {% for s_val, s_lbl in status_choices %}
+            <option value="{{ s_val }}" {% if current_status == s_val %}selected{% endif %}>{{ s_lbl }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <button type="submit" class="cf-btn cf-btn-secondary cf-btn-sm" style="height: 36px;">Filter</button>
+      {% if current_q or current_client != 'ALL' or current_status != 'ALL' %}
+        <a href="{% url 'documents:request_list' %}" class="cf-btn cf-btn-ghost cf-btn-sm" style="height: 36px;">Reset</a>
+      {% endif %}
+    </form>
+  </div>
+
+  <div class="cf-table-responsive">
+    <table class="cf-table">
+      <thead>
+        <tr>
+          <th>Requested Document</th>
+          <th>Client Entity</th>
+          <th>Submission Deadline</th>
+          <th>Status</th>
+          <th>Requested By</th>
+          <th>Uploaded Document</th>
+          <th>Instructions / Notes</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for req in requests %}
+          <tr>
+            <td>
+              <strong style="color: var(--cf-primary-navy);">{{ req.requested_documents }}</strong>
+              <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Requested {{ req.requested_date|date:"M d, Y" }}</div>
+            </td>
+            <td>
+              <a href="{% url 'clients:client_detail' req.client.id %}?tab=documents" style="font-weight: 600; text-decoration: none; color: var(--cf-secondary-navy);">
+                {{ req.client.display_business_name }}
+              </a>
+              <div style="font-size: 0.6875rem; color: var(--cf-text-muted);" class="mono-font">PAN: {{ req.client.pan_number|default:'N/A' }}</div>
+            </td>
+            <td>
+              <span class="mono-font" style="font-size: 0.8125rem; {% if req.is_overdue %}color: var(--cf-danger); font-weight: 700;{% endif %}">
+                {{ req.due_date|date:"M d, Y" }}
+                {% if req.is_overdue %}
+                  <span class="cf-badge cf-badge-danger" style="font-size: 0.625rem; margin-left: 4px;">Overdue</span>
+                {% endif %}
+              </span>
+            </td>
+            <td>
+              {% if req.status == 'RECEIVED' %}
+                <span class="cf-badge cf-badge-success">Received</span>
+              {% elif req.status == 'PARTIALLY_RECEIVED' %}
+                <span class="cf-badge cf-badge-warning">Partially Received</span>
+              {% elif req.status == 'OVERDUE' %}
+                <span class="cf-badge cf-badge-danger">Overdue</span>
+              {% elif req.status == 'REJECTED' %}
+                <span class="cf-badge cf-badge-danger">Rejected</span>
+              {% elif req.status == 'CANCELLED' %}
+                <span class="cf-badge cf-badge-muted">Cancelled</span>
+              {% elif req.status == 'REMINDED' %}
+                <span class="cf-badge cf-badge-warning">Reminded</span>
+              {% else %}
+                <span class="cf-badge cf-badge-primary">Requested</span>
+              {% endif %}
+            </td>
+            <td>{{ req.requested_by.get_full_name|default:'Practice Staff' }}</td>
+            <td>
+              {% if req.uploaded_document %}
+                <a href="{% url 'documents:document_download' req.uploaded_document.id %}" class="cf-btn cf-btn-ghost cf-btn-sm" style="font-size: 0.75rem;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <span>{{ req.uploaded_document.title|truncatechars:18 }}</span>
+                </a>
+              {% else %}
+                <span style="font-size: 0.75rem; color: var(--cf-text-muted);">Awaiting submission</span>
+              {% endif %}
+            </td>
+            <td style="font-size: 0.75rem; color: var(--cf-text-secondary); max-width: 220px;">
+              {{ req.notes|default:'None' }}
+            </td>
+            <td style="text-align: right;">
+              <div style="display: flex; gap: 0.25rem; justify-content: flex-end;">
+                {% if req.status != 'RECEIVED' %}
+                  <form method="post" action="{% url 'documents:request_update_status' req.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="status" value="RECEIVED">
+                    <button type="submit" class="cf-btn cf-btn-ghost cf-btn-sm" title="Mark as Received" style="font-size: 0.75rem; color: var(--cf-success);">Mark Received</button>
+                  </form>
+                {% endif %}
+                <form method="post" action="{% url 'documents:request_delete' req.id %}" onsubmit="return confirm('Delete this request?');" style="display: inline;">
+                  {% csrf_token %}
+                  <button type="submit" class="cf-btn cf-btn-ghost cf-btn-sm" style="font-size: 0.75rem; color: var(--cf-danger);">Delete</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 2.5rem; color: var(--cf-text-muted);">
+              No document requests found.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if is_paginated and page_obj.has_other_pages %}
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-top: 1px solid var(--cf-border); flex-wrap: wrap; gap: 0.75rem;">
+      <div style="font-size: 0.8125rem; color: var(--cf-text-muted);">
+        Showing page {{ page_obj.number }} of {{ paginator.num_pages }}
+      </div>
+      <ul class="cf-pagination">
+        {% if page_obj.has_previous %}
+          <li><a href="?page={{ page_obj.previous_page_number }}&q={{ current_q|urlencode }}&client={{ current_client|urlencode }}&status={{ current_status|urlencode }}" class="cf-btn cf-btn-outline cf-btn-sm">&larr; Previous</a></li>
+        {% endif %}
+        {% if page_obj.has_next %}
+          <li><a href="?page={{ page_obj.next_page_number }}&q={{ current_q|urlencode }}&client={{ current_client|urlencode }}&status={{ current_status|urlencode }}" class="cf-btn cf-btn-outline cf-btn-sm">Next &rarr;</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  {% endif %}
+</div>
+
+{# Request Modal #}
+<div class="cf-modal-backdrop" id="cf-request-doc-modal" role="dialog" aria-modal="true" aria-labelledby="cf-req-title">
+  <div class="cf-modal-dialog" style="max-width: 520px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title" id="cf-req-title">Request Documents from Client</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close dialog">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form method="post" action="{% url 'documents:request_create' %}">
+      {% csrf_token %}
+      <div class="cf-modal-body">
+        <div style="margin-bottom: 1rem;">
+          <label class="cf-label" for="{{ request_form.client.id_for_label }}">Client Entity *</label>
+          {{ request_form.client }}
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <label class="cf-label" for="{{ request_form.requested_documents.id_for_label }}">Requested Documents / Schedules *</label>
+          {{ request_form.requested_documents }}
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <label class="cf-label" for="{{ request_form.due_date.id_for_label }}">Submission Deadline *</label>
+          {{ request_form.due_date }}
+        </div>
+        <div>
+          <label class="cf-label" for="{{ request_form.notes.id_for_label }}">Instructions / Client Notice</label>
+          {{ request_form.notes }}
+        </div>
+      </div>
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Send Request</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

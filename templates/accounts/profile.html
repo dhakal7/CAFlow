@@ -1,7 +1,7 @@
 {% extends "layouts/app.html" %}
 {% load static %}
 
-{% block title %}My Profile &mdash; {{ APP_NAME }}{% endblock %}
+{% block title %}Practitioner Profile &mdash; {{ APP_NAME }}{% endblock %}
 
 {% block app_content %}
 {% include "components/breadcrumbs.html" with items=breadcrumbs %}
@@ -9,69 +9,192 @@
 <div style="margin-bottom: 2rem;">
   <h1>Practitioner Profile &amp; Credentials</h1>
   <p style="font-size: 0.875rem; color: var(--cf-text-muted);">
-    Manage your personal details, ICAN membership number, and firm affiliation.
+    Manage your personal details, ICAN membership number, security password, and firm memberships.
   </p>
 </div>
 
+{% if messages %}
+  {% for message in messages %}
+    <div class="cf-alert cf-alert-{{ message.tags|default:'info' }}" style="margin-bottom: 1.5rem;">
+      {{ message }}
+    </div>
+  {% endfor %}
+{% endif %}
+
 <div class="row g-4">
+  <!-- Left Column: User Summary Card -->
   <div class="col-lg-4">
     <div class="cf-card text-center" style="padding: 2rem;">
-      <div class="cf-avatar" style="width: 80px; height: 80px; font-size: 1.75rem; margin: 0 auto 1rem; background: var(--cf-primary-navy);">
-        {% if request.user.is_authenticated %}{{ request.user.get_display_name|slice:":2"|upper }}{% else %}SD{% endif %}
+      <div class="cf-avatar" style="width: 80px; height: 80px; font-size: 1.75rem; margin: 0 auto 1rem; background: var(--cf-primary-navy); overflow: hidden;">
+        {% if user.profile_photo %}
+          <img src="{{ user.profile_photo.url }}" alt="{{ user.get_full_name }}" style="width: 100%; height: 100%; object-fit: cover;">
+        {% else %}
+          {{ user.get_short_name|slice:":2"|upper }}
+        {% endif %}
       </div>
-      <h3 style="font-size: 1.15rem; margin-bottom: 0.25rem;">
-        {% if request.user.is_authenticated %}{{ request.user.get_display_name }}{% else %}CA. Suyog Dhakal{% endif %}
+
+      <h3 style="font-size: 1.15rem; margin-bottom: 0.25rem; color: var(--cf-primary-navy);">
+        {{ user.get_full_name }}
       </h3>
-      <div style="font-size: 0.8125rem; color: var(--cf-text-muted); margin-bottom: 1rem;">
-        {% if request.user.is_authenticated %}{{ request.user.get_role_display }}{% else %}Managing Partner (FCA){% endif %}
+      <div style="font-size: 0.8125rem; color: var(--cf-text-muted); margin-bottom: 0.75rem;">
+        {{ user.email }}
       </div>
-      <span class="cf-badge cf-badge-success" style="padding: 4px 10px;">Active ICAN Good Standing</span>
-      
-      <div class="cf-card-footer" style="margin-top: 1.5rem; justify-content: center; flex-direction: column; gap: 4px;">
-        <span style="font-size: 0.75rem; color: var(--cf-text-muted);">Firm Membership</span>
-        <strong style="color: var(--cf-primary-navy);">Dhakal &amp; Associates</strong>
+
+      <div style="margin-bottom: 1.25rem;">
+        {% if user.is_email_verified %}
+          <span class="cf-badge cf-badge-success" style="padding: 4px 10px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;"><polyline points="20 6 9 17 4 12"/></svg>
+            Email Verified
+          </span>
+        {% else %}
+          <span class="cf-badge cf-badge-warning" style="padding: 4px 10px;">Unverified Email</span>
+          <form method="post" action="{% url 'accounts:resend_verification' %}" style="margin-top: 0.5rem;">
+            {% csrf_token %}
+            <button type="submit" class="cf-btn cf-btn-ghost cf-btn-sm" style="font-size: 0.75rem; color: var(--cf-secondary-navy);">
+              Resend Verification Link
+            </button>
+          </form>
+        {% endif %}
+      </div>
+
+      <!-- Active Practice Info -->
+      <div class="cf-card-footer" style="margin-top: 1rem; justify-content: center; flex-direction: column; gap: 4px; text-align: center;">
+        <span style="font-size: 0.75rem; color: var(--cf-text-muted); text-transform: uppercase; font-weight: 600;">Active Firm Workspace</span>
+        <strong style="color: var(--cf-primary-navy); font-size: 0.9375rem;">{{ ACTIVE_FIRM.name|default:'No Active Firm' }}</strong>
+        {% if USER_MEMBERSHIP %}
+          <span class="cf-badge {{ USER_MEMBERSHIP.role_badge_class }}" style="margin-top: 4px;">{{ USER_MEMBERSHIP.get_role_display }}</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Practice Memberships List Card -->
+    <div class="cf-card" style="margin-top: 1.5rem;">
+      <div class="cf-card-header">
+        <h3 class="cf-card-title" style="font-size: 0.9375rem;">Firm Memberships ({{ memberships.count }})</h3>
+      </div>
+      <div style="padding: 0.5rem 1rem;">
+        {% for m in memberships %}
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; {% if not forloop.last %}border-bottom: 1px solid var(--cf-border);{% endif %}">
+            <div>
+              <strong style="display: block; font-size: 0.8125rem; color: var(--cf-primary-navy);">{{ m.firm.name }}</strong>
+              <span class="cf-badge {{ m.role_badge_class }}" style="font-size: 0.6875rem; margin-top: 2px;">{{ m.get_role_display }}</span>
+            </div>
+            <div>
+              {% if m.firm.id == ACTIVE_FIRM.id %}
+                <span class="cf-badge cf-badge-success" style="font-size: 0.6875rem;">Active</span>
+              {% else %}
+                <form method="post" action="{% url 'firms:switch_firm' m.firm.id %}">
+                  {% csrf_token %}
+                  <button type="submit" class="cf-btn cf-btn-secondary cf-btn-sm" style="font-size: 0.75rem; padding: 3px 8px;">
+                    Switch
+                  </button>
+                </form>
+              {% endif %}
+            </div>
+          </div>
+        {% empty %}
+          <div style="padding: 1rem; text-align: center; color: var(--cf-text-muted); font-size: 0.8125rem;">
+            No firm memberships yet.
+          </div>
+        {% endfor %}
       </div>
     </div>
   </div>
 
+  <!-- Right Column: Personal Information & Password Forms -->
   <div class="col-lg-8">
+    <!-- Edit Profile Card -->
     <div class="cf-card">
       <div class="cf-card-header">
         <h3 class="cf-card-title">Professional Information</h3>
       </div>
-      <form onsubmit="event.preventDefault(); CAFlow.toast('Profile details updated successfully!', 'success');">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update_profile">
+
+        {% if profile_form.errors %}
+          <div class="cf-alert cf-alert-danger" style="margin-bottom: 1rem;">
+            Please correct the errors below.
+          </div>
+        {% endif %}
+
         <div class="row g-3">
           <div class="col-md-6 cf-form-group">
-            <label class="cf-label">Full Name <span class="required-star">*</span></label>
-            <input type="text" class="cf-input" value="CA. Suyog Dhakal" required>
+            <label class="cf-label" for="id_first_name">First Name <span class="required-star">*</span></label>
+            {{ profile_form.first_name }}
+            {% if profile_form.first_name.errors %}<div style="color: var(--cf-danger); font-size: 0.75rem;">{{ profile_form.first_name.errors.0 }}</div>{% endif %}
           </div>
           <div class="col-md-6 cf-form-group">
-            <label class="cf-label">Official Work Email <span class="required-star">*</span></label>
-            <input type="email" class="cf-input" value="suyog@dhakalassociates.com.np" required>
+            <label class="cf-label" for="id_last_name">Last Name <span class="required-star">*</span></label>
+            {{ profile_form.last_name }}
+            {% if profile_form.last_name.errors %}<div style="color: var(--cf-danger); font-size: 0.75rem;">{{ profile_form.last_name.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label">Official Work Email</label>
+            <input type="email" class="cf-input" value="{{ user.email }}" disabled style="background-color: var(--cf-bg); cursor: not-allowed;">
+            <div class="cf-help-text">Email address is your primary login credential.</div>
           </div>
           <div class="col-md-6 cf-form-group">
-            <label class="cf-label">ICAN Membership / Registration No</label>
-            <input type="text" class="cf-input mono-font" value="ICAN-FCA-1420">
+            <label class="cf-label" for="id_phone">Mobile / Phone Contact</label>
+            {{ profile_form.phone }}
+            {% if profile_form.phone.errors %}<div style="color: var(--cf-danger); font-size: 0.75rem;">{{ profile_form.phone.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label" for="id_ican_membership_no">ICAN Membership / Reg No</label>
+            {{ profile_form.ican_membership_no }}
             <div class="cf-help-text">Institute of Chartered Accountants of Nepal Member ID</div>
+            {% if profile_form.ican_membership_no.errors %}<div style="color: var(--cf-danger); font-size: 0.75rem;">{{ profile_form.ican_membership_no.errors.0 }}</div>{% endif %}
           </div>
           <div class="col-md-6 cf-form-group">
-            <label class="cf-label">Mobile Contact</label>
-            <input type="tel" class="cf-input mono-font" value="+977 9851000000">
-          </div>
-          <div class="col-12 cf-form-group">
-            <label class="cf-label">Firm Role Designation</label>
-            <select class="cf-select">
-              <option selected>Managing Partner / FCA</option>
-              <option>Partner / FCA / ACA</option>
-              <option>Audit &amp; Tax Manager</option>
-              <option>Senior Audit Associate</option>
-              <option>Article Trainee (ICAN)</option>
-            </select>
+            <label class="cf-label" for="id_profile_photo">Profile Photo</label>
+            {{ profile_form.profile_photo }}
+            {% if profile_form.profile_photo.errors %}<div style="color: var(--cf-danger); font-size: 0.75rem;">{{ profile_form.profile_photo.errors.0 }}</div>{% endif %}
           </div>
         </div>
 
         <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
-          <button type="submit" class="cf-btn cf-btn-primary">Save Changes</button>
+          <button type="submit" class="cf-btn cf-btn-primary">Save Profile Changes</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Security & Password Card -->
+    <div class="cf-card" style="margin-top: 1.5rem;">
+      <div class="cf-card-header">
+        <h3 class="cf-card-title">Security &amp; Password</h3>
+      </div>
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="change_password">
+
+        {% if password_form.non_field_errors %}
+          {% for error in password_form.non_field_errors %}
+            <div class="cf-alert cf-alert-danger" style="margin-bottom: 1rem;">{{ error }}</div>
+          {% endfor %}
+        {% endif %}
+
+        <div class="row g-3">
+          <div class="col-12 cf-form-group">
+            <label class="cf-label" for="id_current_password">Current Password <span class="required-star">*</span></label>
+            {{ password_form.current_password }}
+            {% if password_form.current_password.errors %}<div style="color: var(--cf-danger); font-size: 0.75rem;">{{ password_form.current_password.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label" for="id_new_password">New Password <span class="required-star">*</span></label>
+            {{ password_form.new_password }}
+            {% if password_form.new_password.errors %}<div style="color: var(--cf-danger); font-size: 0.75rem;">{{ password_form.new_password.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label" for="id_new_password_confirm">Confirm New Password <span class="required-star">*</span></label>
+            {{ password_form.new_password_confirm }}
+            {% if password_form.new_password_confirm.errors %}<div style="color: var(--cf-danger); font-size: 0.75rem;">{{ password_form.new_password_confirm.errors.0 }}</div>{% endif %}
+          </div>
+        </div>
+
+        <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+          <button type="submit" class="cf-btn cf-btn-secondary">Update Password</button>
         </div>
       </form>
     </div>

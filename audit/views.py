@@ -1,7 +1,9 @@
 from django.views.generic import TemplateView
+from firms.mixins import PermissionRequiredMixin
 
 
-class AuditListView(TemplateView):
+class AuditListView(PermissionRequiredMixin, TemplateView):
+    firm_permission = 'view_audit_logs'
     template_name = 'audit/audit_list.html'
 
     def get_context_data(self, **kwargs):

@@ -10,74 +10,135 @@
   <div>
     <h1>Audit &amp; Practice Calendar</h1>
     <p style="font-size: 0.875rem; color: var(--cf-text-muted);">
-      Scheduled field audit visits, client tax hearings, and IRD filing deadlines.
+      Scheduled field audit visits, client tax hearings, and IRD statutory filing deadlines.
     </p>
   </div>
 
-  <button type="button" class="cf-btn cf-btn-primary" onclick="CAFlow.toast('Event scheduling modal opened', 'info')">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    <span>Schedule Visit / Hearing</span>
-  </button>
+  <div style="display: flex; gap: 0.5rem;">
+    <a href="{% url 'compliance:compliance_list' %}" class="cf-btn cf-btn-secondary">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+      <span>Statutory Hub</span>
+    </a>
+    <button type="button" class="cf-btn cf-btn-primary" onclick="CAFlow.toast('Event scheduling modal opened', 'info')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>Schedule Visit / Hearing</span>
+    </button>
+  </div>
 </div>
 
 <div class="row g-4">
   <div class="col-lg-8">
     <div class="cf-card">
       <div class="cf-card-header">
-        <h3 class="cf-card-title">Ashoj 2081 &bull; October 2024</h3>
+        <h3 class="cf-card-title">Schedule Overview &bull; {{ today|date:"F Y" }}</h3>
         <div style="display: flex; gap: 0.35rem;">
-          <button class="cf-btn cf-btn-outline cf-btn-sm">&larr; Bhadra</button>
-          <button class="cf-btn cf-btn-secondary cf-btn-sm">Current Month</button>
-          <button class="cf-btn cf-btn-outline cf-btn-sm">Kartik &rarr;</button>
+          <span class="cf-badge cf-badge-danger">{{ statutory_deadlines_count }} Statutory Deadlines</span>
+          <span class="cf-badge cf-badge-primary">{{ events_count }} Practice Events</span>
         </div>
       </div>
 
-      <div style="padding: 1.5rem 0;">
-        <div class="row g-3">
-          <div class="col-md-6">
-            <div style="padding: 1rem; border: 1px solid var(--cf-border); border-radius: var(--cf-radius-md); background: var(--cf-surface-muted);">
-              <div style="font-size: 0.75rem; font-weight: 700; color: var(--cf-danger); text-transform: uppercase;">Ashoj 25 &bull; Friday</div>
-              <strong style="display: block; font-size: 0.9375rem; color: var(--cf-primary-navy); margin-top: 4px;">Monthly VAT Return Deadline</strong>
-              <p style="font-size: 0.8125rem; color: var(--cf-text-secondary); margin-top: 4px;">Mandatory submission on IRD e-portal before 5:00 PM.</p>
-            </div>
-          </div>
+      <div style="padding: 1rem 0;">
+        <div class="row g-3" id="calendar-entries-container">
+          {% for entry in calendar_entries %}
+            <div class="col-md-6 calendar-item {{ entry.category_class }}" data-type="{{ entry.item_type }}">
+              <div style="padding: 1.125rem; border: 1px solid var(--cf-border); border-radius: var(--cf-radius-md); background: var(--cf-surface-muted); height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                    <div style="font-size: 0.75rem; font-weight: 700; {% if entry.item_type == 'COMPLIANCE' %}color: var(--cf-danger);{% else %}color: var(--cf-primary-navy);{% endif %} text-transform: uppercase;">
+                      {% if entry.date_bs %}BS {{ entry.date_bs }}{% else %}{{ entry.date_ad|date:"D, M d" }}{% endif %}
+                    </div>
+                    <span class="cf-badge {% if entry.status == 'COMPLETED' or entry.status == 'FILED' %}cf-badge-success{% elif entry.is_overdue or entry.status == 'OVERDUE' %}cf-badge-danger{% elif entry.status == 'READY_FOR_REVIEW' %}cf-badge-warning{% elif entry.status == 'IN_PROGRESS' %}cf-badge-primary{% else %}cf-badge-secondary{% endif %}" style="font-size: 0.6875rem;">
+                      {{ entry.status_display }}
+                    </span>
+                  </div>
 
-          <div class="col-md-6">
-            <div style="padding: 1rem; border: 1px solid var(--cf-border); border-radius: var(--cf-radius-md); background: var(--cf-surface-muted);">
-              <div style="font-size: 0.75rem; font-weight: 700; color: var(--cf-secondary-navy); text-transform: uppercase;">Ashoj 28 &bull; Monday</div>
-              <strong style="display: block; font-size: 0.9375rem; color: var(--cf-primary-navy); margin-top: 4px;">Apex Hydropower On-Site Field Audit</strong>
-              <p style="font-size: 0.8125rem; color: var(--cf-text-secondary); margin-top: 4px;">Field physical verification of dam site machinery in Sindhupalchok.</p>
+                  <strong style="display: block; font-size: 0.9375rem; color: var(--cf-primary-navy); margin-bottom: 4px;">
+                    <a href="{{ entry.url }}" style="color: inherit; text-decoration: none;">
+                      {{ entry.title }}
+                    </a>
+                  </strong>
+
+                  <div style="font-size: 0.8125rem; font-weight: 600; color: var(--cf-text-secondary); margin-bottom: 6px;">
+                    {{ entry.client_name }}
+                  </div>
+
+                  <p style="font-size: 0.8125rem; color: var(--cf-text-muted); margin: 0; line-height: 1.4;">
+                    {{ entry.notes|truncatechars:90 }}
+                  </p>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--cf-border-subtle); font-size: 0.75rem; color: var(--cf-text-secondary);">
+                  <span>A.D. {{ entry.date_ad|date:"M d, Y" }}</span>
+                  <span>Assigned: <strong>{{ entry.assigned_to|default:'Team' }}</strong></span>
+                </div>
+              </div>
             </div>
-          </div>
+          {% empty %}
+            <div class="col-12" style="text-align: center; padding: 3rem 1rem; color: var(--cf-text-muted);">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 0.75rem;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <h4>No Calendar Entries</h4>
+              <p style="font-size: 0.875rem;">No statutory deadlines or audit events scheduled for this period.</p>
+            </div>
+          {% endfor %}
         </div>
       </div>
     </div>
   </div>
 
   <div class="col-lg-4">
-    <div class="cf-card">
+    <div class="cf-card" style="margin-bottom: 1.5rem;">
       <div class="cf-card-header">
         <h3 class="cf-card-title">Filter Events</h3>
       </div>
-      <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
         <label class="cf-checkbox-label">
-          <input type="checkbox" class="cf-checkbox" checked>
-          <span>Statutory Tax Deadlines</span>
+          <input type="checkbox" class="cf-checkbox filter-type-toggle" value="cal-tax-deadline" checked onchange="toggleFilter(this)">
+          <span><strong>Statutory Tax Deadlines</strong> ({{ statutory_deadlines_count }})</span>
         </label>
         <label class="cf-checkbox-label">
-          <input type="checkbox" class="cf-checkbox" checked>
+          <input type="checkbox" class="cf-checkbox filter-type-toggle" value="cal-audit-visit" checked onchange="toggleFilter(this)">
           <span>Physical Audit Visits</span>
         </label>
         <label class="cf-checkbox-label">
-          <input type="checkbox" class="cf-checkbox" checked>
+          <input type="checkbox" class="cf-checkbox filter-type-toggle" value="cal-ird-hearing" checked onchange="toggleFilter(this)">
           <span>Tax Office (IRD) Hearings</span>
         </label>
         <label class="cf-checkbox-label">
-          <input type="checkbox" class="cf-checkbox" checked>
+          <input type="checkbox" class="cf-checkbox filter-type-toggle" value="cal-client-meeting" checked onchange="toggleFilter(this)">
           <span>Client Review Meetings</span>
         </label>
       </div>
     </div>
+
+    <div class="cf-card">
+      <div class="cf-card-header">
+        <h3 class="cf-card-title">Nepal Statutory Guide</h3>
+      </div>
+      <div style="font-size: 0.8125rem; color: var(--cf-text-secondary); line-height: 1.5;">
+        <p style="margin-bottom: 0.5rem;">
+          <strong style="color: var(--cf-danger);">Monthly 25th BS:</strong> IRD VAT Return &amp; Payment Challan (Sec 17/19).
+        </p>
+        <p style="margin-bottom: 0.5rem;">
+          <strong style="color: var(--cf-primary-navy);">Monthly 25th BS:</strong> Withholding E-TDS Submission (Sec 90).
+        </p>
+        <p style="margin-bottom: 0.5rem;">
+          <strong style="color: var(--cf-warning);">Poush / Chaitra / Ashad End:</strong> Advance Tax installments (Sec 94).
+        </p>
+        <p style="margin: 0;">
+          <strong style="color: var(--cf-secondary-navy);">Ashwin End (within 6 mo):</strong> Annual corporate OCR filing (Sec 51/80).
+        </p>
+      </div>
+    </div>
   </div>
 </div>
+
+<script>
+function toggleFilter(chk) {
+  var cls = chk.value;
+  var items = document.querySelectorAll('.' + cls);
+  items.forEach(function(el) {
+    el.style.display = chk.checked ? '' : 'none';
+  });
+}
+</script>
 {% endblock %}

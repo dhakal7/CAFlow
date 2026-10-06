@@ -8,22 +8,33 @@
 
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
   <div>
-    <h1>Firm Team &amp; Trainees</h1>
+    <h1>Practice Team &amp; Members</h1>
     <p style="font-size: 0.875rem; color: var(--cf-text-muted);">
-      Manage partner seats, audit managers, and ICAN registered article trainees.
+      Manage partner seats, chartered accountants, associates, and trainees for <strong>{{ firm.name }}</strong>.
     </p>
   </div>
 
-  <button type="button" class="cf-btn cf-btn-primary" onclick="CAFlow.toast('Invite team member dialog opened', 'info')">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-    <span>Invite Staff Member</span>
-  </button>
+  {% if can_invite %}
+    <button type="button" class="cf-btn cf-btn-primary" data-cf-modal-target="#cf-invite-modal">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+      <span>Invite Team Member</span>
+    </button>
+  {% endif %}
 </div>
 
+{% if messages %}
+  {% for message in messages %}
+    <div class="cf-alert cf-alert-{{ message.tags|default:'info' }}" style="margin-bottom: 1.5rem;">
+      {{ message }}
+    </div>
+  {% endfor %}
+{% endif %}
+
+<!-- Team Members Table -->
 <div class="cf-table-container">
-  <div class="cf-table-toolbar">
+  <div class="cf-table-toolbar" style="display: flex; justify-content: space-between; align-items: center;">
     <div style="font-size: 0.875rem; font-weight: 600; color: var(--cf-primary-navy);">
-      Dhakal &amp; Associates Staff Allocation (6 of 15 seats used)
+      {{ firm.name }} Team Roster ({{ memberships.count }} members)
     </div>
   </div>
 
@@ -32,66 +43,226 @@
       <thead>
         <tr>
           <th>Name / Member</th>
-          <th>Designation</th>
-          <th>ICAN Membership / Reg</th>
-          <th>Primary Role</th>
-          <th>Active Assignments</th>
+          <th>Role</th>
           <th>Status</th>
+          <th>Joined Date</th>
+          {% if can_manage %}
+            <th style="text-align: right;">Actions</th>
+          {% endif %}
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td>
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
-              <div class="cf-avatar" style="background: var(--cf-primary-navy);">SD</div>
-              <div>
-                <strong>CA. Suyog Dhakal</strong>
-                <div style="font-size: 0.75rem; color: var(--cf-text-muted);">suyog@firm.com.np</div>
+        {% for m in memberships %}
+          <tr>
+            <td>
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div class="cf-avatar" style="background: var(--cf-primary-navy); overflow: hidden;">
+                  {% if m.user.profile_photo %}
+                    <img src="{{ m.user.profile_photo.url }}" alt="{{ m.user.get_full_name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                  {% else %}
+                    {{ m.user.get_short_name|slice:":2"|upper }}
+                  {% endif %}
+                </div>
+                <div>
+                  <strong>{{ m.user.get_full_name }}</strong>
+                  {% if m.user.id == request.user.id %}
+                    <span class="cf-badge cf-badge-info" style="font-size: 0.65rem; padding: 1px 5px; margin-left: 4px;">You</span>
+                  {% endif %}
+                  <div style="font-size: 0.75rem; color: var(--cf-text-muted);">{{ m.user.email }}</div>
+                </div>
               </div>
-            </div>
-          </td>
-          <td>Managing Partner (FCA)</td>
-          <td><span class="mono-font" style="font-size: 0.8125rem;">ICAN-1420</span></td>
-          <td><span class="cf-badge cf-badge-primary">Firm Owner</span></td>
-          <td>18 Engagements</td>
-          <td><span class="cf-badge cf-badge-success" dot="True">Active</span></td>
-        </tr>
+            </td>
+            <td>
+              <span class="cf-badge {{ m.role_badge_class }}">{{ m.get_role_display }}</span>
+            </td>
+            <td>
+              <span class="cf-badge {{ m.status_badge_class }}">{{ m.get_status_display }}</span>
+            </td>
+            <td style="font-size: 0.8125rem; color: var(--cf-text-secondary);">
+              {{ m.joined_at|date:"d M Y" }}
+            </td>
+            {% if can_manage %}
+              <td style="text-align: right;">
+                <div style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                  <!-- Change Role trigger (unless target is OWNER and current user is not OWNER) -->
+                  {% if m.role != 'OWNER' or request.firm_membership.role == 'OWNER' %}
+                    <button type="button" 
+                            class="cf-btn cf-btn-secondary cf-btn-sm" 
+                            style="font-size: 0.75rem; padding: 4px 8px;"
+                            data-cf-modal-target="#cf-role-modal-{{ m.id }}">
+                      Role
+                    </button>
+                  {% endif %}
 
-        <tr>
-          <td>
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
-              <div class="cf-avatar" style="background: var(--cf-secondary-navy);">AS</div>
-              <div>
-                <strong>CA. Anjali Sharma</strong>
-                <div style="font-size: 0.75rem; color: var(--cf-text-muted);">anjali@firm.com.np</div>
-              </div>
-            </div>
-          </td>
-          <td>Audit &amp; Tax Manager (ACA)</td>
-          <td><span class="mono-font" style="font-size: 0.8125rem;">ICAN-2841</span></td>
-          <td><span class="cf-badge cf-badge-secondary">Manager</span></td>
-          <td>12 Engagements</td>
-          <td><span class="cf-badge cf-badge-success" dot="True">Active</span></td>
-        </tr>
+                  <!-- Deactivate / Reactivate (Cannot deactivate OWNER or self) -->
+                  {% if m.role != 'OWNER' and m.user.id != request.user.id %}
+                    {% if m.status == 'ACTIVE' %}
+                      <form method="post" action="{% url 'firms:team_deactivate' m.id %}" style="display: inline;" onsubmit="return confirm('Are you sure you want to deactivate {{ m.user.get_full_name }}?');">
+                        {% csrf_token %}
+                        <button type="submit" class="cf-btn cf-btn-outline cf-btn-sm" style="font-size: 0.75rem; padding: 4px 8px; color: var(--cf-danger); border-color: var(--cf-danger);">
+                          Deactivate
+                        </button>
+                      </form>
+                    {% else %}
+                      <form method="post" action="{% url 'firms:team_reactivate' m.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="cf-btn cf-btn-secondary cf-btn-sm" style="font-size: 0.75rem; padding: 4px 8px; color: var(--cf-success);">
+                          Reactivate
+                        </button>
+                      </form>
+                    {% endif %}
+                  {% endif %}
+                </div>
 
-        <tr>
-          <td>
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
-              <div class="cf-avatar" style="background: #4A5560;">BK</div>
-              <div>
-                <strong>Bikash Karki</strong>
-                <div style="font-size: 0.75rem; color: var(--cf-text-muted);">bikash@firm.com.np</div>
-              </div>
-            </div>
-          </td>
-          <td>Article Trainee (Year 2)</td>
-          <td><span class="mono-font" style="font-size: 0.8125rem;">REG-2080-991</span></td>
-          <td><span class="cf-badge cf-badge-muted">Article Trainee</span></td>
-          <td>4 Tasks</td>
-          <td><span class="cf-badge cf-badge-success" dot="True">Active</span></td>
-        </tr>
+                <!-- Role Modal for this member -->
+                <div class="cf-modal-backdrop" id="cf-role-modal-{{ m.id }}">
+                  <div class="cf-modal-dialog" style="text-align: left;">
+                    <div class="cf-modal-header">
+                      <h3 class="cf-modal-title">Change Role &mdash; {{ m.user.get_full_name }}</h3>
+                      <button type="button" class="cf-modal-close-btn" data-cf-modal-close>&times;</button>
+                    </div>
+                    <form method="post" action="{% url 'firms:team_change_role' m.id %}">
+                      {% csrf_token %}
+                      <div class="cf-modal-body">
+                        <p style="font-size: 0.8125rem; color: var(--cf-text-secondary); margin-bottom: 1rem;">
+                          Select the new operational role for this team member within <strong>{{ firm.name }}</strong>.
+                        </p>
+                        <div class="cf-form-group">
+                          <label class="cf-label">Assigned Role</label>
+                          <select name="role" class="cf-select">
+                            {% for role_code, role_label in role_choices %}
+                              <option value="{{ role_code }}" {% if m.role == role_code %}selected{% endif %}>
+                                {{ role_label }}
+                              </option>
+                            {% endfor %}
+                          </select>
+                        </div>
+                      </div>
+                      <div class="cf-modal-footer">
+                        <button type="button" class="cf-btn cf-btn-ghost" data-cf-modal-close>Cancel</button>
+                        <button type="submit" class="cf-btn cf-btn-primary">Update Role</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </td>
+            {% endif %}
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="5" style="text-align: center; padding: 2rem; color: var(--cf-text-muted);">
+              No team members registered yet.
+            </td>
+          </tr>
+        {% endfor %}
       </tbody>
     </table>
   </div>
 </div>
+
+<!-- Pending Invitations Section -->
+{% if can_invite %}
+  <div class="cf-table-container" style="margin-top: 2rem;">
+    <div class="cf-table-toolbar">
+      <div style="font-size: 0.875rem; font-weight: 600; color: var(--cf-primary-navy);">
+        Pending Invitations ({{ invitations.count }})
+      </div>
+    </div>
+
+    <div class="cf-table-responsive">
+      <table class="cf-table">
+        <thead>
+          <tr>
+            <th>Invited Email</th>
+            <th>Role</th>
+            <th>Invited By</th>
+            <th>Sent Date</th>
+            <th>Expires</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for inv in invitations %}
+            <tr>
+              <td>
+                <strong style="color: var(--cf-primary-navy);">{{ inv.email }}</strong>
+              </td>
+              <td>
+                <span class="cf-badge cf-badge-secondary">{{ inv.get_role_display }}</span>
+              </td>
+              <td style="font-size: 0.8125rem; color: var(--cf-text-secondary);">
+                {{ inv.invited_by.get_full_name }}
+              </td>
+              <td style="font-size: 0.8125rem; color: var(--cf-text-secondary);">
+                {{ inv.created_at|date:"d M Y" }}
+              </td>
+              <td style="font-size: 0.8125rem; color: var(--cf-text-muted);">
+                {% if inv.is_expired %}
+                  <span class="cf-badge cf-badge-danger">Expired</span>
+                {% else %}
+                  {{ inv.expires_at|date:"d M Y" }}
+                {% endif %}
+              </td>
+              <td style="text-align: right;">
+                <div style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                  <button type="button" 
+                          class="cf-btn cf-btn-ghost cf-btn-sm" 
+                          style="font-size: 0.75rem;" 
+                          onclick="navigator.clipboard.writeText('{{ request.scheme }}://{{ request.get_host }}/invitations/accept/{{ inv.token }}/'); alert('Invitation link copied to clipboard!');">
+                    Copy Link
+                  </button>
+                  <form method="post" action="{% url 'firms:team_revoke_invite' inv.id %}" style="display: inline;" onsubmit="return confirm('Revoke this invitation?');">
+                    {% csrf_token %}
+                    <button type="submit" class="cf-btn cf-btn-outline cf-btn-sm" style="font-size: 0.75rem; color: var(--cf-danger); border-color: var(--cf-danger);">
+                      Revoke
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" style="text-align: center; padding: 1.5rem; color: var(--cf-text-muted); font-size: 0.8125rem;">
+                No pending invitations.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endif %}
+
+<!-- Invite Staff Modal -->
+{% if can_invite %}
+  <div class="cf-modal-backdrop" id="cf-invite-modal">
+    <div class="cf-modal-dialog">
+      <div class="cf-modal-header">
+        <h3 class="cf-modal-title">Invite New Team Member</h3>
+        <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close">&times;</button>
+      </div>
+      <form method="post" action="{% url 'firms:team_invite' %}">
+        {% csrf_token %}
+        <div class="cf-modal-body">
+          <p style="font-size: 0.8125rem; color: var(--cf-text-secondary); margin-bottom: 1.25rem;">
+            Send a secure, single-use invitation link to onboard a new Chartered Accountant, associate, or trainee to <strong>{{ firm.name }}</strong>.
+          </p>
+          <div class="cf-form-group">
+            <label class="cf-label" for="id_email">Official Email Address <span class="required-star">*</span></label>
+            {{ invite_form.email }}
+          </div>
+          <div class="cf-form-group">
+            <label class="cf-label" for="id_role">Assign Role <span class="required-star">*</span></label>
+            {{ invite_form.role }}
+            <div class="cf-help-text">Controls server-side authorization across clients, tasks, documents, and settings.</div>
+          </div>
+        </div>
+        <div class="cf-modal-footer">
+          <button type="button" class="cf-btn cf-btn-ghost" data-cf-modal-close>Cancel</button>
+          <button type="submit" class="cf-btn cf-btn-primary">Send Invitation</button>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endif %}
 {% endblock %}

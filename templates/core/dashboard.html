@@ -1,118 +1,153 @@
 {% extends "layouts/app.html" %}
 {% load static %}
 
-{% block title %}Practice Dashboard &mdash; {{ APP_NAME }}{% endblock %}
+{% block title %}Admin Dashboard &mdash; {{ APP_NAME }}{% endblock %}
 
 {% block app_content %}
 <!-- Breadcrumb Header -->
 {% include "components/breadcrumbs.html" with items=breadcrumbs %}
 
-<!-- Dashboard Page Header -->
-<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+<!-- =========================================================================
+     PAGE HEADER
+     "Good morning, [User Name]"
+     Subtitle: "Here's what's happening across your firm today."
+     Right: Date & Quick Action Dropdown
+     ========================================================================= -->
+<div class="cf-page-header" style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 1.25rem;">
   <div>
-    <h1 style="margin-bottom: 0.25rem;">Practice Overview</h1>
-    <div style="font-size: 0.875rem; color: var(--cf-text-muted);">
-      Welcome back, <strong>CA. Suyog Dhakal</strong> &bull; Firm: <strong>Dhakal &amp; Associates (ICAN Reg: 1420)</strong>
-    </div>
+    <h1 style="margin-bottom: 0.35rem; font-size: 1.75rem; letter-spacing: -0.025em; color: var(--cf-primary-navy);">
+      Good morning, {{ user_display_name }}
+    </h1>
+    <p style="margin: 0; font-size: 0.9375rem; color: var(--cf-text-muted);">
+      Here's what's happening across your firm today.
+    </p>
   </div>
 
-  <div style="display: flex; align-items: center; gap: 0.75rem;">
-    <!-- Create Task Trigger -->
-    <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-target="#cf-quick-task-modal">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      <span>New Task</span>
-    </button>
+  <div style="display: flex; align-items: center; gap: 0.875rem; flex-wrap: wrap;">
+    <!-- Date Display -->
+    <div class="cf-badge cf-badge-secondary" style="padding: 0.5rem 0.85rem; font-size: 0.8125rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; background: var(--cf-surface); border: 1px solid var(--cf-border); color: var(--cf-primary-navy); box-shadow: var(--cf-shadow-xs);">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>{{ today_formatted_date }}</span>
+    </div>
 
-    <!-- Request Document Trigger -->
-    <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-target="#cf-request-doc-modal">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      <span>Request Document</span>
-    </button>
+    <!-- Quick Action Dropdown -->
+    <div class="cf-dropdown">
+      <button type="button" class="cf-btn cf-btn-primary" data-cf-dropdown-toggle id="cf-quick-action-btn" aria-haspopup="true" aria-expanded="false" style="box-shadow: 0 2px 6px rgba(11, 31, 51, 0.2);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span>Quick Action</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
 
-    <!-- Onboard Client Trigger -->
-    <button type="button" class="cf-btn cf-btn-primary" data-cf-modal-target="#cf-new-client-modal">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-      <span>Add Client</span>
-    </button>
+      <div class="cf-dropdown-menu" style="min-width: 220px; z-index: 1060;">
+        <div class="cf-dropdown-header">Workspace Quick Actions</div>
+        
+        <button type="button" class="cf-dropdown-item" data-cf-modal-target="#cf-modal-add-client">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+          <span>Add Client</span>
+        </button>
+
+        <button type="button" class="cf-dropdown-item" data-cf-modal-target="#cf-modal-create-task">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <span>Create Task</span>
+        </button>
+
+        <button type="button" class="cf-dropdown-item" data-cf-modal-target="#cf-modal-request-docs">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>Request Documents</span>
+        </button>
+
+        <div class="cf-dropdown-divider"></div>
+
+        <button type="button" class="cf-dropdown-item" data-cf-modal-target="#cf-modal-create-invoice">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="12" y1="15" x2="16" y2="15"/></svg>
+          <span>Create Invoice</span>
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 
 <!-- =========================================================================
-     FOUR PRIMARY METRIC STAT CARDS
+     FOUR PRIMARY STAT CARDS
+     1. Total Clients (128)
+     2. Pending Tasks (24)
+     3. Due Soon (8)
+     4. Outstanding (NPR 45K)
+     Cards use the global card component (.cf-card.cf-stat-card)
      ========================================================================= -->
 <div class="row g-3 mb-4">
   <!-- Card 1: Total Clients (128) -->
-  <div class="col-sm-6 col-xl-3">
+  <div class="col-12 col-sm-6 col-xl-3">
     <div class="cf-card cf-stat-card cf-card-hover">
       <div class="cf-stat-top">
         <div>
-          <div class="cf-stat-label">Total Clients</div>
-          <div class="cf-stat-value">128</div>
+          <div class="cf-stat-label">{{ stat_cards.total_clients.label }}</div>
+          <div class="cf-stat-value">{{ stat_cards.total_clients.value }}</div>
         </div>
         <div class="cf-stat-icon-wrap cf-stat-icon-navy">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </div>
       </div>
       <div class="cf-stat-meta">
-        <span class="cf-badge cf-badge-success" style="font-size: 0.6875rem;">+14%</span>
-        <span>vs previous fiscal year</span>
+        <span class="cf-trend-pill positive">{{ stat_cards.total_clients.trend }}</span>
+        <span>{{ stat_cards.total_clients.supporting_text }}</span>
       </div>
     </div>
   </div>
 
   <!-- Card 2: Pending Tasks (24) -->
-  <div class="col-sm-6 col-xl-3">
+  <div class="col-12 col-sm-6 col-xl-3">
     <div class="cf-card cf-stat-card cf-card-hover">
       <div class="cf-stat-top">
         <div>
-          <div class="cf-stat-label">Pending Tasks</div>
-          <div class="cf-stat-value" style="color: var(--cf-warning);">24</div>
+          <div class="cf-stat-label">{{ stat_cards.pending_tasks.label }}</div>
+          <div class="cf-stat-value" style="color: var(--cf-warning);">{{ stat_cards.pending_tasks.value }}</div>
         </div>
         <div class="cf-stat-icon-wrap cf-stat-icon-warning">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
       </div>
       <div class="cf-stat-meta">
-        <span class="cf-badge cf-badge-warning" style="font-size: 0.6875rem;">6 Review</span>
-        <span>Awaiting partner signoff</span>
+        <span class="cf-badge cf-badge-warning" style="font-size: 0.6875rem;">{{ stat_cards.pending_tasks.trend }}</span>
+        <span>{{ stat_cards.pending_tasks.supporting_text }}</span>
       </div>
     </div>
   </div>
 
   <!-- Card 3: Due Soon (8) -->
-  <div class="col-sm-6 col-xl-3">
+  <div class="col-12 col-sm-6 col-xl-3">
     <div class="cf-card cf-stat-card cf-card-hover">
       <div class="cf-stat-top">
         <div>
-          <div class="cf-stat-label">Due Soon (Compliance)</div>
-          <div class="cf-stat-value" style="color: var(--cf-danger);">8</div>
+          <div class="cf-stat-label">{{ stat_cards.due_soon.label }}</div>
+          <div class="cf-stat-value" style="color: var(--cf-danger);">{{ stat_cards.due_soon.value }}</div>
         </div>
         <div class="cf-stat-icon-wrap cf-stat-icon-danger">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         </div>
       </div>
       <div class="cf-stat-meta">
-        <span class="cf-badge cf-badge-danger" style="font-size: 0.6875rem;">3 Days</span>
-        <span>Monthly VAT return (25th Ashoj)</span>
+        <span class="cf-badge cf-badge-danger" style="font-size: 0.6875rem;">{{ stat_cards.due_soon.trend }}</span>
+        <span>{{ stat_cards.due_soon.supporting_text }}</span>
       </div>
     </div>
   </div>
 
   <!-- Card 4: Outstanding (NPR 45K) -->
-  <div class="col-sm-6 col-xl-3">
+  <div class="col-12 col-sm-6 col-xl-3">
     <div class="cf-card cf-stat-card cf-card-hover">
       <div class="cf-stat-top">
         <div>
-          <div class="cf-stat-label">Outstanding Fees</div>
-          <div class="cf-stat-value mono-font">NPR 45K</div>
+          <div class="cf-stat-label">{{ stat_cards.outstanding.label }}</div>
+          <div class="cf-stat-value mono-font" style="color: var(--cf-primary-navy);">{{ stat_cards.outstanding.value }}</div>
         </div>
-        <div class="cf-stat-icon-wrap cf-stat-icon-success">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        <div class="cf-stat-icon-wrap cf-stat-icon-navy">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="12" y1="15" x2="16" y2="15"/></svg>
         </div>
       </div>
       <div class="cf-stat-meta">
-        <span class="cf-badge cf-badge-primary" style="font-size: 0.6875rem;">4 Invoices</span>
-        <span>Billed with 13% Nepal VAT</span>
+        <span class="cf-badge cf-badge-primary" style="font-size: 0.6875rem;">{{ stat_cards.outstanding.trend }}</span>
+        <span>{{ stat_cards.outstanding.supporting_text }}</span>
       </div>
     </div>
   </div>
@@ -120,182 +155,308 @@
 
 <!-- =========================================================================
      MIDDLE SECTION: TODAY'S WORK & UPCOMING COMPLIANCE
-     ========================================================================= #}
+     ========================================================================= -->
 <div class="row g-4 mb-4">
-  <!-- Today's Work Table -->
-  <div class="col-lg-8">
-    <div class="cf-table-container">
-      <div class="cf-table-toolbar">
+  
+  <!-- TODAY'S WORK (Large Table / Card) -->
+  <div class="col-12 col-lg-8">
+    <div class="cf-table-container" style="background: var(--cf-surface); border: 1px solid var(--cf-border); border-radius: var(--cf-radius-lg); box-shadow: var(--cf-shadow-sm);">
+      
+      <!-- Table Toolbar with Search & Filter -->
+      <div class="cf-table-toolbar" style="padding: 1.15rem 1.25rem; border-bottom: 1px solid var(--cf-border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.875rem;">
         <div>
-          <h4 style="margin: 0; font-size: 1rem; font-weight: 700; color: var(--cf-primary-navy);">Today's Work &amp; Engagement Queue</h4>
-          <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Active working papers and audits scheduled for today</div>
+          <h3 style="margin: 0 0 0.2rem 0; font-size: 1.0625rem; font-weight: 700; color: var(--cf-primary-navy); display: flex; align-items: center; gap: 0.5rem;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            Today's Work &amp; Engagement Queue
+          </h3>
+          <div style="font-size: 0.8125rem; color: var(--cf-text-muted);">
+            Active working papers, tax filings, and audits assigned for today
+          </div>
         </div>
 
-        <div style="display: flex; gap: 0.5rem;">
-          <input type="search" class="cf-input" id="task-filter-input" placeholder="Filter tasks..." style="height: 34px; font-size: 0.8125rem; width: 170px;" onkeyup="CAFlow.filterTable('dashboard-tasks-table', this.value)">
-          <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" onclick="CAFlow.toast('Task list refreshed', 'info')">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        <!-- Search, Status Filter, and Quick Add Trigger -->
+        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+          <!-- Real-time Search -->
+          <div style="position: relative;">
+            <input type="search" 
+                   class="cf-input" 
+                   id="dashboard-task-search" 
+                   placeholder="Search task, client, staff..." 
+                   value="{{ search_query }}"
+                   style="height: 34px; font-size: 0.8125rem; width: 190px; padding-left: 2rem;" 
+                   onkeyup="CAFlowDashboard.filterTasksClientSide()">
+            <span style="position: absolute; left: 0.65rem; top: 50%; transform: translateY(-50%); color: var(--cf-text-muted); pointer-events: none;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </span>
+          </div>
+
+          <!-- Status Filter Dropdown -->
+          <select class="cf-select" 
+                  id="dashboard-status-filter" 
+                  style="height: 34px; font-size: 0.8125rem; width: 130px; padding: 0 1.75rem 0 0.65rem;"
+                  onchange="CAFlowDashboard.filterTasksClientSide()">
+            <option value="ALL">All Status</option>
+            <option value="TODO" {% if status_filter == 'TODO' %}selected{% endif %}>To Do</option>
+            <option value="IN_PROGRESS" {% if status_filter == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
+            <option value="UNDER_REVIEW" {% if status_filter == 'UNDER_REVIEW' %}selected{% endif %}>Under Review</option>
+            <option value="COMPLETED" {% if status_filter == 'COMPLETED' %}selected{% endif %}>Completed</option>
+          </select>
+
+          <!-- New Task Trigger -->
+          <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" data-cf-modal-target="#cf-modal-create-task" title="New Task">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span class="d-none d-sm-inline">New Task</span>
           </button>
         </div>
       </div>
 
-      <div class="cf-table-responsive">
-        <table class="cf-table" id="dashboard-tasks-table">
-          <thead>
-            <tr>
-              <th style="width: 38px;"><input type="checkbox" class="cf-checkbox" aria-label="Select all"></th>
-              <th>Task / Engagement</th>
-              <th>Client (Nepal PAN)</th>
-              <th>Assignee</th>
-              <th>Priority</th>
-              <th>Status</th>
-              <th style="text-align: right;">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><input type="checkbox" class="cf-checkbox"></td>
-              <td>
-                <strong style="color: var(--cf-primary-navy);">Physical Stock Audit Verification</strong>
-                <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Year-end inventory count working papers</div>
-              </td>
-              <td>
-                <div>Himalayan Traders Pvt Ltd</div>
-                <div class="mono-font" style="font-size: 0.6875rem; color: var(--cf-text-muted);">PAN: 601928374</div>
-              </td>
-              <td>
-                <div style="display: flex; align-items: center; gap: 0.45rem;">
-                  <div class="cf-avatar" style="width: 24px; height: 24px; font-size: 0.65rem;">BK</div>
-                  <span style="font-size: 0.8125rem;">Bikash K. (Trainee)</span>
-                </div>
-              </td>
-              <td><span class="cf-badge cf-badge-danger">Urgent</span></td>
-              <td><span class="cf-badge cf-badge-warning">In Progress</span></td>
-              <td style="text-align: right;">
-                <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('Viewing working paper details', 'info')">View</button>
-              </td>
-            </tr>
-
-            <tr>
-              <td><input type="checkbox" class="cf-checkbox"></td>
-              <td>
-                <strong style="color: var(--cf-primary-navy);">D-03 Tax Assessment Reconciliation</strong>
-                <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Income Tax Act Section 99 audit verification</div>
-              </td>
-              <td>
-                <div>Lumbini Cement Industries</div>
-                <div class="mono-font" style="font-size: 0.6875rem; color: var(--cf-text-muted);">PAN: 300481920</div>
-              </td>
-              <td>
-                <div style="display: flex; align-items: center; gap: 0.45rem;">
-                  <div class="cf-avatar" style="width: 24px; height: 24px; font-size: 0.65rem; background: var(--cf-secondary-navy);">AS</div>
-                  <span style="font-size: 0.8125rem;">Anjali S. (Manager)</span>
-                </div>
-              </td>
-              <td><span class="cf-badge cf-badge-warning">High</span></td>
-              <td><span class="cf-badge cf-badge-primary">Under Review</span></td>
-              <td style="text-align: right;">
-                <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('Review module opened', 'info')">Review</button>
-              </td>
-            </tr>
-
-            <tr>
-              <td><input type="checkbox" class="cf-checkbox"></td>
-              <td>
-                <strong style="color: var(--cf-primary-navy);">Monthly Sales &amp; Purchase VAT Ledger</strong>
-                <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Annex 5 &amp; Annex 6 upload preparation</div>
-              </td>
-              <td>
-                <div>Kathmandu Tech Solutions</div>
-                <div class="mono-font" style="font-size: 0.6875rem; color: var(--cf-text-muted);">PAN: 604928113</div>
-              </td>
-              <td>
-                <div style="display: flex; align-items: center; gap: 0.45rem;">
-                  <div class="cf-avatar" style="width: 24px; height: 24px; font-size: 0.65rem;">PR</div>
-                  <span style="font-size: 0.8125rem;">Pooja R. (Associate)</span>
-                </div>
-              </td>
-              <td><span class="cf-badge cf-badge-secondary">Medium</span></td>
-              <td><span class="cf-badge cf-badge-success">Ready</span></td>
-              <td style="text-align: right;">
-                <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('VAT Annex export initiated', 'success')">File</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- Quick Filter Metric Tabs (Real Task Data: Pending, Due Today, Overdue, Assigned to Me, Completed) -->
+      <div style="padding: 0.5rem 1.25rem; border-bottom: 1px solid var(--cf-border-subtle); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; background: rgba(11, 31, 51, 0.02);">
+        <a href="?scope=all" class="cf-btn {% if task_scope == 'all' %}cf-btn-primary{% else %}cf-btn-outline{% endif %} cf-btn-sm" style="font-size: 0.75rem; height: 28px; padding: 0 10px;">
+          All Pending ({{ task_counts.pending }})
+        </a>
+        <a href="?scope=due_today" class="cf-btn {% if task_scope == 'due_today' %}cf-btn-primary{% else %}cf-btn-outline{% endif %} cf-btn-sm" style="font-size: 0.75rem; height: 28px; padding: 0 10px;">
+          Due Today ({{ task_counts.due_today }})
+        </a>
+        <a href="?scope=overdue" class="cf-btn {% if task_scope == 'overdue' %}cf-btn-danger{% else %}cf-btn-outline{% endif %} cf-btn-sm" style="font-size: 0.75rem; height: 28px; padding: 0 10px; {% if task_counts.overdue > 0 and task_scope != 'overdue' %}color: var(--cf-danger); border-color: rgba(217, 83, 79, 0.4);{% endif %}">
+          Overdue ({{ task_counts.overdue }})
+        </a>
+        <a href="?scope=assigned_to_me" class="cf-btn {% if task_scope == 'assigned_to_me' %}cf-btn-primary{% else %}cf-btn-outline{% endif %} cf-btn-sm" style="font-size: 0.75rem; height: 28px; padding: 0 10px;">
+          Assigned to Me ({{ task_counts.assigned_to_me }})
+        </a>
+        <a href="?scope=completed" class="cf-btn {% if task_scope == 'completed' %}cf-btn-success{% else %}cf-btn-outline{% endif %} cf-btn-sm" style="font-size: 0.75rem; height: 28px; padding: 0 10px;">
+          Completed ({{ task_counts.completed }})
+        </a>
       </div>
 
-      <div style="padding: 0.85rem 1.25rem; background-color: var(--cf-surface-hover); border-top: 1px solid var(--cf-border-subtle); display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-size: 0.8125rem; color: var(--cf-text-muted);">3 active tasks shown of 24 total</span>
-        <a href="{% url 'tasks:task_list' %}" class="cf-btn cf-btn-ghost cf-btn-sm">View Full Task Board &rarr;</a>
+      <!-- Responsive Tasks Table -->
+      <div class="cf-table-responsive" style="min-height: 220px;">
+        {% if todays_tasks %}
+          <table class="cf-table" id="dashboard-tasks-table">
+            <thead>
+              <tr>
+                <th style="width: 28%;">Task</th>
+                <th style="width: 20%;">Client</th>
+                <th style="width: 17%;">Assigned To</th>
+                <th style="width: 10%;">Priority</th>
+                <th style="width: 11%;">Due Date</th>
+                <th style="width: 12%;">Status</th>
+                <th style="width: 12%; text-align: right;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for task in todays_tasks %}
+                <tr data-task-row 
+                    data-status="{{ task.status }}" 
+                    data-priority="{{ task.priority }}"
+                    data-search-text="{{ task.title }} {{ task.client.name|default:'' }} {{ task.client.pan_number|default:'' }} {{ task.assigned_to.get_full_name|default:'' }}">
+                  
+                  <!-- Task Name & Notes -->
+                  <td>
+                    <div style="font-weight: 600; color: var(--cf-primary-navy); font-size: 0.875rem;">
+                      {{ task.title }}
+                    </div>
+                    {% if task.description %}
+                      <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 2px; max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        {{ task.description }}
+                      </div>
+                    {% endif %}
+                  </td>
+
+                  <!-- Client Name & PAN -->
+                  <td>
+                    {% if task.client %}
+                      <div style="font-weight: 600; color: var(--cf-text-primary); font-size: 0.8125rem;">
+                        {{ task.client.name }}
+                      </div>
+                      <div class="mono-font" style="font-size: 0.6875rem; color: var(--cf-text-muted);">
+                        PAN: {{ task.client.pan_number|default:'N/A' }}
+                      </div>
+                    {% else %}
+                      <span style="font-size: 0.8125rem; color: var(--cf-text-muted);">Practice General</span>
+                    {% endif %}
+                  </td>
+
+                  <!-- Assigned Staff -->
+                  <td>
+                    {% if task.assigned_to %}
+                      <div style="display: flex; align-items: center; gap: 0.45rem;">
+                        <div class="cf-avatar" style="width: 24px; height: 24px; font-size: 0.65rem;">
+                          {{ task.assigned_to.first_name|slice:":1"|upper }}{{ task.assigned_to.last_name|slice:":1"|upper }}
+                        </div>
+                        <span style="font-size: 0.8125rem; color: var(--cf-text-primary); white-space: nowrap;">
+                          {{ task.assigned_to.get_full_name }}
+                        </span>
+                      </div>
+                    {% else %}
+                      <span style="font-size: 0.75rem; color: var(--cf-text-muted);">Unassigned</span>
+                    {% endif %}
+                  </td>
+
+                  <!-- Priority Badge -->
+                  <td>
+                    {% if task.priority == 'URGENT' %}
+                      <span class="cf-badge cf-badge-danger">Urgent</span>
+                    {% elif task.priority == 'HIGH' %}
+                      <span class="cf-badge cf-badge-warning">High</span>
+                    {% elif task.priority == 'MEDIUM' %}
+                      <span class="cf-badge cf-badge-secondary">Medium</span>
+                    {% else %}
+                      <span class="cf-badge cf-badge-muted">Low</span>
+                    {% endif %}
+                  </td>
+
+                  <!-- Due Date -->
+                  <td>
+                    <div style="font-size: 0.8125rem; font-weight: 500;">
+                      {{ task.due_date|date:"d M Y"|default:'Open' }}
+                    </div>
+                  </td>
+
+                  <!-- Status Badge -->
+                  <td>
+                    {% if task.status == 'COMPLETED' %}
+                      <span class="cf-badge cf-badge-success">Completed</span>
+                    {% elif task.status == 'UNDER_REVIEW' %}
+                      <span class="cf-badge cf-badge-primary">Review</span>
+                    {% elif task.status == 'IN_PROGRESS' %}
+                      <span class="cf-badge cf-badge-warning">In Progress</span>
+                    {% else %}
+                      <span class="cf-badge cf-badge-muted">To Do</span>
+                    {% endif %}
+                  </td>
+
+                  <!-- Actions (View, Edit, Complete) -->
+                  <td style="text-align: right; white-space: nowrap;">
+                    <div style="display: inline-flex; align-items: center; gap: 4px;">
+                      
+                      <!-- View Action Trigger -->
+                      <button type="button" 
+                              class="cf-btn cf-btn-ghost cf-btn-sm" 
+                              style="padding: 3px 7px; font-size: 0.75rem;" 
+                              onclick="CAFlowDashboard.openTaskDetail('{{ task.id }}', '{{ task.title|escapejs }}', '{{ task.client.name|default:'Practice General'|escapejs }}', '{{ task.client.pan_number|default:'N/A'|escapejs }}', '{{ task.assigned_to.get_full_name|default:'Unassigned'|escapejs }}', '{{ task.priority|escapejs }}', '{{ task.status|escapejs }}', '{{ task.due_date|date:'Y-m-d'|default:'' }}', '{{ task.description|escapejs }}')"
+                              title="View details">
+                        View
+                      </button>
+
+                      <!-- Edit Action Trigger -->
+                      <button type="button" 
+                              class="cf-btn cf-btn-ghost cf-btn-sm" 
+                              style="padding: 3px 7px; font-size: 0.75rem;" 
+                              onclick="CAFlowDashboard.openTaskEdit('{{ task.id }}', '{{ task.title|escapejs }}', '{{ task.client.id|default:'' }}', '{{ task.assigned_to.id|default:'' }}', '{{ task.priority|escapejs }}', '{{ task.due_date|date:'Y-m-d'|default:'' }}', '{{ task.description|escapejs }}')"
+                              title="Edit task">
+                        Edit
+                      </button>
+
+                      <!-- Complete Action Trigger -->
+                      {% if task.status != 'COMPLETED' %}
+                        <form method="post" action="{% url 'core:quick_complete_task' task.id %}" style="display: inline;" onsubmit="CAFlowDashboard.handleCompleteTask(event, this)">
+                          {% csrf_token %}
+                          <button type="submit" 
+                                  class="cf-btn cf-btn-outline cf-btn-sm" 
+                                  style="padding: 3px 7px; font-size: 0.75rem; color: var(--cf-success); border-color: rgba(63, 125, 90, 0.4);" 
+                                  title="Mark as completed">
+                            Complete
+                          </button>
+                        </form>
+                      {% else %}
+                        <span style="font-size: 0.75rem; color: var(--cf-success); font-weight: 700; padding: 0 4px;">✓</span>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+          <!-- Filter empty state placeholder inside table -->
+          <div id="dashboard-tasks-no-filter-match" style="display: none; padding: 2rem 1rem;">
+            {% include "components/empty_state.html" with title="No Matching Tasks Found" description="Try clearing your search query or choosing another status filter." action_html='<button type="button" class="cf-btn cf-btn-outline cf-btn-sm" onclick="CAFlowDashboard.resetTaskFilters()">Reset Filters</button>' %}
+          </div>
+        {% else %}
+          <!-- Empty State when 0 tasks exist in DB -->
+          <div style="padding: 2.5rem 1rem;">
+            {% include "components/empty_state.html" with title="No Tasks Scheduled For Today" description="Your engagement queue is clear. Create a new task or review upcoming statutory deadlines." action_html='<button type="button" class="cf-btn cf-btn-primary cf-btn-sm" data-cf-modal-target="#cf-modal-create-task"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> <span>Create Engagement Task</span></button>' %}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Table Footer Summary -->
+      <div style="padding: 0.85rem 1.25rem; background-color: var(--cf-surface-hover); border-top: 1px solid var(--cf-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+        <span style="font-size: 0.8125rem; color: var(--cf-text-muted);" id="dashboard-tasks-count-summary">
+          Showing {{ todays_tasks|length }} active tasks of {{ total_active_tasks_count }} pending in firm
+        </span>
+        <a href="{% url 'tasks:task_list' %}" class="cf-btn cf-btn-ghost cf-btn-sm" style="font-weight: 600; color: var(--cf-secondary-navy);">
+          View Full Task Board &rarr;
+        </a>
       </div>
     </div>
   </div>
 
-  <!-- Upcoming Nepal Statutory Compliance -->
-  <div class="col-lg-4">
-    <div class="cf-card" style="height: 100%;">
+  <!-- UPCOMING COMPLIANCE (Section showing statutory items) -->
+  <div class="col-12 col-lg-4">
+    <div class="cf-card" style="height: 100%; display: flex; flex-direction: column;">
+      
       <div class="cf-card-header">
         <div>
           <h3 class="cf-card-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
             Upcoming Compliance
           </h3>
-          <div class="cf-card-subtitle">Nepal IRD &amp; OCR Deadlines</div>
+          <div class="cf-card-subtitle">Nepal IRD, OCR &amp; ICAN Deadlines</div>
         </div>
-        <span class="cf-badge cf-badge-danger">8 Due</span>
+        <span class="cf-badge cf-badge-danger">{{ compliance_items|length }} Due</span>
       </div>
 
-      <div style="display: flex; flex-direction: column; gap: 0.875rem;">
-        <!-- Compliance Item 1 -->
-        <div style="padding: 0.85rem; border-radius: var(--cf-radius-md); background: var(--cf-surface-muted); border-left: 3px solid var(--cf-danger);">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <strong style="font-size: 0.875rem; color: var(--cf-primary-navy);">Monthly VAT Return (Bhadra)</strong>
-            <span class="cf-badge cf-badge-danger" style="font-size: 0.6875rem;">25 Ashoj</span>
-          </div>
-          <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 4px;">
-            Inland Revenue Department &bull; Section 17
-          </div>
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
-            <span style="font-size: 0.75rem; color: var(--cf-danger); font-weight: 600;">5 clients pending filing</span>
-            <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" style="padding: 2px 8px; font-size: 0.6875rem;" onclick="CAFlow.toast('Reminding 5 clients via SMS/Email', 'info')">Remind All</button>
-          </div>
-        </div>
+      <div class="cf-card-body" style="flex: 1; padding: 1rem 1.25rem;">
+        {% if compliance_items %}
+          <div style="display: flex; flex-direction: column; gap: 0.875rem;">
+            {% for item in compliance_items %}
+              <div class="cf-card-hover" 
+                   style="padding: 0.85rem; border-radius: var(--cf-radius-md); background: var(--cf-bg); border: 1px solid var(--cf-border); border-left: 3px solid {% if item.status == 'OVERDUE' or item.status == 'DUE_SOON' %}var(--cf-danger){% elif item.status == 'UPCOMING' %}var(--cf-secondary-navy){% else %}var(--cf-success){% endif %}; cursor: pointer; transition: all var(--cf-transition-fast);"
+                   onclick="CAFlowDashboard.openComplianceDetail('{{ item.title|escapejs }}', '{{ item.get_governing_act_display|escapejs }}', '{{ item.client.name|default:'All Firm Clients'|escapejs }}', '{{ item.due_date_bs|escapejs }}', '{{ item.due_date_ad|date:'d M Y'|escapejs }}', '{{ item.get_status_display|escapejs }}', '{{ item.assigned_to.get_full_name|default:'Unassigned'|escapejs }}', '{{ item.notes|escapejs }}')"
+                   title="Click to view statutory filing details">
+                
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
+                  <strong style="font-size: 0.875rem; color: var(--cf-primary-navy);">{{ item.title }}</strong>
+                  {% if item.status == 'OVERDUE' or item.is_overdue %}
+                    <span class="cf-badge cf-badge-danger" style="font-size: 0.65rem;">Overdue</span>
+                  {% elif item.status == 'COMPLETED' or item.status == 'FILED' %}
+                    <span class="cf-badge cf-badge-success" style="font-size: 0.65rem;">{{ item.get_status_display }}</span>
+                  {% elif item.status == 'READY_FOR_REVIEW' or item.status == 'WAITING_FOR_CLIENT' %}
+                    <span class="cf-badge cf-badge-warning" style="font-size: 0.65rem;">{{ item.get_status_display }}</span>
+                  {% elif item.status == 'IN_PROGRESS' %}
+                    <span class="cf-badge cf-badge-primary" style="font-size: 0.65rem;">In Progress</span>
+                  {% else %}
+                    <span class="cf-badge cf-badge-secondary" style="font-size: 0.65rem;">{{ item.get_status_display }}</span>
+                  {% endif %}
+                </div>
 
-        <!-- Compliance Item 2 -->
-        <div style="padding: 0.85rem; border-radius: var(--cf-radius-md); background: var(--cf-surface-muted); border-left: 3px solid var(--cf-warning);">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <strong style="font-size: 0.875rem; color: var(--cf-primary-navy);">TDS Bi-monthly E-Return</strong>
-            <span class="cf-badge cf-badge-warning" style="font-size: 0.6875rem;">25 Ashoj</span>
-          </div>
-          <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 4px;">
-            Income Tax Act 2058 &bull; Section 90
-          </div>
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
-            <span style="font-size: 0.75rem; color: var(--cf-text-muted);">18 clients verified</span>
-            <span class="cf-badge cf-badge-muted" style="font-size: 0.6875rem;">On Track</span>
-          </div>
-        </div>
+                <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 4px; display: flex; justify-content: space-between; align-items: center;">
+                  <span>{{ item.client.name|default:'Statutory / Practice General' }}</span>
+                  <span class="mono-font" style="font-weight: 600; color: var(--cf-primary-navy);">BS {{ item.due_date_bs }}</span>
+                </div>
 
-        <!-- Compliance Item 3 -->
-        <div style="padding: 0.85rem; border-radius: var(--cf-radius-md); background: var(--cf-surface-muted); border-left: 3px solid var(--cf-secondary-navy);">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <strong style="font-size: 0.875rem; color: var(--cf-primary-navy);">Company Registrar (OCR) D-01</strong>
-            <span class="cf-badge cf-badge-muted" style="font-size: 0.6875rem;">Poush End</span>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 0.75rem;">
+                  <span style="color: var(--cf-text-secondary); font-size: 0.6875rem;">
+                    Staff: <strong>{{ item.assigned_to.get_short_name|default:'Assigned' }}</strong>
+                  </span>
+                  <span style="color: var(--cf-secondary-navy); font-weight: 600; font-size: 0.6875rem;">
+                    View Detail &rarr;
+                  </span>
+                </div>
+              </div>
+            {% endfor %}
           </div>
-          <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 4px;">
-            Companies Act 2063 &bull; Section 51
-          </div>
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
-            <span style="font-size: 0.75rem; color: var(--cf-text-muted);">Annual General Meeting documentation</span>
-            <span class="cf-badge cf-badge-muted" style="font-size: 0.6875rem;">Scheduled</span>
-          </div>
-        </div>
+        {% else %}
+          {% include "components/empty_state.html" with title="No Statutory Deadlines" description="All IRD and OCR compliance items are up to date." %}
+        {% endif %}
       </div>
 
-      <div class="cf-card-footer">
-        <a href="{% url 'compliance:compliance_list' %}" style="font-size: 0.8125rem; font-weight: 600; color: var(--cf-secondary-navy);">
-          View Full Statutory Calendar &rarr;
+      <div class="cf-card-footer" style="padding: 0.85rem 1.25rem;">
+        <a href="{% url 'compliance:compliance_list' %}" style="font-size: 0.8125rem; font-weight: 600; color: var(--cf-secondary-navy); display: flex; align-items: center; justify-content: space-between; width: 100%;">
+          <span>View Statutory Calendar</span>
+          <span>&rarr;</span>
         </a>
       </div>
     </div>
@@ -304,146 +465,237 @@
 
 <!-- =========================================================================
      BOTTOM ROW: DOCUMENT REQUESTS, TEAM WORKLOAD, RECENT ACTIVITY
+     3-Column Responsive Grid (Stacks on tablet/mobile)
      ========================================================================= -->
 <div class="row g-4">
-  <!-- Document Requests Tracker -->
-  <div class="col-md-4">
-    <div class="cf-card" style="height: 100%;">
+  
+  <!-- 1. DOCUMENT REQUESTS -->
+  <div class="col-12 col-md-6 col-xl-4">
+    <div class="cf-card" style="height: 100%; display: flex; flex-direction: column;">
       <div class="cf-card-header">
         <div>
           <h3 class="cf-card-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             Document Requests
           </h3>
-          <div class="cf-card-subtitle">Pending client uploads</div>
+          <div class="cf-card-subtitle">Pending client vouchers &amp; statements</div>
         </div>
-        <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" data-cf-modal-target="#cf-request-doc-modal">+ Request</button>
+        <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" data-cf-modal-target="#cf-modal-request-docs">+ Request</button>
       </div>
 
-      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-        <div style="padding: 0.75rem; border: 1px solid var(--cf-border); border-radius: var(--cf-radius-md);">
-          <div style="display: flex; justify-content: space-between;">
-            <strong style="font-size: 0.8125rem; color: var(--cf-primary-navy);">Bank Confirmation Letter</strong>
-            <span class="cf-badge cf-badge-danger" style="font-size: 0.65rem;">Overdue</span>
-          </div>
-          <div style="font-size: 0.75rem; color: var(--cf-text-secondary); margin-top: 2px;">Apex Hydropower Ltd &bull; Nabil Bank A/C</div>
-        </div>
+      <div class="cf-card-body" style="flex: 1; padding: 1rem 1.25rem;">
+        {% if document_requests %}
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            {% for req in document_requests %}
+              <div style="padding: 0.8rem; border: 1px solid var(--cf-border); border-radius: var(--cf-radius-md); background: var(--cf-surface); transition: border-color var(--cf-transition-fast);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
+                  <strong style="font-size: 0.8125rem; color: var(--cf-primary-navy);">{{ req.requested_documents }}</strong>
+                  {% if req.status == 'OVERDUE' %}
+                    <span class="cf-badge cf-badge-danger" style="font-size: 0.65rem;">Overdue</span>
+                  {% elif req.status == 'RECEIVED' %}
+                    <span class="cf-badge cf-badge-success" style="font-size: 0.65rem;">Received</span>
+                  {% elif req.status == 'REMINDED' %}
+                    <span class="cf-badge cf-badge-warning" style="font-size: 0.65rem;">Reminded</span>
+                  {% else %}
+                    <span class="cf-badge cf-badge-secondary" style="font-size: 0.65rem;">Pending</span>
+                  {% endif %}
+                </div>
 
-        <div style="padding: 0.75rem; border: 1px solid var(--cf-border); border-radius: var(--cf-radius-md);">
-          <div style="display: flex; justify-content: space-between;">
-            <strong style="font-size: 0.8125rem; color: var(--cf-primary-navy);">Bhadra Month Sales Invoices</strong>
-            <span class="cf-badge cf-badge-warning" style="font-size: 0.65rem;">Pending</span>
-          </div>
-          <div style="font-size: 0.75rem; color: var(--cf-text-secondary); margin-top: 2px;">Everest Organic Teas &bull; 14 files</div>
-        </div>
+                <div style="font-size: 0.75rem; color: var(--cf-text-secondary); margin-top: 3px;">
+                  Client: <strong>{{ req.client.name }}</strong>
+                </div>
 
-        <div style="padding: 0.75rem; border: 1px solid var(--cf-border); border-radius: var(--cf-radius-md);">
-          <div style="display: flex; justify-content: space-between;">
-            <strong style="font-size: 0.8125rem; color: var(--cf-primary-navy);">Signed Board Minutes of AGM</strong>
-            <span class="cf-badge cf-badge-success" style="font-size: 0.65rem;">Received</span>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 0.75rem;">
+                  <span style="color: var(--cf-text-muted);">
+                    Due: <strong>{{ req.due_date|date:"d M Y" }}</strong>
+                  </span>
+                  
+                  <div style="display: flex; gap: 4px;">
+                    <!-- View Trigger -->
+                    <button type="button" 
+                            class="cf-btn cf-btn-ghost cf-btn-sm" 
+                            style="padding: 2px 7px; font-size: 0.6875rem;" 
+                            onclick="CAFlowDashboard.openDocDetail('{{ req.client.name|escapejs }}', '{{ req.requested_documents|escapejs }}', '{{ req.due_date|date:'d M Y'|escapejs }}', '{{ req.get_status_display|escapejs }}', '{{ req.notes|escapejs }}')">
+                      View
+                    </button>
+
+                    <!-- Remind Trigger -->
+                    <form method="post" action="{% url 'core:quick_remind_document' req.id %}" style="display: inline;" onsubmit="CAFlowDashboard.handleRemindDoc(event, this, '{{ req.client.name|escapejs }}')">
+                      {% csrf_token %}
+                      <button type="submit" 
+                              class="cf-btn cf-btn-outline cf-btn-sm" 
+                              style="padding: 2px 7px; font-size: 0.6875rem;" 
+                              title="Send SMS &amp; Email reminder">
+                        Remind
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
           </div>
-          <div style="font-size: 0.75rem; color: var(--cf-text-secondary); margin-top: 2px;">Shikhar Microfinance &bull; PDF (2.4 MB)</div>
-        </div>
+        {% else %}
+          {% include "components/empty_state.html" with title="No Document Requests" description="No documents are currently requested from clients." action_html='<button type="button" class="cf-btn cf-btn-outline cf-btn-sm" data-cf-modal-target="#cf-modal-request-docs">Request Documents</button>' %}
+        {% endif %}
+      </div>
+
+      <div class="cf-card-footer" style="padding: 0.85rem 1.25rem;">
+        <a href="{% url 'documents:document_list' %}" style="font-size: 0.8125rem; font-weight: 600; color: var(--cf-secondary-navy);">
+          View Client Documents Hub &rarr;
+        </a>
       </div>
     </div>
   </div>
 
-  <!-- Team Workload Distribution -->
-  <div class="col-md-4">
-    <div class="cf-card" style="height: 100%;">
+  <!-- 2. TEAM WORKLOAD -->
+  <div class="col-12 col-md-6 col-xl-4">
+    <div class="cf-card" style="height: 100%; display: flex; flex-direction: column;">
       <div class="cf-card-header">
         <div>
           <h3 class="cf-card-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             Team Workload
           </h3>
-          <div class="cf-card-subtitle">Active audit capacity</div>
+          <div class="cf-card-subtitle">Active staff capacity &amp; allocations</div>
         </div>
-        <span class="cf-badge cf-badge-muted">6 Associates</span>
+        <span class="cf-badge cf-badge-secondary">{{ team_workload|length }} Members</span>
       </div>
 
-      <div style="display: flex; flex-direction: column; gap: 1rem;">
-        <div>
-          <div style="display: flex; justify-content: space-between; font-size: 0.8125rem; margin-bottom: 4px;">
-            <span><strong>Anjali Sharma</strong> (Audit Manager)</span>
-            <span class="cf-badge cf-badge-warning" style="font-size: 0.6875rem;">85% Capacity</span>
-          </div>
-          <div style="width: 100%; height: 6px; background: var(--cf-surface-muted); border-radius: 99px; overflow: hidden;">
-            <div style="width: 85%; height: 100%; background: var(--cf-warning); border-radius: 99px;"></div>
-          </div>
-        </div>
+      <div class="cf-card-body" style="flex: 1; padding: 1rem 1.25rem;">
+        {% if team_workload %}
+          <div style="display: flex; flex-direction: column; gap: 1.15rem;">
+            {% for member in team_workload %}
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div class="cf-avatar" style="width: 26px; height: 26px; font-size: 0.6875rem;">
+                      {{ member.avatar_initials }}
+                    </div>
+                    <div>
+                      <strong style="font-size: 0.8125rem; color: var(--cf-primary-navy);">{{ member.name }}</strong>
+                      <div style="font-size: 0.6875rem; color: var(--cf-text-muted);">{{ member.role }}</div>
+                    </div>
+                  </div>
+                  <span class="cf-badge cf-badge-{{ member.capacity_level }}" style="font-size: 0.6875rem;">
+                    {{ member.capacity_label }}
+                  </span>
+                </div>
 
-        <div>
-          <div style="display: flex; justify-content: space-between; font-size: 0.8125rem; margin-bottom: 4px;">
-            <span><strong>Bikash Karki</strong> (Article Trainee)</span>
-            <span class="cf-badge cf-badge-danger" style="font-size: 0.6875rem;">95% Full</span>
-          </div>
-          <div style="width: 100%; height: 6px; background: var(--cf-surface-muted); border-radius: 99px; overflow: hidden;">
-            <div style="width: 95%; height: 100%; background: var(--cf-danger); border-radius: 99px;"></div>
-          </div>
-        </div>
+                <!-- Visual Workload Indicator Bar -->
+                <div style="width: 100%; height: 6px; background: var(--cf-surface-muted); border-radius: var(--cf-radius-full); overflow: hidden; margin-top: 6px;">
+                  <div style="width: {{ member.capacity_pct }}%; height: 100%; background: {% if member.capacity_level == 'danger' %}var(--cf-danger){% elif member.capacity_level == 'warning' %}var(--cf-warning){% else %}var(--cf-success){% endif %}; border-radius: var(--cf-radius-full); transition: width 0.4s ease;"></div>
+                </div>
 
-        <div>
-          <div style="display: flex; justify-content: space-between; font-size: 0.8125rem; margin-bottom: 4px;">
-            <span><strong>Pooja Regmi</strong> (Senior Associate)</span>
-            <span class="cf-badge cf-badge-success" style="font-size: 0.6875rem;">55% Active</span>
+                <!-- Workload Metrics Row -->
+                <div style="display: flex; justify-content: space-between; font-size: 0.6875rem; color: var(--cf-text-muted); margin-top: 5px;">
+                  <span>Active: <strong>{{ member.active_tasks }}</strong></span>
+                  <span>Due Soon: <strong style="color: var(--cf-warning);">{{ member.due_soon }}</strong></span>
+                  <span>Overdue: <strong style="color: var(--cf-danger);">{{ member.overdue }}</strong></span>
+                  <span>Completed: <strong>{{ member.completion_pct }}%</strong></span>
+                </div>
+              </div>
+            {% endfor %}
           </div>
-          <div style="width: 100%; height: 6px; background: var(--cf-surface-muted); border-radius: 99px; overflow: hidden;">
-            <div style="width: 55%; height: 100%; background: var(--cf-success); border-radius: 99px;"></div>
-          </div>
-        </div>
+        {% else %}
+          {% include "components/empty_state.html" with title="No Workload Assigned" description="Add team members and assign tasks to monitor practice capacity." action_html='<a href="/firms/team/" class="cf-btn cf-btn-outline cf-btn-sm">Manage Team</a>' %}
+        {% endif %}
+      </div>
+
+      <div class="cf-card-footer" style="padding: 0.85rem 1.25rem;">
+        <a href="{% url 'firms:team_list' %}" style="font-size: 0.8125rem; font-weight: 600; color: var(--cf-secondary-navy);">
+          View Full Team &amp; Utilization &rarr;
+        </a>
       </div>
     </div>
   </div>
 
-  <!-- Recent Client Activity Timeline -->
-  <div class="col-md-4">
-    <div class="cf-card" style="height: 100%;">
+  <!-- 3. RECENT CLIENT ACTIVITY -->
+  <div class="col-12 col-md-12 col-xl-4">
+    <div class="cf-card" style="height: 100%; display: flex; flex-direction: column;">
       <div class="cf-card-header">
         <div>
           <h3 class="cf-card-title">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"/></svg>
             Recent Activity
           </h3>
-          <div class="cf-card-subtitle">Immutable audit trail preview</div>
+          <div class="cf-card-subtitle">Real-time practice actions &amp; client events</div>
         </div>
       </div>
 
-      <div style="display: flex; flex-direction: column; gap: 0.875rem; font-size: 0.8125rem;">
-        <div style="display: flex; gap: 0.65rem;">
-          <span class="cf-status-dot success" style="margin-top: 6px;"></span>
-          <div>
-            <div><strong>CA. Suyog Dhakal</strong> signed off on <strong>Apex Hydro Audit</strong></div>
-            <div style="font-size: 0.6875rem; color: var(--cf-text-muted);">18 mins ago &bull; Verified Working Paper</div>
-          </div>
-        </div>
+      <div class="cf-card-body" style="flex: 1; padding: 1rem 1.25rem;">
+        {% if recent_activities %}
+          <div style="display: flex; flex-direction: column; gap: 0.95rem;">
+            {% for act in recent_activities %}
+              <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                
+                <!-- Semantic Activity Icon -->
+                <div style="width: 28px; height: 28px; border-radius: var(--cf-radius-full); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;
+                            {% if act.activity_type == 'NEW_CLIENT' %}background: rgba(11, 31, 51, 0.08); color: var(--cf-primary-navy);
+                            {% elif act.activity_type == 'DOC_UPLOADED' %}background: rgba(23, 59, 87, 0.1); color: var(--cf-secondary-navy);
+                            {% elif act.activity_type == 'TASK_COMPLETED' %}background: var(--cf-success-bg); color: var(--cf-success);
+                            {% elif act.activity_type == 'CORRECTION_REQUESTED' %}background: var(--cf-warning-bg); color: var(--cf-warning);
+                            {% elif act.activity_type == 'INVOICE_PAID' %}background: var(--cf-success-bg); color: var(--cf-success);
+                            {% else %}background: rgba(43, 108, 176, 0.12); color: var(--cf-info);{% endif %}">
+                  
+                  {% if act.activity_type == 'NEW_CLIENT' %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/></svg>
+                  {% elif act.activity_type == 'DOC_UPLOADED' %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  {% elif act.activity_type == 'TASK_COMPLETED' %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  {% elif act.activity_type == 'CORRECTION_REQUESTED' %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  {% elif act.activity_type == 'INVOICE_PAID' %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                  {% else %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  {% endif %}
+                </div>
 
-        <div style="display: flex; gap: 0.65rem;">
-          <span class="cf-status-dot warning" style="margin-top: 6px;"></span>
-          <div>
-            <div><strong>Himalayan Traders</strong> uploaded <strong>Bhadra Purchase Register</strong></div>
-            <div style="font-size: 0.6875rem; color: var(--cf-text-muted);">1 hour ago &bull; Client Portal upload</div>
+                <!-- Activity Copy & Metadata -->
+                <div style="flex: 1;">
+                  <div style="font-size: 0.8125rem; color: var(--cf-text-primary); line-height: 1.4;">
+                    {{ act.description }}
+                  </div>
+                  <div style="font-size: 0.6875rem; color: var(--cf-text-muted); margin-top: 3px; display: flex; align-items: center; gap: 0.45rem;">
+                    <span>{{ act.created_at|timesince }} ago</span>
+                    {% if act.client %}
+                      <span>&bull;</span>
+                      <span style="font-weight: 600; color: var(--cf-secondary-navy);">{{ act.client.name }}</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
           </div>
-        </div>
+        {% else %}
+          {% include "components/empty_state.html" with title="No Recent Activity" description="Client activity, uploads, and filings will appear here automatically." %}
+        {% endif %}
+      </div>
 
-        <div style="display: flex; gap: 0.65rem;">
-          <span class="cf-status-dot danger" style="margin-top: 6px;"></span>
-          <div>
-            <div><strong>System Sentinel</strong> flagged <strong>VAT deadline alert for 5 clients</strong></div>
-            <div style="font-size: 0.6875rem; color: var(--cf-text-muted);">3 hours ago &bull; Automated compliance monitor</div>
-          </div>
-        </div>
+      <div class="cf-card-footer" style="padding: 0.85rem 1.25rem;">
+        <a href="{% url 'audit:audit_list' %}" style="font-size: 0.8125rem; font-weight: 600; color: var(--cf-secondary-navy);">
+          View Immutable Audit Trail &rarr;
+        </a>
       </div>
     </div>
   </div>
 </div>
 
 <!-- =========================================================================
-     MODALS FOR DASHBOARD QUICK ACTIONS
+     MODALS FOR WORKING WORKFLOWS
+     1. Add Client
+     2. Create Task
+     3. Request Documents
+     4. Create Invoice
+     5. Task Detail Modal
+     6. Task Edit Modal
+     7. Compliance Detail Modal
+     8. Document Request Detail Modal
      ========================================================================= -->
 
-{# Modal 1: Quick Add Client #}
-<div class="cf-modal-backdrop" id="cf-new-client-modal">
+{# 1. ADD CLIENT MODAL #}
+<div class="cf-modal-backdrop" id="cf-modal-add-client">
   <div class="cf-modal-dialog">
     <div class="cf-modal-header">
       <h3 class="cf-modal-title">Onboard New Client Entity</h3>
@@ -451,95 +703,130 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
     </div>
-    <form onsubmit="event.preventDefault(); CAFlow.closeModal('#cf-new-client-modal'); CAFlow.toast('Client successfully onboarded!', 'success');">
+    
+    <form method="post" action="{% url 'core:quick_add_client' %}">
+      {% csrf_token %}
       <div class="cf-modal-body">
         <div class="cf-form-group">
-          <label class="cf-label">Client / Trade Name <span class="required-star">*</span></label>
-          <input type="text" class="cf-input" placeholder="e.g. Shangri-La Hydro Energy Ltd." required>
+          <label class="cf-label" for="client-name-input">Client / Trade Name <span class="required-star">*</span></label>
+          <input type="text" name="name" id="client-name-input" class="cf-input" placeholder="e.g. Shangri-La Hydro Energy Ltd." required>
         </div>
+
         <div class="row g-2">
           <div class="col-md-6 cf-form-group">
-            <label class="cf-label">Nepal IRD PAN (9 Digits) <span class="required-star">*</span></label>
-            <input type="text" class="cf-input mono-font" placeholder="601827364" maxlength="9" required>
+            <label class="cf-label" for="client-pan-input">Nepal IRD PAN (9 Digits) <span class="required-star">*</span></label>
+            <input type="text" name="pan_number" id="client-pan-input" class="cf-input mono-font" placeholder="601827364" maxlength="9" pattern="\d{9}" title="9-digit IRD PAN" required>
           </div>
+
           <div class="col-md-6 cf-form-group">
-            <label class="cf-label">Client Type</label>
-            <select class="cf-select">
-              <option>Private Limited Company</option>
-              <option>Public Limited Company</option>
-              <option>Proprietorship Practice</option>
-              <option>Partnership Firm</option>
-              <option>NGO / INGO</option>
+            <label class="cf-label" for="client-type-select">Client Category</label>
+            <select name="client_type" id="client-type-select" class="cf-select">
+              <option value="PVT_LTD">Private Limited Company</option>
+              <option value="PUB_LTD">Public Limited Company</option>
+              <option value="PROPRIETORSHIP">Proprietorship Business</option>
+              <option value="PARTNERSHIP">Partnership Firm</option>
+              <option value="NGO_INGO">NGO / INGO / Non-Profit</option>
+              <option value="INDIVIDUAL">Individual Taxpayer</option>
             </select>
           </div>
         </div>
+
         <div class="cf-form-group">
-          <label class="cf-label">Primary Contact Person</label>
-          <input type="text" class="cf-input" placeholder="Managing Director / Finance Head">
+          <label class="cf-label" for="client-contact-input">Contact Person / Managing Director</label>
+          <input type="text" name="contact_person" id="client-contact-input" class="cf-input" placeholder="Mr. Ramesh Adhikari">
+        </div>
+
+        <div class="row g-2">
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label" for="client-email-input">Official Email</label>
+            <input type="email" name="email" id="client-email-input" class="cf-input" placeholder="finance@company.com.np">
+          </div>
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label" for="client-city-input">City / District</label>
+            <input type="text" name="city" id="client-city-input" class="cf-input" value="Kathmandu">
+          </div>
         </div>
       </div>
+
       <div class="cf-modal-footer">
         <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
-        <button type="submit" class="cf-btn cf-btn-primary">Save Client</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Save &amp; Onboard Client</button>
       </div>
     </form>
   </div>
 </div>
 
-{# Modal 2: Quick Task Modal #}
-<div class="cf-modal-backdrop" id="cf-quick-task-modal">
+{# 2. CREATE TASK MODAL #}
+<div class="cf-modal-backdrop" id="cf-modal-create-task">
   <div class="cf-modal-dialog">
     <div class="cf-modal-header">
-      <h3 class="cf-modal-title">Create Audit / Compliance Task</h3>
+      <h3 class="cf-modal-title">Create Audit &amp; Compliance Task</h3>
       <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
     </div>
-    <form onsubmit="event.preventDefault(); CAFlow.closeModal('#cf-quick-task-modal'); CAFlow.toast('Task assigned successfully!', 'success');">
+
+    <form method="post" action="{% url 'core:quick_create_task' %}">
+      {% csrf_token %}
       <div class="cf-modal-body">
         <div class="cf-form-group">
-          <label class="cf-label">Task Title <span class="required-star">*</span></label>
-          <input type="text" class="cf-input" placeholder="e.g. VAT Purchase &amp; Sales Verification" required>
+          <label class="cf-label" for="task-title-input">Task Title <span class="required-star">*</span></label>
+          <input type="text" name="title" id="task-title-input" class="cf-input" placeholder="e.g. Monthly VAT Annex 5 &amp; 6 Preparation" required>
         </div>
+
         <div class="cf-form-group">
-          <label class="cf-label">Client Entity</label>
-          <select class="cf-select">
-            <option>Himalayan Traders Pvt Ltd</option>
-            <option>Lumbini Cement Industries</option>
-            <option>Kathmandu Tech Solutions</option>
-            <option>Apex Hydropower Ltd</option>
+          <label class="cf-label" for="task-client-select">Client Entity</label>
+          <select name="client_id" id="task-client-select" class="cf-select">
+            <option value="">-- General Practice / Internal Task --</option>
+            {% for c in active_clients %}
+              <option value="{{ c.id }}">{{ c.name }} (PAN: {{ c.pan_number }})</option>
+            {% endfor %}
           </select>
         </div>
+
         <div class="row g-2">
           <div class="col-md-6 cf-form-group">
-            <label class="cf-label">Assign To</label>
-            <select class="cf-select">
-              <option>Bikash Karki (Trainee)</option>
-              <option>Pooja Regmi (Associate)</option>
-              <option>Anjali Sharma (Manager)</option>
+            <label class="cf-label" for="task-assignee-select">Assign To</label>
+            <select name="assigned_to_id" id="task-assignee-select" class="cf-select">
+              <option value="">-- Select Staff Member --</option>
+              {% for s in active_staff %}
+                <option value="{{ s.id }}">{{ s.get_full_name }}</option>
+              {% endfor %}
             </select>
           </div>
+
           <div class="col-md-6 cf-form-group">
-            <label class="cf-label">Priority</label>
-            <select class="cf-select">
-              <option>Medium</option>
-              <option>High</option>
-              <option>Urgent</option>
-              <option>Low</option>
+            <label class="cf-label" for="task-priority-select">Priority</label>
+            <select name="priority" id="task-priority-select" class="cf-select">
+              <option value="MEDIUM">Medium</option>
+              <option value="HIGH">High</option>
+              <option value="URGENT">Urgent</option>
+              <option value="LOW">Low</option>
             </select>
           </div>
         </div>
+
+        <div class="cf-form-group">
+          <label class="cf-label" for="task-duedate-input">Due Date</label>
+          <input type="date" name="due_date" id="task-duedate-input" class="cf-input">
+        </div>
+
+        <div class="cf-form-group">
+          <label class="cf-label" for="task-desc-input">Detailed Notes / Audit Standard</label>
+          <textarea name="description" id="task-desc-input" class="cf-textarea" rows="2" placeholder="Working paper checklist, audit reference, or IRD section notes."></textarea>
+        </div>
       </div>
+
       <div class="cf-modal-footer">
         <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
-        <button type="submit" class="cf-btn cf-btn-primary">Create Task</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Queue Task</button>
       </div>
     </form>
   </div>
 </div>
 
-{# Modal 3: Request Document Modal #}
-<div class="cf-modal-backdrop" id="cf-request-doc-modal">
+{# 3. REQUEST DOCUMENTS MODAL #}
+<div class="cf-modal-backdrop" id="cf-modal-request-docs">
   <div class="cf-modal-dialog">
     <div class="cf-modal-header">
       <h3 class="cf-modal-title">Request Documents from Client</h3>
@@ -547,36 +834,385 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
     </div>
-    <form onsubmit="event.preventDefault(); CAFlow.closeModal('#cf-request-doc-modal'); CAFlow.toast('Document request email dispatched to client!', 'success');">
+
+    <form method="post" action="{% url 'core:quick_request_documents' %}">
+      {% csrf_token %}
       <div class="cf-modal-body">
         <div class="cf-form-group">
-          <label class="cf-label">Client Entity <span class="required-star">*</span></label>
-          <select class="cf-select" required>
-            <option>Himalayan Traders Pvt Ltd</option>
-            <option>Apex Hydropower Ltd</option>
-            <option>Lumbini Cement Industries</option>
+          <label class="cf-label" for="req-client-select">Client Entity <span class="required-star">*</span></label>
+          <select name="client_id" id="req-client-select" class="cf-select" required>
+            <option value="">-- Choose Client --</option>
+            {% for c in active_clients %}
+              <option value="{{ c.id }}">{{ c.name }} (PAN: {{ c.pan_number }})</option>
+            {% endfor %}
           </select>
         </div>
+
         <div class="cf-form-group">
-          <label class="cf-label">Required Document Category</label>
-          <select class="cf-select">
-            <option>Bank Statements (All Operating Accounts)</option>
-            <option>Monthly VAT Purchase &amp; Sales Books</option>
-            <option>TDS Deduction Certificates &amp; Challans</option>
-            <option>Fixed Asset Physical Verification Register</option>
-            <option>Signed Board Resolutions / Minutes</option>
-          </select>
+          <label class="cf-label" for="req-docs-input">Requested Documents <span class="required-star">*</span></label>
+          <input type="text" name="requested_documents" id="req-docs-input" class="cf-input" placeholder="e.g. Bank Confirmation Letter (Nabil Bank &amp; Global IME)" required>
         </div>
+
         <div class="cf-form-group">
-          <label class="cf-label">Instructions for Client</label>
-          <textarea class="cf-textarea" rows="2" placeholder="Please upload scanned PDFs before 24th Ashoj for timely filing."></textarea>
+          <label class="cf-label" for="req-due-input">Submission Deadline</label>
+          <input type="date" name="due_date" id="req-due-input" class="cf-input">
+        </div>
+
+        <div class="cf-form-group">
+          <label class="cf-label" for="req-notes-input">Instructions for Client</label>
+          <textarea name="notes" id="req-notes-input" class="cf-textarea" rows="2" placeholder="Please upload stamped and scanned PDF files for audit verification."></textarea>
         </div>
       </div>
+
       <div class="cf-modal-footer">
         <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
-        <button type="submit" class="cf-btn cf-btn-primary">Send Request</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Send Document Request</button>
       </div>
     </form>
   </div>
 </div>
+
+{# 4. CREATE INVOICE MODAL #}
+<div class="cf-modal-backdrop" id="cf-modal-create-invoice">
+  <div class="cf-modal-dialog">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title">Generate Professional Fee Invoice</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form method="post" action="{% url 'core:quick_create_invoice' %}">
+      {% csrf_token %}
+      <div class="cf-modal-body">
+        <div class="cf-form-group">
+          <label class="cf-label" for="inv-client-select">Billed Client <span class="required-star">*</span></label>
+          <select name="client_id" id="inv-client-select" class="cf-select" required>
+            <option value="">-- Choose Client --</option>
+            {% for c in active_clients %}
+              <option value="{{ c.id }}">{{ c.name }} (PAN: {{ c.pan_number }})</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="row g-2">
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label" for="inv-num-input">Invoice Serial # <span class="required-star">*</span></label>
+            <input type="text" name="invoice_number" id="inv-num-input" class="cf-input mono-font" value="2081-045" required>
+          </div>
+
+          <div class="col-md-6 cf-form-group">
+            <label class="cf-label" for="inv-subtotal-input">Subtotal (NPR) <span class="required-star">*</span></label>
+            <input type="number" step="0.01" name="subtotal_npr" id="inv-subtotal-input" class="cf-input mono-font" value="15000.00" onkeyup="CAFlowDashboard.recalcInvoiceVat()" required>
+          </div>
+        </div>
+
+        <!-- VAT Preview -->
+        <div style="padding: 0.75rem 1rem; background: var(--cf-bg); border-radius: var(--cf-radius-md); border: 1px solid var(--cf-border); margin-bottom: 1rem; font-size: 0.8125rem;">
+          <div style="display: flex; justify-content: space-between;">
+            <span>Nepal VAT (13%):</span>
+            <strong class="mono-font" id="inv-vat-preview">NPR 1,950.00</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 4px; border-top: 1px dashed var(--cf-border); padding-top: 4px;">
+            <span>Total Payable:</span>
+            <strong class="mono-font" style="color: var(--cf-primary-navy);" id="inv-total-preview">NPR 16,950.00</strong>
+          </div>
+        </div>
+
+        <div class="cf-form-group">
+          <label class="cf-label" for="inv-duedate-input">Payment Due Date</label>
+          <input type="date" name="due_date" id="inv-duedate-input" class="cf-input">
+        </div>
+      </div>
+
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Generate &amp; Issue Invoice</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# 5. TASK DETAIL MODAL (Inspect Task) #}
+<div class="cf-modal-backdrop" id="cf-modal-task-detail">
+  <div class="cf-modal-dialog">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title" id="td-title">Engagement Task Details</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    
+    <div class="cf-modal-body">
+      <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+        <span class="cf-badge" id="td-priority-badge">High</span>
+        <span class="cf-badge" id="td-status-badge">In Progress</span>
+      </div>
+
+      <div class="cf-card" style="padding: 1rem; margin-bottom: 1rem; background: var(--cf-bg);">
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; font-size: 0.8125rem;">
+          <div>
+            <div style="color: var(--cf-text-muted); font-size: 0.6875rem; text-transform: uppercase;">Client</div>
+            <strong id="td-client">Client Name</strong>
+          </div>
+          <div>
+            <div style="color: var(--cf-text-muted); font-size: 0.6875rem; text-transform: uppercase;">IRD PAN</div>
+            <strong class="mono-font" id="td-pan">PAN Number</strong>
+          </div>
+          <div>
+            <div style="color: var(--cf-text-muted); font-size: 0.6875rem; text-transform: uppercase;">Assigned Staff</div>
+            <strong id="td-staff">Staff Member</strong>
+          </div>
+          <div>
+            <div style="color: var(--cf-text-muted); font-size: 0.6875rem; text-transform: uppercase;">Due Date</div>
+            <strong id="td-due">Due Date</strong>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-weight: 700; font-size: 0.8125rem; color: var(--cf-primary-navy); margin-bottom: 4px;">Task Description &amp; Working Papers</div>
+        <p id="td-desc" style="font-size: 0.8125rem; line-height: 1.5; color: var(--cf-text-primary);">
+          Detailed description.
+        </p>
+      </div>
+    </div>
+
+    <div class="cf-modal-footer">
+      <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Close</button>
+    </div>
+  </div>
+</div>
+
+{# 6. COMPLIANCE DETAIL MODAL #}
+<div class="cf-modal-backdrop" id="cf-modal-compliance-detail">
+  <div class="cf-modal-dialog">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title" id="cd-title">Nepal Statutory Compliance Guideline</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="cf-modal-body">
+      <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+        <span class="cf-badge cf-badge-primary" id="cd-act-badge">Income Tax Act</span>
+        <span class="cf-badge cf-badge-danger" id="cd-status-badge">Due Soon</span>
+      </div>
+
+      <div class="cf-card" style="padding: 1rem; margin-bottom: 1rem; background: var(--cf-bg);">
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; font-size: 0.8125rem;">
+          <div>
+            <div style="color: var(--cf-text-muted); font-size: 0.6875rem; text-transform: uppercase;">Client / Scope</div>
+            <strong id="cd-client">Client Name</strong>
+          </div>
+          <div>
+            <div style="color: var(--cf-text-muted); font-size: 0.6875rem; text-transform: uppercase;">Assigned Auditor</div>
+            <strong id="cd-staff">Auditor</strong>
+          </div>
+          <div>
+            <div style="color: var(--cf-text-muted); font-size: 0.6875rem; text-transform: uppercase;">Due Date (Bikram Sambat)</div>
+            <strong class="mono-font" style="color: var(--cf-danger);" id="cd-date-bs">BS Date</strong>
+          </div>
+          <div>
+            <div style="color: var(--cf-text-muted); font-size: 0.6875rem; text-transform: uppercase;">Gregorian Due Date</div>
+            <strong id="cd-date-ad">AD Date</strong>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-weight: 700; font-size: 0.8125rem; color: var(--cf-primary-navy); margin-bottom: 4px;">Filing Guidelines &amp; Penalty Provisions</div>
+        <p id="cd-notes" style="font-size: 0.8125rem; line-height: 1.5; color: var(--cf-text-primary);">
+          Statutory notes.
+        </p>
+      </div>
+    </div>
+
+    <div class="cf-modal-footer">
+      <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Close</button>
+      <a href="{% url 'compliance:compliance_list' %}" class="cf-btn cf-btn-primary">View in Statutory Hub &rarr;</a>
+    </div>
+  </div>
+</div>
+
+{# 7. DOCUMENT REQUEST DETAIL MODAL #}
+<div class="cf-modal-backdrop" id="cf-modal-doc-detail">
+  <div class="cf-modal-dialog">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title">Document Request Inspection</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="cf-modal-body">
+      <div style="margin-bottom: 1rem;">
+        <span class="cf-badge cf-badge-warning" id="dr-status-badge">Pending</span>
+      </div>
+
+      <div class="cf-card" style="padding: 1rem; margin-bottom: 1rem; background: var(--cf-bg);">
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; font-size: 0.8125rem;">
+          <div>
+            <div style="color: var(--cf-text-muted); font-size: 0.6875rem; text-transform: uppercase;">Client</div>
+            <strong id="dr-client">Client</strong>
+          </div>
+          <div>
+            <div style="color: var(--cf-text-muted); font-size: 0.6875rem; text-transform: uppercase;">Due Date</div>
+            <strong id="dr-due">Due Date</strong>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-weight: 700; font-size: 0.8125rem; color: var(--cf-primary-navy); margin-bottom: 4px;">Requested Documents</div>
+        <p id="dr-items" style="font-size: 0.875rem; font-weight: 600; color: var(--cf-primary-navy);">
+          Items
+        </p>
+
+        <div style="font-weight: 700; font-size: 0.8125rem; color: var(--cf-primary-navy); margin-top: 1rem; margin-bottom: 4px;">Client Instructions</div>
+        <p id="dr-notes" style="font-size: 0.8125rem; line-height: 1.5; color: var(--cf-text-secondary);">
+          Notes
+        </p>
+      </div>
+    </div>
+
+    <div class="cf-modal-footer">
+      <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================================
+     DASHBOARD INTERACTIVE CLIENT SCRIPT
+     ========================================================================= -->
+<script>
+  window.CAFlowDashboard = {
+    // Filter Today's Work table by Search and Status
+    filterTasksClientSide: function() {
+      var searchInput = document.getElementById('dashboard-task-search');
+      var statusSelect = document.getElementById('dashboard-status-filter');
+      var filterText = (searchInput ? searchInput.value : '').toLowerCase().trim();
+      var filterStatus = statusSelect ? statusSelect.value : 'ALL';
+      var rows = document.querySelectorAll('#dashboard-tasks-table tbody tr[data-task-row]');
+      var visibleCount = 0;
+
+      rows.forEach(function(row) {
+        var rowText = (row.getAttribute('data-search-text') || '').toLowerCase();
+        var rowStatus = row.getAttribute('data-status') || '';
+        
+        var matchesText = !filterText || rowText.indexOf(filterText) > -1;
+        var matchesStatus = filterStatus === 'ALL' || rowStatus === filterStatus;
+
+        if (matchesText && matchesStatus) {
+          row.style.display = '';
+          visibleCount++;
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      var noMatchAlert = document.getElementById('dashboard-tasks-no-filter-match');
+      if (noMatchAlert) {
+        noMatchAlert.style.display = (visibleCount === 0 && rows.length > 0) ? 'block' : 'none';
+      }
+
+      var summaryText = document.getElementById('dashboard-tasks-count-summary');
+      if (summaryText) {
+        summaryText.textContent = 'Showing ' + visibleCount + ' active task' + (visibleCount === 1 ? '' : 's');
+      }
+    },
+
+    resetTaskFilters: function() {
+      var searchInput = document.getElementById('dashboard-task-search');
+      var statusSelect = document.getElementById('dashboard-status-filter');
+      if (searchInput) searchInput.value = '';
+      if (statusSelect) statusSelect.value = 'ALL';
+      this.filterTasksClientSide();
+    },
+
+    // Open Task Detail Modal
+    openTaskDetail: function(id, title, client, pan, staff, priority, status, due, desc) {
+      document.getElementById('td-title').textContent = title;
+      document.getElementById('td-client').textContent = client;
+      document.getElementById('td-pan').textContent = pan;
+      document.getElementById('td-staff').textContent = staff;
+      document.getElementById('td-due').textContent = due || 'Not specified';
+      document.getElementById('td-desc').textContent = desc || 'No specific notes recorded.';
+
+      var pBadge = document.getElementById('td-priority-badge');
+      pBadge.textContent = priority;
+      pBadge.className = 'cf-badge ' + (priority === 'URGENT' ? 'cf-badge-danger' : (priority === 'HIGH' ? 'cf-badge-warning' : 'cf-badge-secondary'));
+
+      var sBadge = document.getElementById('td-status-badge');
+      sBadge.textContent = status;
+      sBadge.className = 'cf-badge ' + (status === 'COMPLETED' ? 'cf-badge-success' : (status === 'UNDER_REVIEW' ? 'cf-badge-primary' : 'cf-badge-warning'));
+
+      CAFlow.openModal('#cf-modal-task-detail');
+    },
+
+    // Open Task Edit Modal
+    openTaskEdit: function(id, title, clientId, staffId, priority, due, desc) {
+      // Pre-fill Create Task modal as editor or toast
+      CAFlow.toast('Editing task: ' + title, 'info');
+      CAFlow.openModal('#cf-modal-create-task');
+      var titleInput = document.getElementById('task-title-input');
+      if (titleInput) titleInput.value = title;
+      var descInput = document.getElementById('task-desc-input');
+      if (descInput) descInput.value = desc;
+      var dueInput = document.getElementById('task-duedate-input');
+      if (dueInput && due) dueInput.value = due;
+    },
+
+    // Handle AJAX Task Completion
+    handleCompleteTask: function(event, form) {
+      // Allow default POST submission for production-grade reliability
+      // Form submits directly to QuickCompleteTaskView
+    },
+
+    // Open Compliance Detail Modal
+    openComplianceDetail: function(title, act, client, dateBs, dateAd, status, staff, notes) {
+      document.getElementById('cd-title').textContent = title;
+      document.getElementById('cd-act-badge').textContent = act;
+      document.getElementById('cd-status-badge').textContent = status;
+      document.getElementById('cd-client').textContent = client;
+      document.getElementById('cd-staff').textContent = staff;
+      document.getElementById('cd-date-bs').textContent = dateBs;
+      document.getElementById('cd-date-ad').textContent = dateAd;
+      document.getElementById('cd-notes').textContent = notes || 'Standard compliance filing per relevant legislation.';
+
+      CAFlow.openModal('#cf-modal-compliance-detail');
+    },
+
+    // Open Document Detail Modal
+    openDocDetail: function(client, items, due, status, notes) {
+      document.getElementById('dr-client').textContent = client;
+      document.getElementById('dr-items').textContent = items;
+      document.getElementById('dr-due').textContent = due;
+      document.getElementById('dr-status-badge').textContent = status;
+      document.getElementById('dr-notes').textContent = notes || 'No additional instructions provided.';
+
+      CAFlow.openModal('#cf-modal-doc-detail');
+    },
+
+    // Handle Document Reminder
+    handleRemindDoc: function(event, form, clientName) {
+      // Submits to QuickRemindDocView
+    },
+
+    // Calculate VAT in Invoice Modal
+    recalcInvoiceVat: function() {
+      var subtotalInput = document.getElementById('inv-subtotal-input');
+      var subtotal = parseFloat(subtotalInput.value) || 0;
+      var vat = subtotal * 0.13;
+      var total = subtotal + vat;
+
+      var vatPreview = document.getElementById('inv-vat-preview');
+      var totalPreview = document.getElementById('inv-total-preview');
+
+      if (vatPreview) vatPreview.textContent = 'NPR ' + vat.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      if (totalPreview) totalPreview.textContent = 'NPR ' + total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+  };
+</script>
 {% endblock %}

@@ -1,0 +1,34 @@
+{# CAFlow Reusable Drawer / Slide-Over Component #}
+<div class="cf-drawer-backdrop {{ extra_backdrop_classes|default:'' }}" 
+     id="{{ id }}" 
+     role="dialog" 
+     aria-modal="true" 
+     aria-labelledby="{{ id }}-title">
+  <div class="cf-drawer cf-drawer-{{ position|default:'right' }} cf-drawer-{{ size|default:'md' }} {{ extra_classes|default:'' }}">
+    <div class="cf-drawer-header">
+      <div>
+        <h3 class="cf-drawer-title" id="{{ id }}-title">{{ title }}</h3>
+        {% if subtitle %}
+          <div class="cf-drawer-subtitle">{{ subtitle }}</div>
+        {% endif %}
+      </div>
+      <button type="button" class="cf-modal-close-btn" data-cf-drawer-close aria-label="Close drawer">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="cf-drawer-body">
+      {% if body_html %}
+        {{ body_html|safe }}
+      {% elif drawer_content %}
+        {{ drawer_content|safe }}
+      {% endif %}
+    </div>
+
+    {% if footer_html %}
+      <div class="cf-drawer-footer">
+        {{ footer_html|safe }}
+      </div>
+    {% endif %}
+  </div>
+</div>

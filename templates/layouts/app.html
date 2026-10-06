@@ -10,20 +10,50 @@
   <!-- Dark Navy Sidebar (~250px) -->
   <aside class="cf-sidebar" id="cf-sidebar">
     <!-- Brand / Firm Header -->
-    <div class="cf-sidebar-brand">
-      <a href="{% url 'core:dashboard' %}" class="cf-brand-link">
-        <div class="cf-brand-logo-icon">CF</div>
-        <div>
-          <div class="cf-brand-title">
-            {{ APP_NAME }}
-            <span class="cf-brand-nepal-badge">NEPAL</span>
+    <div class="cf-sidebar-brand" style="flex-direction: column; align-items: stretch; gap: 0.5rem; padding-bottom: 0.75rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <a href="{% url 'core:dashboard' %}" class="cf-brand-link">
+          <div class="cf-brand-logo-icon">CF</div>
+          <div>
+            <div class="cf-brand-title">
+              {{ APP_NAME }}
+              <span class="cf-brand-nepal-badge">NEPAL</span>
+            </div>
+            <div style="font-size: 0.6875rem; color: var(--cf-text-on-navy-muted);">Practice OS</div>
           </div>
-          <div style="font-size: 0.6875rem; color: var(--cf-text-on-navy-muted);">Practice OS</div>
+        </a>
+        <button type="button" class="cf-modal-close-btn d-lg-none" id="cf-sidebar-close" style="color: #fff;" aria-label="Close Sidebar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      {% if ACTIVE_FIRM %}
+        <div style="padding: 0.45rem 0.65rem; background: rgba(255,255,255,0.06); border-radius: var(--cf-radius-sm); border: 1px solid rgba(255,255,255,0.1); margin-top: 2px;">
+          <div style="font-size: 0.625rem; text-transform: uppercase; color: var(--cf-text-on-navy-muted); letter-spacing: 0.05em; font-weight: 600;">Active Firm</div>
+          <div style="font-size: 0.8125rem; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ ACTIVE_FIRM.name }}">
+            {{ ACTIVE_FIRM.name }}
+          </div>
+          {% if USER_FIRMS|length > 1 %}
+            <div class="cf-dropdown" style="margin-top: 4px;">
+              <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" data-cf-dropdown-toggle style="padding: 0; font-size: 0.6875rem; color: #FCD34D; font-weight: 600;">
+                Switch Workspace &darr;
+              </button>
+              <div class="cf-dropdown-menu" style="left: 0; min-width: 220px; z-index: 1050;">
+                <div class="cf-dropdown-header">Switch Practice Firm</div>
+                {% for m in USER_FIRMS %}
+                  <form method="post" action="{% url 'firms:switch_firm' m.firm.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="cf-dropdown-item" style="width: 100%; text-align: left; background: none; border: none; font-size: 0.8125rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem;">
+                      <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px;">{{ m.firm.name }}</span>
+                      {% if m.firm.id == ACTIVE_FIRM.id %}<span style="color: var(--cf-success); font-weight: 800;">&#10003;</span>{% endif %}
+                    </button>
+                  </form>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
         </div>
-      </a>
-      <button type="button" class="cf-modal-close-btn d-lg-none" id="cf-sidebar-close" style="color: #fff;" aria-label="Close Sidebar">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-      </button>
+      {% endif %}
     </div>
 
     <!-- Navigation Scroll Area -->
@@ -46,7 +76,9 @@
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </span>
             <span>Clients</span>
-            <span class="cf-nav-pill-badge">128</span>
+            {% if SIDEBAR_CLIENT_COUNT is not None %}
+              <span class="cf-nav-pill-badge">{{ SIDEBAR_CLIENT_COUNT }}</span>
+            {% endif %}
           </a>
         </li>
         <li class="cf-nav-item">
@@ -55,7 +87,9 @@
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
             </span>
             <span>Tasks</span>
-            <span class="cf-nav-pill-badge" style="background-color: rgba(245, 158, 11, 0.2); color: #FCD34D;">24</span>
+            {% if SIDEBAR_TASK_COUNT is not None %}
+              <span class="cf-nav-pill-badge" style="background-color: rgba(245, 158, 11, 0.2); color: #FCD34D;">{{ SIDEBAR_TASK_COUNT }}</span>
+            {% endif %}
           </a>
         </li>
         <li class="cf-nav-item">
@@ -72,7 +106,9 @@
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
             </span>
             <span>Compliance</span>
-            <span class="cf-nav-pill-badge" style="background-color: rgba(220, 38, 38, 0.25); color: #FCA5A5;">8 Due</span>
+            {% if SIDEBAR_COMPLIANCE_COUNT is not None %}
+              <span class="cf-nav-pill-badge" style="background-color: rgba(220, 38, 38, 0.25); color: #FCA5A5;">{{ SIDEBAR_COMPLIANCE_COUNT }} Due</span>
+            {% endif %}
           </a>
         </li>
         <li class="cf-nav-item">
@@ -115,43 +151,51 @@
       </ul>
 
       <!-- Section: ADMIN -->
-      <div class="cf-sidebar-section-label">Admin</div>
-      <ul class="cf-nav-list">
-        <li class="cf-nav-item">
-          <a href="{% url 'firms:team_list' %}" class="cf-nav-link {% if 'firms/team' in request.path %}active{% endif %}">
-            <span class="cf-nav-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            </span>
-            <span>Team</span>
-          </a>
-        </li>
-        <li class="cf-nav-item">
-          <a href="{% url 'firms:firm_settings' %}" class="cf-nav-link {% if 'firms/settings' in request.path %}active{% endif %}">
-            <span class="cf-nav-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            </span>
-            <span>Settings</span>
-          </a>
-        </li>
-        <li class="cf-nav-item">
-          <a href="{% url 'audit:audit_list' %}" class="cf-nav-link {% if 'audit' in request.path %}active{% endif %}">
-            <span class="cf-nav-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-            </span>
-            <span>Audit Logs</span>
-          </a>
-        </li>
+      {% if 'view_team' in USER_PERMISSIONS or 'manage_settings' in USER_PERMISSIONS or 'view_audit_logs' in USER_PERMISSIONS or not request.user.is_authenticated %}
+        <div class="cf-sidebar-section-label">Admin</div>
+        <ul class="cf-nav-list">
+          {% if 'view_team' in USER_PERMISSIONS or not request.user.is_authenticated %}
+            <li class="cf-nav-item">
+              <a href="{% url 'firms:team_list' %}" class="cf-nav-link {% if 'firms/team' in request.path or '/team/' in request.path %}active{% endif %}">
+                <span class="cf-nav-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </span>
+                <span>Team</span>
+              </a>
+            </li>
+          {% endif %}
+          {% if 'manage_settings' in USER_PERMISSIONS or not request.user.is_authenticated %}
+            <li class="cf-nav-item">
+              <a href="{% url 'firms:firm_settings' %}" class="cf-nav-link {% if 'firms/settings' in request.path or '/firm/settings/' in request.path %}active{% endif %}">
+                <span class="cf-nav-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                </span>
+                <span>Settings</span>
+              </a>
+            </li>
+          {% endif %}
+          {% if 'view_audit_logs' in USER_PERMISSIONS or not request.user.is_authenticated %}
+            <li class="cf-nav-item">
+              <a href="{% url 'audit:audit_list' %}" class="cf-nav-link {% if 'audit' in request.path %}active{% endif %}">
+                <span class="cf-nav-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                </span>
+                <span>Audit Logs</span>
+              </a>
+            </li>
+          {% endif %}
 
-        {# Component Design System Showcase Link #}
-        <li class="cf-nav-item" style="margin-top: 10px;">
-          <a href="{% url 'core:design_system' %}" class="cf-nav-link {% if 'design-system' in request.path %}active{% endif %}" style="border: 1px dashed rgba(212, 175, 55, 0.4); color: #FCD34D;">
-            <span class="cf-nav-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-            </span>
-            <span>Design System UI</span>
-          </a>
-        </li>
-      </ul>
+          {# Component Design System Showcase Link #}
+          <li class="cf-nav-item" style="margin-top: 8px;">
+            <a href="{% url 'core:design_system' %}" class="cf-nav-link {% if 'design-system' in request.path %}active{% endif %}" style="border: 1px dashed rgba(212, 175, 55, 0.4); color: #FCD34D;">
+              <span class="cf-nav-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              </span>
+              <span>Design System UI</span>
+            </a>
+          </li>
+        </ul>
+      {% endif %}
     </div>
 
     <!-- Sidebar Bottom: User & Session -->

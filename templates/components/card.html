@@ -17,7 +17,7 @@
   {% endif %}
 
   <div class="cf-card-body">
-    {{ content|default:body_html|safe }}
+    {% if body_html %}{{ body_html|safe }}{% elif card_content %}{{ card_content|safe }}{% endif %}
   </div>
 
   {% if footer_html %}

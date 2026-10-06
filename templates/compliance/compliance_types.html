@@ -1,0 +1,215 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}Configurable Compliance Types &mdash; {{ APP_NAME }}{% endblock %}
+
+{% block app_content %}
+{% include "components/breadcrumbs.html" with items=breadcrumbs %}
+
+<!-- PAGE HEADER -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1 style="margin: 0; font-size: 1.75rem; font-weight: 700; color: var(--cf-primary-navy);">
+      Configurable Compliance Schedules &amp; Types
+    </h1>
+    <p style="font-size: 0.875rem; color: var(--cf-text-muted); margin-top: 4px; margin-bottom: 0;">
+      Define firm-specific tax, VAT, audit, and regulatory filing requirements. Do not assume every client has every requirement.
+    </p>
+  </div>
+
+  <div style="display: flex; gap: 0.5rem;">
+    <a href="{% url 'compliance:compliance_list' %}" class="cf-btn cf-btn-outline">
+      &larr; Back to Calendar
+    </a>
+    <button type="button" class="cf-btn cf-btn-primary" onclick="CAFlow.openModal('#modal-add-type')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>Create Custom Type</span>
+    </button>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- LIST OF COMPLIANCE TYPES -->
+  <div class="col-lg-8">
+    <div class="cf-table-container">
+      <div class="cf-table-toolbar">
+        <h3 class="cf-card-title" style="margin: 0;">Active Practice Compliance Types ({{ types|length }})</h3>
+      </div>
+
+      <div class="cf-table-responsive">
+        <table class="cf-table">
+          <thead>
+            <tr>
+              <th>Compliance Type &bull; Code</th>
+              <th>Category / Authority</th>
+              <th>Frequency</th>
+              <th>BS Due Day</th>
+              <th>Default Priority</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t in types %}
+              <tr>
+                <td>
+                  <strong style="color: var(--cf-primary-navy); font-size: 0.875rem;">{{ t.name }}</strong>
+                  <div class="mono-font" style="font-size: 0.6875rem; color: var(--cf-text-muted);">{{ t.code|default:'CUSTOM_TYPE' }}</div>
+                  <div style="font-size: 0.75rem; color: var(--cf-text-secondary); margin-top: 2px;">{{ t.description|truncatechars:80 }}</div>
+                </td>
+                <td>
+                  <span class="cf-badge cf-badge-secondary" style="font-size: 0.6875rem;">{{ t.get_category_display }}</span>
+                  <div style="font-size: 0.6875rem; color: var(--cf-text-muted); margin-top: 2px;">{{ t.statutory_authority|default:'IRD / Statutory' }}</div>
+                </td>
+                <td>
+                  <span class="cf-badge cf-badge-primary" style="font-size: 0.6875rem;">{{ t.get_frequency_display }}</span>
+                </td>
+                <td class="mono-font" style="font-weight: 700; color: #B58A3A;">
+                  {% if t.due_day_bs %}Day {{ t.due_day_bs }}{% else %}Variable{% endif %}
+                </td>
+                <td>
+                  <span class="cf-badge {% if t.default_priority == 'URGENT' %}cf-badge-danger{% elif t.default_priority == 'HIGH' %}cf-badge-warning{% elif t.default_priority == 'MEDIUM' %}cf-badge-primary{% else %}cf-badge-secondary{% endif %}" style="font-size: 0.6875rem;">
+                    {{ t.default_priority }}
+                  </span>
+                </td>
+                <td>
+                  {% if t.is_active %}
+                    <span class="cf-badge cf-badge-success" style="font-size: 0.6875rem;">Active</span>
+                  {% else %}
+                    <span class="cf-badge cf-badge-muted" style="font-size: 0.6875rem;">Inactive</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="6" style="text-align: center; padding: 2rem; color: var(--cf-text-muted);">
+                  No compliance types found. Click "Create Custom Type" to add one.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- BATCH SCHEDULE GENERATOR -->
+  <div class="col-lg-4">
+    <div class="cf-card" style="margin-bottom: 1.5rem;">
+      <div class="cf-card-header">
+        <h3 class="cf-card-title">Schedule Generator</h3>
+      </div>
+      <p style="font-size: 0.8125rem; color: var(--cf-text-muted); margin-bottom: 1rem;">
+        Generate filing deadlines across all subscribed clients for a specific cycle (e.g. Bhadra 2081 VAT &amp; TDS).
+      </p>
+
+      <form method="post" action="{% url 'compliance:generate_schedule' %}">
+        {% csrf_token %}
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <div>
+            <label class="cf-label">Period Name *</label>
+            <input type="text" name="period_name" class="cf-input" placeholder="e.g. Bhadra 2081 / Q1 2081/82" required>
+          </div>
+          <div>
+            <label class="cf-label">Bikram Sambat Due Date *</label>
+            <input type="text" name="due_date_bs" class="cf-input" placeholder="e.g. 2081-06-25" required>
+          </div>
+          <div>
+            <label class="cf-label">Gregorian Due Date (AD) *</label>
+            <input type="date" name="due_date_ad" class="cf-input" required>
+          </div>
+          <button type="submit" class="cf-btn cf-btn-secondary" style="margin-top: 0.5rem;">
+            Generate Client Deadlines
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- STATUTORY GUIDELINE NOTICE -->
+    <div class="cf-card">
+      <div class="cf-card-header">
+        <h3 class="cf-card-title">Nepal CA Practice Rules</h3>
+      </div>
+      <div style="font-size: 0.8125rem; color: var(--cf-text-secondary); line-height: 1.5;">
+        <p style="margin-bottom: 0.5rem;">
+          &bull; <strong>Multi-Tenant Isolation:</strong> Custom compliance types defined here belong strictly to your firm workspace.
+        </p>
+        <p style="margin-bottom: 0.5rem;">
+          &bull; <strong>Client Subscriptions:</strong> Clients are assigned only the types matching their business structure (e.g. VAT vs non-VAT).
+        </p>
+        <p style="margin: 0;">
+          &bull; <strong>Auto-Recurrence:</strong> When a deadline is marked Completed, the system automatically schedules the next period.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ADD COMPLIANCE TYPE -->
+<div class="cf-modal-backdrop" id="modal-add-type" style="display: none;">
+  <div class="cf-modal" style="max-width: 600px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title">Configure Compliance Type</h3>
+      <button type="button" class="cf-modal-close" onclick="CAFlow.closeModal('#modal-add-type')">&times;</button>
+    </div>
+
+    <form method="post" action="{% url 'compliance:compliance_types' %}">
+      {% csrf_token %}
+      <div class="cf-modal-body" style="display: flex; flex-direction: column; gap: 0.875rem; max-height: 70vh; overflow-y: auto;">
+        <div>
+          <label class="cf-label"><strong>Type Name *</strong></label>
+          {{ form.name }}
+        </div>
+        <div class="row g-2">
+          <div class="col-md-6">
+            <label class="cf-label">Code / Identifier</label>
+            {{ form.code }}
+          </div>
+          <div class="col-md-6">
+            <label class="cf-label">Category</label>
+            {{ form.category }}
+          </div>
+        </div>
+        <div class="row g-2">
+          <div class="col-md-6">
+            <label class="cf-label">Statutory Authority</label>
+            {{ form.statutory_authority }}
+          </div>
+          <div class="col-md-6">
+            <label class="cf-label">Default Frequency</label>
+            {{ form.frequency }}
+          </div>
+        </div>
+        <div class="row g-2">
+          <div class="col-md-6">
+            <label class="cf-label">Default Priority</label>
+            {{ form.default_priority }}
+          </div>
+          <div class="col-md-6">
+            <label class="cf-label">Default BS Due Day (1-32)</label>
+            {{ form.due_day_bs }}
+          </div>
+        </div>
+        <div>
+          <label class="cf-label">Description &amp; Procedure</label>
+          {{ form.description }}
+        </div>
+        <div>
+          <label class="cf-label">Statutory Penalty Provisions</label>
+          {{ form.penalty_guidelines }}
+        </div>
+        <div>
+          <label class="cf-checkbox-label">
+            {{ form.is_active }}
+            <span>Is Active</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" onclick="CAFlow.closeModal('#modal-add-type')">Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Save Compliance Type</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

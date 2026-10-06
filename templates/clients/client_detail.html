@@ -1,0 +1,2395 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}{{ client.display_business_name }} &mdash; Client Profile &bull; {{ APP_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Client Detail Specialized Styles */
+  .cf-detail-header-card {
+    background: var(--cf-surface);
+    border: 1px solid var(--cf-border);
+    border-radius: var(--cf-radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  .cf-detail-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: var(--cf-radius-md);
+    background: linear-gradient(135deg, var(--cf-primary-navy) 0%, var(--cf-secondary-navy) 100%);
+    color: #fff;
+    font-weight: 800;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.2);
+    box-shadow: 0 4px 10px rgba(11,31,51,0.15);
+  }
+
+  .cf-stat-chip-bar {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+
+  .cf-stat-chip {
+    background: var(--cf-surface);
+    border: 1px solid var(--cf-border);
+    border-radius: var(--cf-radius-md);
+    padding: 0.75rem 1.15rem;
+    flex: 1;
+    min-width: 160px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  }
+
+  .cf-stat-chip-label {
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    color: var(--cf-text-muted);
+    margin-bottom: 0.25rem;
+  }
+
+  .cf-stat-chip-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--cf-primary-navy);
+    line-height: 1.2;
+  }
+
+  .cf-nav-tabs-wrapper {
+    background: var(--cf-surface);
+    border: 1px solid var(--cf-border);
+    border-radius: var(--cf-radius-lg);
+    padding: 0.35rem 0.5rem 0 0.5rem;
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .cf-nav-tabs-wrapper::-webkit-scrollbar {
+    display: none;
+  }
+
+  .cf-tab-panel {
+    display: none;
+  }
+  .cf-tab-panel.active {
+    display: block;
+    animation: cfFadeIn 0.2s ease-in-out;
+  }
+
+  @keyframes cfFadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .cf-team-role-card {
+    background: var(--cf-bg);
+    border: 1px solid var(--cf-border);
+    border-radius: var(--cf-radius-md);
+    padding: 1rem;
+    height: 100%;
+    transition: all 0.15s ease;
+  }
+  .cf-team-role-card:hover {
+    border-color: var(--cf-secondary-navy);
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+
+  .cf-timeline {
+    position: relative;
+    padding-left: 2rem;
+  }
+  .cf-timeline::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    bottom: 10px;
+    left: 15px;
+    width: 2px;
+    background: var(--cf-border);
+  }
+
+  .cf-timeline-item {
+    position: relative;
+    margin-bottom: 1.5rem;
+  }
+
+  .cf-timeline-icon {
+    position: absolute;
+    left: -2rem;
+    top: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+
+  .cf-timeline-content {
+    background: var(--cf-surface);
+    border: 1px solid var(--cf-border);
+    border-radius: var(--cf-radius-md);
+    padding: 1rem;
+  }
+
+  .cf-service-card {
+    background: var(--cf-surface);
+    border: 1px solid var(--cf-border);
+    border-radius: var(--cf-radius-lg);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .cf-service-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    border-color: var(--cf-secondary-navy);
+  }
+
+  .cf-chat-bubble-received {
+    background: var(--cf-surface-muted);
+    border: 1px solid var(--cf-border);
+    border-radius: 12px 12px 12px 2px;
+    padding: 0.875rem 1rem;
+    max-width: 80%;
+  }
+
+  .cf-chat-bubble-sent {
+    background: #EFF6FC;
+    border: 1px solid #C8E1F7;
+    border-radius: 12px 12px 2px 12px;
+    padding: 0.875rem 1rem;
+    max-width: 80%;
+    margin-left: auto;
+  }
+</style>
+{% endblock %}
+
+{% block app_content %}
+
+{# ======================================================== #}
+{# 1. BREADCRUMBS & TOP NAV #}
+{# ======================================================== #}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+  <div>
+    {% include "components/breadcrumbs.html" with items=breadcrumbs %}
+  </div>
+  <div>
+    <a href="{% url 'clients:client_list' %}" class="cf-btn cf-btn-outline cf-btn-sm" style="display: inline-flex; align-items: center; gap: 6px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      <span>Back to Clients Directory</span>
+    </a>
+  </div>
+</div>
+
+{% if client.status == 'ARCHIVED' or client.status == 'INACTIVE' %}
+<div class="cf-alert cf-alert-warning" style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; background: #FFFBEB; border: 1px solid #FCD34D; border-radius: var(--cf-radius-md); padding: 0.875rem 1.25rem;">
+  <div style="display: flex; align-items: center; gap: 0.75rem;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <div>
+      <strong style="color: #92400E;">This client is currently {{ client.get_status_display|lower }}.</strong>
+      <span style="color: #B45309; font-size: 0.8125rem;"> Active deadline alerts are suppressed.</span>
+    </div>
+  </div>
+  <form method="post" action="{% url 'clients:client_restore' client.id %}" style="margin: 0;">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="/clients/{{ client.id }}/">
+    <button type="submit" class="cf-btn cf-btn-primary cf-btn-sm" style="box-shadow: none;">Restore Client</button>
+  </form>
+</div>
+{% endif %}
+
+{# ======================================================== #}
+{# 2. CLIENT DOSSIER HEADER #}
+{# ======================================================== #}
+<div class="cf-detail-header-card">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.25rem;">
+    
+    {# Left: Avatar & Identity #}
+    <div style="display: flex; align-items: flex-start; gap: 1.25rem; min-width: 0; flex: 1;">
+      <div class="cf-detail-avatar">
+        {{ client.display_contact_name|slice:":2"|upper }}
+      </div>
+      
+      <div style="min-width: 0; flex: 1;">
+        <div style="display: flex; align-items: center; gap: 0.625rem; flex-wrap: wrap; margin-bottom: 0.35rem;">
+          {# Status Badge #}
+          <span class="cf-badge {{ client.status_badge_class }}" style="font-weight: 700; padding: 4px 10px; font-size: 0.75rem;">
+            <span class="cf-status-dot" style="background-color: currentColor;"></span>
+            {{ client.get_status_display }}
+          </span>
+
+          {# PAN Badge with Copy #}
+          <div style="display: inline-flex; align-items: center; background: #071523; color: #FCD34D; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;" class="mono-font">
+            <span>PAN: {{ client.pan_number|default:'N/A' }}</span>
+            {% if client.pan_number %}
+              <button type="button" onclick="navigator.clipboard.writeText('{{ client.pan_number }}'); showToast('PAN {{ client.pan_number }} copied to clipboard!', 'info');" title="Copy PAN" style="background: none; border: none; color: #9BB0C1; cursor: pointer; padding: 0 0 0 6px; display: inline-flex;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              </button>
+            {% endif %}
+          </div>
+
+          {# Legal Entity Category #}
+          <span class="cf-badge cf-badge-secondary" style="font-size: 0.75rem;">
+            {{ client.get_client_type_display }}
+          </span>
+
+          {# Fiscal Year #}
+          <span class="cf-badge cf-badge-muted" style="font-size: 0.75rem;">
+            FY: {{ client.fiscal_year|default:CURRENT_FISCAL_YEAR }}
+          </span>
+        </div>
+
+        {# Client & Business Names #}
+        <h1 style="font-size: 1.625rem; font-weight: 800; color: var(--cf-primary-navy); margin: 0 0 0.25rem 0; line-height: 1.25; word-break: break-word;">
+          {{ client.display_business_name }}
+        </h1>
+        
+        <div style="display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; font-size: 0.8125rem; color: var(--cf-text-secondary); margin-top: 0.35rem;">
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span style="font-weight: 600; color: var(--cf-primary-navy);">{{ client.display_contact_name }}</span>
+            <span style="color: var(--cf-text-muted);">(Contact Person)</span>
+          </div>
+
+          {% if client.email %}
+            <div style="display: flex; align-items: center; gap: 5px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <a href="mailto:{{ client.email }}" style="color: inherit; text-decoration: none;">{{ client.email }}</a>
+            </div>
+          {% endif %}
+
+          {% if client.phone %}
+            <div style="display: flex; align-items: center; gap: 5px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <a href="tel:{{ client.phone }}" style="color: inherit; text-decoration: none;">{{ client.phone }}</a>
+            </div>
+          {% endif %}
+
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span>{{ client.address|default:client.city }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# Right: Primary Action Buttons #}
+    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+      
+      {# Edit Action #}
+      <button type="button" 
+              class="cf-btn cf-btn-outline" 
+              data-cf-modal-trigger="cf-edit-client-modal"
+              id="action-btn-edit-client">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <span>Edit</span>
+      </button>
+
+      {# Create Task Action #}
+      <button type="button" 
+              class="cf-btn cf-btn-outline" 
+              data-cf-modal-trigger="cf-create-task-modal"
+              id="action-btn-create-task">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <span>Create Task</span>
+      </button>
+
+      {# Request Documents Action #}
+      <button type="button" 
+              class="cf-btn cf-btn-outline" 
+              data-cf-modal-trigger="cf-request-doc-modal"
+              id="action-btn-request-doc">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        <span>Request Documents</span>
+      </button>
+
+      {# Message Action #}
+      <button type="button" 
+              class="cf-btn cf-btn-outline" 
+              data-cf-modal-trigger="cf-send-message-modal"
+              id="action-btn-send-message">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>Message</span>
+      </button>
+
+      {# More Dropdown #}
+      <div class="cf-dropdown">
+        <button type="button" class="cf-btn cf-btn-secondary" data-cf-dropdown-toggle id="action-btn-more-dropdown">
+          <span>More</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="cf-dropdown-menu" style="right: 0; min-width: 220px; z-index: 1050;">
+          <div class="cf-dropdown-header">Practice Operations</div>
+          
+          <button type="button" class="cf-dropdown-item" data-cf-modal-trigger="cf-assign-staff-modal">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            <span>Assign Engagement Team</span>
+          </button>
+
+          <button type="button" class="cf-dropdown-item" data-cf-modal-trigger="cf-upload-doc-modal">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>Upload Working Paper / File</span>
+          </button>
+
+          <button type="button" class="cf-dropdown-item" data-cf-modal-trigger="cf-create-invoice-modal">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            <span>Generate Billing Invoice</span>
+          </button>
+
+          <div class="cf-dropdown-divider"></div>
+
+          <a href="{% url 'clients:client_export_single' client.id %}" class="cf-dropdown-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Export Client Dossier (CSV)</span>
+          </a>
+
+          <div class="cf-dropdown-divider"></div>
+
+          <button type="button" class="cf-dropdown-item" data-cf-modal-trigger="cf-deactivate-modal" style="color: var(--cf-danger);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+            <span>{% if client.status == 'ACTIVE' or client.status == 'ONBOARDING' %}Deactivate Client{% else %}Re-activate Client{% endif %}</span>
+          </button>
+
+          {% if client.status == 'ARCHIVED' %}
+            <form method="post" action="{% url 'clients:client_restore' client.id %}" style="margin: 0;">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="/clients/{{ client.id }}/">
+              <button type="submit" class="cf-dropdown-item" style="color: var(--cf-success); width: 100%; text-align: left; background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Restore Client</span>
+              </button>
+            </form>
+          {% else %}
+            <button type="button" class="cf-dropdown-item" data-cf-modal-trigger="cf-archive-modal" style="color: var(--cf-danger);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+              <span>Archive Client</span>
+            </button>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# 3. QUICK PRACTICE KPI CHIPS #}
+{# ======================================================== #}
+<div class="cf-stat-chip-bar">
+  <div class="cf-stat-chip">
+    <div class="cf-stat-chip-label">Active Services</div>
+    <div class="cf-stat-chip-value">{{ subscribed_services|length }}</div>
+  </div>
+  <div class="cf-stat-chip">
+    <div class="cf-stat-chip-label">Open Tasks</div>
+    <div class="cf-stat-chip-value" style="color: {% if tasks_urgent_count > 0 %}var(--cf-danger){% else %}var(--cf-primary-navy){% endif %};">
+      {{ tasks_todo.count }}
+      {% if tasks_urgent_count > 0 %}
+        <span class="cf-badge cf-badge-danger" style="font-size: 0.6875rem; vertical-align: middle; margin-left: 4px;">{{ tasks_urgent_count }} Urgent</span>
+      {% endif %}
+    </div>
+  </div>
+  <div class="cf-stat-chip">
+    <div class="cf-stat-chip-label">Stored Documents</div>
+    <div class="cf-stat-chip-value">{{ documents.count }} <span style="font-size: 0.75rem; font-weight: 500; color: var(--cf-text-muted);">({{ total_storage_mb }} MB)</span></div>
+  </div>
+  <div class="cf-stat-chip">
+    <div class="cf-stat-chip-label">Next Deadline</div>
+    <div class="cf-stat-chip-value" style="font-size: 1rem;">
+      {% if overview_deadlines %}
+        {% with next_item=overview_deadlines.0 %}
+          <span style="font-weight: 700; color: {% if next_item.is_urgent %}var(--cf-danger){% else %}var(--cf-primary-navy){% endif %};">
+            {{ next_item.title|truncatechars:24 }}
+          </span>
+          <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 2px;">
+            {{ next_item.date_ad|date:"M d, Y" }}
+            {% if next_item.days_left == 0 %}
+              <span class="cf-badge cf-badge-danger" style="padding: 1px 4px; font-size: 0.625rem;">Today</span>
+            {% elif next_item.days_left < 0 %}
+              <span class="cf-badge cf-badge-danger" style="padding: 1px 4px; font-size: 0.625rem;">Overdue</span>
+            {% else %}
+              <span class="cf-badge cf-badge-warning" style="padding: 1px 4px; font-size: 0.625rem;">{{ next_item.days_left }}d left</span>
+            {% endif %}
+          </div>
+        {% endwith %}
+      {% else %}
+        <span style="color: var(--cf-success); font-size: 0.875rem;">All filings up-to-date</span>
+      {% endif %}
+    </div>
+  </div>
+  <div class="cf-stat-chip">
+    <div class="cf-stat-chip-label">Outstanding Fees</div>
+    <div class="cf-stat-chip-value mono-font" style="color: {% if total_outstanding_npr > 0 %}var(--cf-warning-text){% else %}var(--cf-success){% endif %};">
+      NPR {{ total_outstanding_npr|floatformat:2 }}
+    </div>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# 4. TABS NAVIGATION #}
+{# ======================================================== #}
+<div class="cf-nav-tabs-wrapper">
+  <ul class="cf-nav-tabs" id="client-detail-tabs" role="tablist">
+    
+    <li>
+      <a href="#overview" class="cf-tab-link {% if active_tab == 'overview' %}active{% endif %}" data-tab-target="overview" role="tab" id="tab-btn-overview">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span>Overview</span>
+      </a>
+    </li>
+
+    <li>
+      <a href="#services" class="cf-tab-link {% if active_tab == 'services' %}active{% endif %}" data-tab-target="services" role="tab" id="tab-btn-services">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        <span>Services</span>
+        <span class="cf-badge cf-badge-muted" style="font-size: 0.6875rem; padding: 1px 6px;">{{ tab_counts.services }}</span>
+      </a>
+    </li>
+
+    <li>
+      <a href="#tasks" class="cf-tab-link {% if active_tab == 'tasks' %}active{% endif %}" data-tab-target="tasks" role="tab" id="tab-btn-tasks">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <span>Tasks</span>
+        <span class="cf-badge cf-badge-muted" style="font-size: 0.6875rem; padding: 1px 6px;">{{ tab_counts.tasks }}</span>
+      </a>
+    </li>
+
+    <li>
+      <a href="#documents" class="cf-tab-link {% if active_tab == 'documents' %}active{% endif %}" data-tab-target="documents" role="tab" id="tab-btn-documents">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span>Documents</span>
+        <span class="cf-badge cf-badge-muted" style="font-size: 0.6875rem; padding: 1px 6px;">{{ tab_counts.documents }}</span>
+      </a>
+    </li>
+
+    <li>
+      <a href="#compliance" class="cf-tab-link {% if active_tab == 'compliance' %}active{% endif %}" data-tab-target="compliance" role="tab" id="tab-btn-compliance">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>Compliance</span>
+        <span class="cf-badge cf-badge-muted" style="font-size: 0.6875rem; padding: 1px 6px;">{{ tab_counts.compliance }}</span>
+      </a>
+    </li>
+
+    <li>
+      <a href="#calendar" class="cf-tab-link {% if active_tab == 'calendar' %}active{% endif %}" data-tab-target="calendar" role="tab" id="tab-btn-calendar">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Calendar</span>
+        <span class="cf-badge cf-badge-muted" style="font-size: 0.6875rem; padding: 1px 6px;">{{ tab_counts.calendar|default:0 }}</span>
+      </a>
+    </li>
+
+    <li>
+      <a href="#billing" class="cf-tab-link {% if active_tab == 'billing' %}active{% endif %}" data-tab-target="billing" role="tab" id="tab-btn-billing">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        <span>Billing</span>
+        <span class="cf-badge cf-badge-muted" style="font-size: 0.6875rem; padding: 1px 6px;">{{ tab_counts.billing }}</span>
+      </a>
+    </li>
+
+    <li>
+      <a href="#messages" class="cf-tab-link {% if active_tab == 'messages' %}active{% endif %}" data-tab-target="messages" role="tab" id="tab-btn-messages">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>Messages</span>
+        <span class="cf-badge cf-badge-muted" style="font-size: 0.6875rem; padding: 1px 6px;">{{ tab_counts.messages }}</span>
+      </a>
+    </li>
+
+    <li>
+      <a href="#activity" class="cf-tab-link {% if active_tab == 'activity' %}active{% endif %}" data-tab-target="activity" role="tab" id="tab-btn-activity">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span>Activity</span>
+        <span class="cf-badge cf-badge-muted" style="font-size: 0.6875rem; padding: 1px 6px;">{{ tab_counts.activity }}</span>
+      </a>
+    </li>
+
+  </ul>
+</div>
+
+{# ======================================================== #}
+{# 5. TAB 1: OVERVIEW #}
+{# ======================================================== #}
+<div class="cf-tab-panel {% if active_tab == 'overview' %}active{% endif %}" id="panel-overview">
+  
+  <div class="row g-4">
+    {# Left Column: Client & Business Information #}
+    <div class="col-lg-6">
+      
+      {# Card 1: Client Information #}
+      <div class="cf-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+          <h3 style="font-size: 1.0625rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0; display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span>Client Information</span>
+          </h3>
+          <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" data-cf-modal-trigger="cf-edit-client-modal">Edit</button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 1rem; font-size: 0.875rem;">
+          <div>
+            <div style="color: var(--cf-text-muted); font-size: 0.75rem; text-transform: uppercase; font-weight: 600;">Contact Person / Signatory</div>
+            <div style="font-weight: 600; color: var(--cf-primary-navy); margin-top: 2px;">{{ client.display_contact_name }}</div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <div style="color: var(--cf-text-muted); font-size: 0.75rem; text-transform: uppercase; font-weight: 600;">Official Email</div>
+              <div style="font-weight: 500; margin-top: 2px;">
+                {% if client.email %}
+                  <a href="mailto:{{ client.email }}" style="color: var(--cf-info); text-decoration: none;">{{ client.email }}</a>
+                {% else %}
+                  <span style="color: var(--cf-text-muted);">&mdash;</span>
+                {% endif %}
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <div style="color: var(--cf-text-muted); font-size: 0.75rem; text-transform: uppercase; font-weight: 600;">Official Phone / Mobile</div>
+              <div style="font-weight: 500; margin-top: 2px;">
+                {% if client.phone %}
+                  <a href="tel:{{ client.phone }}" style="color: inherit; text-decoration: none;">{{ client.phone }}</a>
+                {% else %}
+                  <span style="color: var(--cf-text-muted);">&mdash;</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div style="color: var(--cf-text-muted); font-size: 0.75rem; text-transform: uppercase; font-weight: 600;">Registered Office Address</div>
+            <div style="font-weight: 500; color: var(--cf-text-primary); margin-top: 2px;">
+              {{ client.address|default:'Ward No., Street Address' }}, {{ client.city|default:'Kathmandu' }}, Nepal
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {# Card 2: Business Information #}
+      <div class="cf-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+          <h3 style="font-size: 1.0625rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0; display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            <span>Business Information</span>
+          </h3>
+          <span class="cf-badge cf-badge-secondary">{{ client.get_client_type_display }}</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 1rem; font-size: 0.875rem;">
+          <div>
+            <div style="color: var(--cf-text-muted); font-size: 0.75rem; text-transform: uppercase; font-weight: 600;">Registered Legal Business Name</div>
+            <div style="font-weight: 700; color: var(--cf-primary-navy); margin-top: 2px; font-size: 1rem;">{{ client.display_business_name }}</div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <div style="color: var(--cf-text-muted); font-size: 0.75rem; text-transform: uppercase; font-weight: 600;">Inland Revenue (IRD) PAN</div>
+              <div style="font-weight: 700; color: var(--cf-primary-navy); margin-top: 2px;" class="mono-font">
+                {{ client.pan_number|default:'Not Provided' }}
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <div style="color: var(--cf-text-muted); font-size: 0.75rem; text-transform: uppercase; font-weight: 600;">Company Registrar (OCR) Reg No</div>
+              <div style="font-weight: 600; color: var(--cf-text-primary); margin-top: 2px;" class="mono-font">
+                {{ client.registration_number|default:'N/A' }}
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <div style="color: var(--cf-text-muted); font-size: 0.75rem; text-transform: uppercase; font-weight: 600;">Business Entity Type</div>
+              <div style="font-weight: 600; color: var(--cf-text-primary); margin-top: 2px;">
+                {{ client.get_client_type_display }}
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <div style="color: var(--cf-text-muted); font-size: 0.75rem; text-transform: uppercase; font-weight: 600;">Active Fiscal Year</div>
+              <div style="font-weight: 600; color: var(--cf-text-primary); margin-top: 2px;">
+                {{ client.fiscal_year|default:CURRENT_FISCAL_YEAR }} (B.S.)
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <div style="color: var(--cf-text-muted); font-size: 0.75rem; text-transform: uppercase; font-weight: 600;">Registration Date</div>
+              <div style="font-weight: 500; color: var(--cf-text-primary); margin-top: 2px;">
+                {% if client.registration_date %}{{ client.registration_date|date:"M d, Y" }}{% else %}<span style="color: var(--cf-text-muted);">&mdash;</span>{% endif %}
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <div style="color: var(--cf-text-muted); font-size: 0.75rem; text-transform: uppercase; font-weight: 600;">Tax / PAN Reg Date</div>
+              <div style="font-weight: 500; color: var(--cf-text-primary); margin-top: 2px;">
+                {% if client.tax_registration_date %}{{ client.tax_registration_date|date:"M d, Y" }}{% else %}<span style="color: var(--cf-text-muted);">&mdash;</span>{% endif %}
+              </div>
+            </div>
+          </div>
+
+          {% if client.notes %}
+          <div style="border-top: 1px solid var(--cf-border); padding-top: 0.75rem;">
+            <div style="color: var(--cf-text-muted); font-size: 0.75rem; text-transform: uppercase; font-weight: 600;">Practice &amp; Compliance Notes</div>
+            <div style="font-size: 0.8125rem; color: var(--cf-text-primary); margin-top: 4px; white-space: pre-line; background: var(--cf-bg); padding: 0.625rem 0.75rem; border-radius: var(--cf-radius-sm); border: 1px solid var(--cf-border);">{{ client.notes }}</div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      {# Card 4: Active Services #}
+      <div class="cf-card" style="padding: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+          <h3 style="font-size: 1.0625rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0; display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            <span>Active Services ({{ subscribed_services|length }})</span>
+          </h3>
+          <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" data-cf-modal-trigger="cf-edit-client-modal">Configure</button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          {% for s in subscribed_services %}
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; background: var(--cf-bg); border-radius: var(--cf-radius-md); border: 1px solid var(--cf-border);">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div style="width: 32px; height: 32px; border-radius: 6px; background: rgba(11,31,51,0.08); color: var(--cf-primary-navy); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">
+                  {{ s.code|slice:":2" }}
+                </div>
+                <div>
+                  <div style="font-weight: 700; color: var(--cf-primary-navy); font-size: 0.875rem;">{{ s.name }}</div>
+                  <div style="font-size: 0.75rem; color: var(--cf-text-muted);">{{ s.category }}</div>
+                </div>
+              </div>
+              <span class="cf-badge cf-badge-success" style="font-size: 0.6875rem;">Subscribed</span>
+            </div>
+          {% empty %}
+            <div class="cf-empty-state" style="padding: 1.5rem 0;">
+              <p style="font-size: 0.8125rem; color: var(--cf-text-muted); margin: 0 0 0.5rem 0;">No services currently configured.</p>
+              <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" data-cf-modal-trigger="cf-edit-client-modal">Add Practice Services</button>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+
+    {# Right Column: Assigned Team & Upcoming Deadlines #}
+    <div class="col-lg-6">
+      
+      {# Card 3: Assigned Team (CA, Senior, Accountant, Staff) #}
+      <div class="cf-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+          <div>
+            <h3 style="font-size: 1.0625rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0; display: flex; align-items: center; gap: 8px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              <span>Assigned Engagement Team</span>
+            </h3>
+            <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 2px;">Nepal practice role hierarchy (CA &bull; Senior &bull; Accountant &bull; Staff)</div>
+          </div>
+          <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" data-cf-modal-trigger="cf-assign-staff-modal">Assign Staff</button>
+        </div>
+
+        <div class="row g-3">
+          {# 1. CA / Engagement Lead #}
+          <div class="col-sm-6">
+            <div class="cf-team-role-card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <span style="font-size: 0.6875rem; text-transform: uppercase; font-weight: 700; color: #173B57; letter-spacing: 0.05em;">CA / Lead Partner</span>
+                <span class="cf-badge cf-badge-primary" style="font-size: 0.625rem; padding: 1px 5px;">ICAN CA</span>
+              </div>
+              {% if team_by_role.ca %}
+                {% for ca in team_by_role.ca %}
+                  <div style="display: flex; align-items: center; gap: 0.625rem; margin-top: 4px;">
+                    <div class="cf-avatar cf-avatar-sm" style="background: var(--cf-primary-navy); color: #fff; font-weight: 700; font-size: 0.6875rem;">
+                      {{ ca.initials }}
+                    </div>
+                    <div style="min-width: 0;">
+                      <div style="font-weight: 700; font-size: 0.8125rem; color: var(--cf-primary-navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ ca.name }}">{{ ca.name }}</div>
+                      <div style="font-size: 0.6875rem; color: var(--cf-text-muted);">{{ ca.ican|default:'Chartered Accountant' }}</div>
+                    </div>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <div style="font-size: 0.8125rem; color: var(--cf-text-muted); font-style: italic; margin-top: 4px;">No CA Partner Assigned</div>
+              {% endif %}
+            </div>
+          </div>
+
+          {# 2. Senior Associate #}
+          <div class="col-sm-6">
+            <div class="cf-team-role-card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <span style="font-size: 0.6875rem; text-transform: uppercase; font-weight: 700; color: var(--cf-text-secondary); letter-spacing: 0.05em;">Senior Associate</span>
+                <span class="cf-badge cf-badge-secondary" style="font-size: 0.625rem; padding: 1px 5px;">Audit Senior</span>
+              </div>
+              {% if team_by_role.senior %}
+                {% for sr in team_by_role.senior %}
+                  <div style="display: flex; align-items: center; gap: 0.625rem; margin-top: 4px;">
+                    <div class="cf-avatar cf-avatar-sm" style="background: var(--cf-secondary-navy); color: #fff; font-weight: 700; font-size: 0.6875rem;">
+                      {{ sr.initials }}
+                    </div>
+                    <div style="min-width: 0;">
+                      <div style="font-weight: 700; font-size: 0.8125rem; color: var(--cf-primary-navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ sr.name }}">{{ sr.name }}</div>
+                      <div style="font-size: 0.6875rem; color: var(--cf-text-muted);">{{ sr.email }}</div>
+                    </div>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <div style="font-size: 0.8125rem; color: var(--cf-text-muted); font-style: italic; margin-top: 4px;">No Senior Assigned</div>
+              {% endif %}
+            </div>
+          </div>
+
+          {# 3. Accountant #}
+          <div class="col-sm-6">
+            <div class="cf-team-role-card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <span style="font-size: 0.6875rem; text-transform: uppercase; font-weight: 700; color: var(--cf-text-secondary); letter-spacing: 0.05em;">Accountant</span>
+                <span class="cf-badge cf-badge-secondary" style="font-size: 0.625rem; padding: 1px 5px;">Accounts</span>
+              </div>
+              {% if team_by_role.accountant %}
+                {% for acc in team_by_role.accountant %}
+                  <div style="display: flex; align-items: center; gap: 0.625rem; margin-top: 4px;">
+                    <div class="cf-avatar cf-avatar-sm" style="background: #2563EB; color: #fff; font-weight: 700; font-size: 0.6875rem;">
+                      {{ acc.initials }}
+                    </div>
+                    <div style="min-width: 0;">
+                      <div style="font-weight: 700; font-size: 0.8125rem; color: var(--cf-primary-navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ acc.name }}">{{ acc.name }}</div>
+                      <div style="font-size: 0.6875rem; color: var(--cf-text-muted);">{{ acc.email }}</div>
+                    </div>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <div style="font-size: 0.8125rem; color: var(--cf-text-muted); font-style: italic; margin-top: 4px;">No Accountant Assigned</div>
+              {% endif %}
+            </div>
+          </div>
+
+          {# 4. Staff / Trainee #}
+          <div class="col-sm-6">
+            <div class="cf-team-role-card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <span style="font-size: 0.6875rem; text-transform: uppercase; font-weight: 700; color: var(--cf-text-secondary); letter-spacing: 0.05em;">Staff / Trainee</span>
+                <span class="cf-badge cf-badge-muted" style="font-size: 0.625rem; padding: 1px 5px;">Articled Trainee</span>
+              </div>
+              {% if team_by_role.staff %}
+                {% for st in team_by_role.staff %}
+                  <div style="display: flex; align-items: center; gap: 0.625rem; margin-top: 4px;">
+                    <div class="cf-avatar cf-avatar-sm" style="background: #475569; color: #fff; font-weight: 700; font-size: 0.6875rem;">
+                      {{ st.initials }}
+                    </div>
+                    <div style="min-width: 0;">
+                      <div style="font-weight: 700; font-size: 0.8125rem; color: var(--cf-primary-navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ st.name }}">{{ st.name }}</div>
+                      <div style="font-size: 0.6875rem; color: var(--cf-text-muted);">{{ st.email }}</div>
+                    </div>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <div style="font-size: 0.8125rem; color: var(--cf-text-muted); font-style: italic; margin-top: 4px;">No Staff Assigned</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {# Card 5: Upcoming Deadlines #}
+      <div class="cf-card" style="padding: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+          <h3 style="font-size: 1.0625rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0; display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>Upcoming Deadlines &amp; Filings</span>
+          </h3>
+          <a href="#compliance" onclick="switchTab('compliance')" class="cf-btn cf-btn-ghost cf-btn-sm">View All &rarr;</a>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          {% for dl in overview_deadlines %}
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; background: var(--cf-bg); border-radius: var(--cf-radius-md); border-left: 3px solid {% if dl.is_urgent or dl.is_overdue %}var(--cf-danger){% else %}var(--cf-secondary-navy){% endif %};">
+              <div style="min-width: 0; flex: 1; padding-right: 0.75rem;">
+                <div style="font-weight: 700; font-size: 0.875rem; color: var(--cf-primary-navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ dl.title }}">
+                  {{ dl.title }}
+                </div>
+                <div style="font-size: 0.75rem; color: var(--cf-text-muted); display: flex; align-items: center; gap: 8px; margin-top: 2px;">
+                  <span>{{ dl.category }}</span>
+                  {% if dl.date_bs %}
+                    <span>&bull; BS {{ dl.date_bs }}</span>
+                  {% endif %}
+                  <span>&bull; AD {{ dl.date_ad|date:"M d, Y" }}</span>
+                </div>
+              </div>
+              <div style="flex-shrink: 0; text-align: right;">
+                {% if dl.days_left < 0 %}
+                  <span class="cf-badge cf-badge-danger" style="font-size: 0.6875rem;">Overdue ({{ dl.days_left }}d)</span>
+                {% elif dl.days_left == 0 %}
+                  <span class="cf-badge cf-badge-danger" style="font-size: 0.6875rem;">Due Today</span>
+                {% elif dl.days_left <= 3 %}
+                  <span class="cf-badge cf-badge-warning" style="font-size: 0.6875rem;">{{ dl.days_left }} days left</span>
+                {% else %}
+                  <span class="cf-badge cf-badge-muted" style="font-size: 0.6875rem;">{{ dl.days_left }} days left</span>
+                {% endif %}
+              </div>
+            </div>
+          {% empty %}
+            <div class="cf-empty-state" style="padding: 1.5rem 0;">
+              <p style="font-size: 0.8125rem; color: var(--cf-text-muted); margin: 0;">No impending compliance deadlines or tasks due.</p>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+{# ======================================================== #}
+{# 6. TAB 2: SERVICES #}
+{# ======================================================== #}
+<div class="cf-tab-panel {% if active_tab == 'services' %}active{% endif %}" id="panel-services">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+    <div>
+      <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0;">Subscribed CA Practice Services</h2>
+      <p style="font-size: 0.8125rem; color: var(--cf-text-muted); margin: 0;">Professional services engaged under formal client representation letter.</p>
+    </div>
+    <button type="button" class="cf-btn cf-btn-primary" data-cf-modal-trigger="cf-edit-client-modal">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>Modify Subscribed Services</span>
+    </button>
+  </div>
+
+  <div class="row g-4">
+    {% for s in subscribed_services %}
+      <div class="col-md-6 col-lg-4">
+        <div class="cf-service-card" style="height: 100%;">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+              <span class="cf-badge cf-badge-primary" style="font-weight: 700; font-size: 0.6875rem;">{{ s.code }}</span>
+              <span class="cf-badge cf-badge-success" style="font-size: 0.6875rem;">Active Engagement</span>
+            </div>
+            <h4 style="font-size: 1.0625rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0 0 0.5rem 0;">{{ s.name }}</h4>
+            <div style="font-size: 0.75rem; color: var(--cf-secondary-navy); font-weight: 600; margin-bottom: 0.5rem;">{{ s.category }}</div>
+            <p style="font-size: 0.8125rem; color: var(--cf-text-secondary); line-height: 1.5; margin-bottom: 0.75rem;">
+              {{ s.description }}
+            </p>
+          </div>
+          <div style="border-top: 1px solid var(--cf-border); padding-top: 0.75rem; margin-top: 0.5rem; font-size: 0.75rem; color: var(--cf-text-muted);">
+            <strong style="color: var(--cf-primary-navy);">Scope:</strong> {{ s.scope }}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  {% if available_services %}
+    <div style="margin-top: 2.5rem;">
+      <h3 style="font-size: 1.0625rem; font-weight: 700; color: var(--cf-primary-navy); margin-bottom: 0.5rem;">Available Additional CA Services</h3>
+      <p style="font-size: 0.8125rem; color: var(--cf-text-muted); margin-bottom: 1rem;">Expand your practice scope for this client.</p>
+
+      <div class="row g-3">
+        {% for a in available_services %}
+          <div class="col-md-4">
+            <div class="cf-card" style="padding: 1rem; border-style: dashed; background: var(--cf-bg);">
+              <div style="font-weight: 700; color: var(--cf-primary-navy); font-size: 0.875rem;">{{ a.name }}</div>
+              <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin: 0.25rem 0 0.5rem 0;">{{ a.category }}</div>
+              <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" data-cf-modal-trigger="cf-edit-client-modal" style="width: 100%;">
+                + Add Service
+              </button>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+</div>
+
+{# ======================================================== #}
+{# 7. TAB 3: TASKS #}
+{# ======================================================== #}
+<div class="cf-tab-panel {% if active_tab == 'tasks' %}active{% endif %}" id="panel-tasks">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+    <div>
+      <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0;">Client Engagement Tasks</h2>
+      <p style="font-size: 0.8125rem; color: var(--cf-text-muted); margin: 0;">Audit procedures, tax reconciliations, and review checkpoints.</p>
+    </div>
+    <button type="button" class="cf-btn cf-btn-primary" data-cf-modal-trigger="cf-create-task-modal">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>Create Task</span>
+    </button>
+  </div>
+
+  <div class="cf-table-container">
+    <table class="cf-table">
+      <thead>
+        <tr>
+          <th style="width: 40px;">Status</th>
+          <th>Task Title &amp; Scope</th>
+          <th>Assigned Auditor</th>
+          <th>Priority</th>
+          <th>Due Date</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for task in all_tasks %}
+          <tr>
+            <td>
+              <form method="post" action="{% url 'clients:client_task_toggle' client.id task.id %}">
+                {% csrf_token %}
+                <button type="submit" 
+                        class="cf-btn cf-btn-ghost cf-btn-sm" 
+                        title="{% if task.status == 'COMPLETED' %}Mark Incomplete{% else %}Mark Complete{% endif %}"
+                        style="padding: 2px;">
+                  {% if task.status == 'COMPLETED' %}
+                    <span style="color: var(--cf-success); font-size: 1.15rem; font-weight: 800;">&#10003;</span>
+                  {% else %}
+                    <span style="display: inline-block; width: 16px; height: 16px; border: 2px solid var(--cf-border-dark); border-radius: 4px;"></span>
+                  {% endif %}
+                </button>
+              </form>
+            </td>
+
+            <td>
+              <div style="font-weight: 600; color: var(--cf-primary-navy); font-size: 0.875rem; {% if task.status == 'COMPLETED' %}text-decoration: line-through; color: var(--cf-text-muted);{% endif %}">
+                {{ task.title }}
+              </div>
+              {% if task.description %}
+                <div style="font-size: 0.75rem; color: var(--cf-text-secondary); margin-top: 2px; max-width: 480px;">
+                  {{ task.description|truncatechars:120 }}
+                </div>
+              {% endif %}
+            </td>
+
+            <td>
+              {% if task.assigned_to %}
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <div class="cf-avatar cf-avatar-sm" style="background: var(--cf-secondary-navy); color: #fff; font-size: 0.6875rem;">
+                    {{ task.assigned_to.first_name|slice:":1" }}{{ task.assigned_to.last_name|slice:":1" }}
+                  </div>
+                  <div style="font-size: 0.8125rem; font-weight: 600; color: var(--cf-primary-navy);">
+                    {{ task.assigned_to.get_full_name }}
+                  </div>
+                </div>
+              {% else %}
+                <span style="color: var(--cf-text-muted); font-size: 0.8125rem;">Unassigned</span>
+              {% endif %}
+            </td>
+
+            <td>
+              {% if task.priority == 'URGENT' %}
+                <span class="cf-badge cf-badge-danger">Urgent</span>
+              {% elif task.priority == 'HIGH' %}
+                <span class="cf-badge cf-badge-warning">High</span>
+              {% elif task.priority == 'MEDIUM' %}
+                <span class="cf-badge cf-badge-secondary">Medium</span>
+              {% else %}
+                <span class="cf-badge cf-badge-muted">Low</span>
+              {% endif %}
+            </td>
+
+            <td>
+              {% if task.due_date %}
+                <span style="font-size: 0.8125rem; font-weight: 500;">{{ task.due_date|date:"M d, Y" }}</span>
+              {% else %}
+                <span style="color: var(--cf-text-muted); font-size: 0.8125rem;">&mdash;</span>
+              {% endif %}
+            </td>
+
+            <td style="text-align: right;">
+              <span class="cf-badge {% if task.status == 'COMPLETED' %}cf-badge-success{% elif task.status == 'IN_PROGRESS' %}cf-badge-primary{% elif task.status == 'UNDER_REVIEW' %}cf-badge-warning{% else %}cf-badge-muted{% endif %}" style="font-size: 0.6875rem;">
+                {{ task.get_status_display }}
+              </span>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 2.5rem;">
+              <p style="color: var(--cf-text-muted); margin-bottom: 0.75rem;">No tasks recorded for this client.</p>
+              <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" data-cf-modal-trigger="cf-create-task-modal">Create Initial Task</button>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# 8. TAB 4: DOCUMENTS #}
+{# ======================================================== #}
+<div class="cf-tab-panel {% if active_tab == 'documents' %}active{% endif %}" id="panel-documents">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+    <div>
+      <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0;">Documents &amp; Submissions</h2>
+      <p style="font-size: 0.8125rem; color: var(--cf-text-muted); margin: 0;">Repository files, financial statements, and client document requests.</p>
+    </div>
+    <div style="display: flex; gap: 0.5rem;">
+      <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-trigger="cf-request-doc-modal">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        <span>Request Documents</span>
+      </button>
+      <button type="button" class="cf-btn cf-btn-primary" data-cf-modal-trigger="cf-upload-doc-modal">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span>Upload File</span>
+      </button>
+    </div>
+  </div>
+
+  {# Section A: Document Repository Files #}
+  <div class="cf-card" style="margin-bottom: 1.5rem;">
+    <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--cf-border); display: flex; justify-content: space-between; align-items: center;">
+      <h3 style="font-size: 0.9375rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0;">Client Repository Working Papers ({{ documents.count }})</h3>
+      <span style="font-size: 0.75rem; color: var(--cf-text-muted);">Storage: {{ total_storage_mb }} MB</span>
+    </div>
+
+    <div class="cf-table-container">
+      <table class="cf-table">
+        <thead>
+          <tr>
+            <th>Document Title</th>
+            <th>Category</th>
+            <th>Fiscal Year</th>
+            <th>Uploaded By</th>
+            <th>Size</th>
+            <th>Date Added</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for doc in documents %}
+            <tr>
+              <td>
+                <div style="display: flex; align-items: center; gap: 0.625rem;">
+                  <div style="width: 28px; height: 28px; border-radius: 4px; background: rgba(11,31,51,0.08); color: var(--cf-primary-navy); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.625rem;">
+                    {{ doc.file_extension|upper|default:'FILE' }}
+                  </div>
+                  <div>
+                    <div style="font-weight: 600; color: var(--cf-primary-navy); font-size: 0.875rem;">
+                      {{ doc.title }}
+                    </div>
+                    {% if doc.expiry_date %}
+                      <div style="font-size: 0.6875rem; color: {% if doc.is_expired %}var(--cf-danger){% elif doc.is_expiring_soon %}var(--cf-warning){% else %}var(--cf-text-muted){% endif %};">
+                        Exp: {{ doc.expiry_date|date:"M d, Y" }} {% if doc.is_expired %}(Expired){% elif doc.is_expiring_soon %}(Expiring Soon){% endif %}
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="cf-badge cf-badge-secondary" style="font-size: 0.6875rem;">
+                  {{ doc.get_category_display }}
+                </span>
+              </td>
+              <td class="mono-font">{{ doc.fiscal_year }}</td>
+              <td>{{ doc.uploaded_by.get_full_name|default:'Firm Staff' }}</td>
+              <td class="mono-font" style="font-size: 0.75rem; color: var(--cf-text-muted);">
+                {{ doc.file_size_bytes|filesizeformat }}
+              </td>
+              <td style="font-size: 0.8125rem;">{{ doc.created_at|date:"M d, Y" }}</td>
+              <td style="text-align: right;">
+                <div style="display: flex; gap: 0.35rem; justify-content: flex-end; align-items: center;">
+                  {% if doc.can_preview %}
+                    <a href="{% url 'documents:document_preview' doc.id %}" target="_blank" class="cf-btn cf-btn-ghost cf-btn-sm" style="font-size: 0.75rem; padding: 4px 8px;">
+                      Preview
+                    </a>
+                  {% endif %}
+                  {% if doc.file %}
+                    <a href="{% url 'documents:document_download' doc.id %}" class="cf-btn cf-btn-ghost cf-btn-sm" style="font-size: 0.75rem; padding: 4px 8px;">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                      <span>Download</span>
+                    </a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7" style="text-align: center; padding: 2rem;">
+                <p style="color: var(--cf-text-muted); margin: 0 0 0.5rem 0;">No documents uploaded in this repository yet.</p>
+                <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" data-cf-modal-trigger="cf-upload-doc-modal">Upload First Document</button>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {# Section B: Document Requests #}
+  <div class="cf-card">
+    <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--cf-border); display: flex; justify-content: space-between; align-items: center;">
+      <h3 style="font-size: 0.9375rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0;">Sent Document Requests ({{ document_requests.count }})</h3>
+      {% if pending_requests_count > 0 %}
+        <span class="cf-badge cf-badge-warning" style="font-size: 0.6875rem;">{{ pending_requests_count }} Pending Submissions</span>
+      {% endif %}
+    </div>
+
+    <div class="cf-table-container">
+      <table class="cf-table">
+        <thead>
+          <tr>
+            <th>Requested Documents</th>
+            <th>Submission Deadline</th>
+            <th>Status</th>
+            <th>Requested By</th>
+            <th>Uploaded Document</th>
+            <th>Instructions / Notes</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for req in document_requests %}
+            <tr>
+              <td style="font-weight: 600; color: var(--cf-primary-navy);">
+                {{ req.requested_documents }}
+              </td>
+              <td>
+                <span class="mono-font" style="font-size: 0.8125rem; {% if req.is_overdue %}color: var(--cf-danger); font-weight: 700;{% endif %}">
+                  {{ req.due_date|date:"M d, Y" }}
+                  {% if req.is_overdue %}<span class="cf-badge cf-badge-danger" style="font-size: 0.625rem; margin-left: 4px;">Overdue</span>{% endif %}
+                </span>
+              </td>
+              <td>
+                {% if req.status == 'RECEIVED' %}
+                  <span class="cf-badge cf-badge-success">Received</span>
+                {% elif req.status == 'PARTIALLY_RECEIVED' %}
+                  <span class="cf-badge cf-badge-warning">Partially Received</span>
+                {% elif req.status == 'OVERDUE' %}
+                  <span class="cf-badge cf-badge-danger">Overdue</span>
+                {% elif req.status == 'REJECTED' %}
+                  <span class="cf-badge cf-badge-danger">Rejected</span>
+                {% elif req.status == 'CANCELLED' %}
+                  <span class="cf-badge cf-badge-muted">Cancelled</span>
+                {% elif req.status == 'REMINDED' %}
+                  <span class="cf-badge cf-badge-warning">Reminded</span>
+                {% else %}
+                  <span class="cf-badge cf-badge-primary">Requested</span>
+                {% endif %}
+              </td>
+              <td>{{ req.requested_by.get_full_name|default:'Firm Staff' }}</td>
+              <td>
+                {% if req.uploaded_document %}
+                  <a href="{% url 'documents:document_download' req.uploaded_document.id %}" class="cf-btn cf-btn-ghost cf-btn-sm" style="font-size: 0.75rem;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <span>{{ req.uploaded_document.title|truncatechars:20 }}</span>
+                  </a>
+                {% else %}
+                  <span style="font-size: 0.75rem; color: var(--cf-text-muted);">Awaiting Upload</span>
+                {% endif %}
+              </td>
+              <td style="font-size: 0.75rem; color: var(--cf-text-secondary); max-width: 260px;">
+                {{ req.notes|default:'None' }}
+              </td>
+              <td style="text-align: right;">
+                <div style="display: flex; gap: 0.35rem; justify-content: flex-end;">
+                  {% if req.status != 'RECEIVED' %}
+                    <form method="post" action="{% url 'documents:request_update_status' req.id %}" style="display: inline;">
+                      {% csrf_token %}
+                      <input type="hidden" name="status" value="RECEIVED">
+                      <input type="hidden" name="next" value="/clients/{{ client.id }}/?tab=documents">
+                      <button type="submit" class="cf-btn cf-btn-ghost cf-btn-sm" title="Mark as Received" style="font-size: 0.75rem; color: var(--cf-success);">Mark Received</button>
+                    </form>
+                  {% endif %}
+                  <form method="post" action="{% url 'documents:request_delete' req.id %}" onsubmit="return confirm('Delete this document request?');" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="/clients/{{ client.id }}/?tab=documents">
+                    <button type="submit" class="cf-btn cf-btn-ghost cf-btn-sm" style="font-size: 0.75rem; color: var(--cf-danger);">Delete</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7" style="text-align: center; padding: 1.5rem; color: var(--cf-text-muted);">
+                No active document requests sent.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# 9. TAB 5: COMPLIANCE #}
+{# ======================================================== #}
+<div class="cf-tab-panel {% if active_tab == 'compliance' %}active{% endif %}" id="panel-compliance">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+    <div>
+      <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0;">Statutory Compliance History &amp; Schedules</h2>
+      <p style="font-size: 0.8125rem; color: var(--cf-text-muted); margin: 0;">Filing calendar according to Nepal Income Tax Act 2058, VAT Act 2052, Companies Act 2063, and SSF Rules.</p>
+    </div>
+    <div style="display: flex; gap: 0.5rem; align-items: center;">
+      <span class="cf-badge cf-badge-secondary" style="font-weight: 700;">FY: {{ client.fiscal_year|default:CURRENT_FISCAL_YEAR }}</span>
+      <button type="button" class="cf-btn cf-btn-secondary cf-btn-sm" onclick="CAFlow.openModal('#modal-add-client-requirement')">
+        + Subscribe Schedule
+      </button>
+      <button type="button" class="cf-btn cf-btn-primary cf-btn-sm" onclick="CAFlow.openModal('#modal-add-client-deadline')">
+        + Add Filing Deadline
+      </button>
+    </div>
+  </div>
+
+  {# Subscribed Schedules Card #}
+  {% if client_compliance_requirements %}
+    <div style="padding: 1rem 1.25rem; background: var(--cf-surface-muted); border: 1px solid var(--cf-border); border-radius: var(--cf-radius-md); margin-bottom: 1.25rem;">
+      <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--cf-primary-navy); margin-bottom: 0.5rem;">
+        Subscribed Compliance Obligations ({{ client_compliance_requirements|length }})
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+        {% for req in client_compliance_requirements %}
+          <div style="display: flex; align-items: center; gap: 6px; padding: 4px 10px; background: #fff; border: 1px solid var(--cf-border); border-radius: var(--cf-radius-sm); font-size: 0.8125rem;">
+            <strong>{{ req.compliance_type.name }}</strong>
+            <span class="cf-badge cf-badge-secondary" style="font-size: 0.625rem;">{{ req.get_frequency_display }}</span>
+            {% if req.assigned_staff %}
+              <span style="font-size: 0.6875rem; color: var(--cf-text-muted);">Assigned: {{ req.assigned_staff.first_name }}</span>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  {# Nepal Tax Compliance Advisory Alert Box #}
+  <div style="padding: 1rem 1.25rem; background: #FEF8EC; border: 1px solid #F1DEC0; border-radius: var(--cf-radius-md); margin-bottom: 1.5rem; display: flex; align-items: flex-start; gap: 0.75rem;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B58A3A" stroke-width="2" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <div style="font-size: 0.8125rem; color: #78581F;">
+      <strong style="display: block; margin-bottom: 2px;">Nepal Statutory Guidelines Reminder:</strong>
+      Monthly VAT returns must be submitted by the 25th of the following Bikram Sambat month (Sec. 19 of VAT Act 2052). Advance Income Tax installments are due end of Poush (40%), Chaitra (70%), and Ashad (100%) under Sec. 94 of Income Tax Act 2058.
+    </div>
+  </div>
+
+  <div class="cf-table-container">
+    <table class="cf-table">
+      <thead>
+        <tr>
+          <th>Statutory Filing Title</th>
+          <th>Period</th>
+          <th>Governing Act</th>
+          <th>Due Date (B.S. &bull; A.D.)</th>
+          <th>Workflow Status</th>
+          <th>Assigned / Reviewer</th>
+          <th>Token / Ref No.</th>
+          <th>Completion</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in compliance_list %}
+          {% with c=item.obj %}
+            <tr>
+              <td>
+                <div style="font-weight: 700; color: var(--cf-primary-navy); font-size: 0.875rem;">
+                  {{ c.title }}
+                </div>
+                <div style="font-size: 0.75rem; color: var(--cf-text-muted);">
+                  {{ c.compliance_type.name|default:'Statutory Return' }}
+                </div>
+              </td>
+              <td class="mono-font" style="font-size: 0.8125rem; font-weight: 600;">
+                {{ c.period|default:'Current FY' }}
+              </td>
+              <td>
+                <span class="cf-badge cf-badge-secondary" style="font-size: 0.6875rem;">
+                  {{ c.get_governing_act_display }}
+                </span>
+              </td>
+              <td>
+                <div class="mono-font" style="font-weight: 700; color: #B58A3A;">BS {{ c.due_date_bs }}</div>
+                <div class="mono-font" style="font-size: 0.75rem; color: var(--cf-text-muted);">
+                  AD {{ c.due_date_ad|date:"M d, Y" }}
+                  {% if item.days_left < 0 %}
+                    <span class="cf-badge cf-badge-danger" style="font-size: 0.625rem; padding: 1px 4px;">Overdue ({{ item.days_left }}d)</span>
+                  {% elif item.days_left == 0 %}
+                    <span class="cf-badge cf-badge-danger" style="font-size: 0.625rem; padding: 1px 4px;">Today</span>
+                  {% elif item.days_left <= 3 %}
+                    <span class="cf-badge cf-badge-warning" style="font-size: 0.625rem; padding: 1px 4px;">{{ item.days_left }}d</span>
+                  {% endif %}
+                </div>
+              </td>
+              <td>
+                <span class="cf-badge {% if c.status == 'COMPLETED' or c.status == 'FILED' %}cf-badge-success{% elif c.status == 'OVERDUE' or item.is_overdue %}cf-badge-danger{% elif c.status == 'READY_FOR_REVIEW' or c.status == 'WAITING_FOR_CLIENT' %}cf-badge-warning{% elif c.status == 'IN_PROGRESS' %}cf-badge-primary{% else %}cf-badge-secondary{% endif %}" style="font-size: 0.75rem;">
+                  {{ c.get_status_display }}
+                </span>
+              </td>
+              <td style="font-size: 0.8125rem;">
+                <div>Staff: <strong>{{ c.assigned_to.get_full_name|default:'Unassigned' }}</strong></div>
+                {% if c.reviewer %}
+                  <div style="font-size: 0.6875rem; color: var(--cf-text-muted);">Rev: {{ c.reviewer.get_full_name }}</div>
+                {% endif %}
+              </td>
+              <td class="mono-font" style="font-size: 0.75rem; color: var(--cf-success); font-weight: 600;">
+                {{ c.filing_reference_number|default:'Pending' }}
+              </td>
+              <td class="mono-font" style="font-size: 0.75rem; color: var(--cf-text-secondary);">
+                {{ c.completion_date|date:"M d, Y"|default:'-' }}
+              </td>
+              <td style="text-align: right;">
+                <a href="{% url 'compliance:compliance_detail' c.id %}" class="cf-btn cf-btn-ghost cf-btn-sm">
+                  View &rarr;
+                </a>
+              </td>
+            </tr>
+          {% endwith %}
+        {% empty %}
+          <tr>
+            <td colspan="9" style="text-align: center; padding: 2rem; color: var(--cf-text-muted);">
+              No statutory compliance deadlines recorded for this client.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{# MODAL: ADD CLIENT FILING DEADLINE #}
+<div class="cf-modal-backdrop" id="modal-add-client-deadline" style="display: none;">
+  <div class="cf-modal" style="max-width: 580px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title">Schedule Filing for {{ client.name }}</h3>
+      <button type="button" class="cf-modal-close" onclick="CAFlow.closeModal('#modal-add-client-deadline')">&times;</button>
+    </div>
+    <form method="post" action="{% url 'compliance:compliance_create' %}">
+      {% csrf_token %}
+      <input type="hidden" name="client" value="{{ client.id }}">
+      <input type="hidden" name="next" value="{{ request.get_full_path }}#compliance">
+      <div class="cf-modal-body" style="display: flex; flex-direction: column; gap: 0.875rem;">
+        <div>
+          <label class="cf-label"><strong>Filing Title *</strong></label>
+          <input type="text" name="title" class="cf-input" placeholder="e.g. Monthly VAT Return (Bhadra 2081)" required>
+        </div>
+        <div class="row g-2">
+          <div class="col-md-6">
+            <label class="cf-label">Compliance Type</label>
+            <select name="compliance_type" class="cf-select">
+              <option value="">-- Custom Filing --</option>
+              {% for ct in available_compliance_types %}
+                <option value="{{ ct.id }}">{{ ct.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="cf-label">Period</label>
+            <input type="text" name="period" class="cf-input" placeholder="e.g. Bhadra 2081">
+          </div>
+        </div>
+        <div class="row g-2">
+          <div class="col-md-6">
+            <label class="cf-label">Due Date (BS) *</label>
+            <input type="text" name="due_date_bs" class="cf-input" placeholder="e.g. 2081-06-25" required>
+          </div>
+          <div class="col-md-6">
+            <label class="cf-label">Due Date (AD) *</label>
+            <input type="date" name="due_date_ad" class="cf-input" required>
+          </div>
+        </div>
+        <div class="row g-2">
+          <div class="col-md-6">
+            <label class="cf-label">Priority</label>
+            <select name="priority" class="cf-select">
+              <option value="LOW">Low</option>
+              <option value="MEDIUM" selected>Medium</option>
+              <option value="HIGH">High</option>
+              <option value="URGENT">Urgent</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="cf-label">Initial Status</label>
+            <select name="status" class="cf-select">
+              <option value="UPCOMING" selected>Upcoming</option>
+              <option value="IN_PROGRESS">In Progress</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="cf-label">Notes &amp; Penalty Provisions</label>
+          <textarea name="notes" class="cf-input" rows="2" placeholder="Mandatory provisions under relevant Act..."></textarea>
+        </div>
+      </div>
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" onclick="CAFlow.closeModal('#modal-add-client-deadline')">Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Schedule Deadline</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# MODAL: SUBSCRIBE CLIENT REQUIREMENT #}
+<div class="cf-modal-backdrop" id="modal-add-client-requirement" style="display: none;">
+  <div class="cf-modal" style="max-width: 500px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title">Subscribe Compliance Schedule</h3>
+      <button type="button" class="cf-modal-close" onclick="CAFlow.closeModal('#modal-add-client-requirement')">&times;</button>
+    </div>
+    <form method="post" action="{% url 'compliance:client_requirement_add' %}">
+      {% csrf_token %}
+      <input type="hidden" name="client" value="{{ client.id }}">
+      <input type="hidden" name="next" value="{{ request.get_full_path }}#compliance">
+      <div class="cf-modal-body" style="display: flex; flex-direction: column; gap: 0.875rem;">
+        <div>
+          <label class="cf-label"><strong>Compliance Obligation Type *</strong></label>
+          <select name="compliance_type" class="cf-select" required>
+            {% for ct in available_compliance_types %}
+              <option value="{{ ct.id }}">{{ ct.name }} ({{ ct.get_category_display }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="cf-label">Filing Frequency</label>
+          <select name="frequency" class="cf-select">
+            <option value="MONTHLY">Monthly</option>
+            <option value="QUARTERLY">Quarterly</option>
+            <option value="TRIANNUAL">Every 4 Months (Trimester)</option>
+            <option value="BIANNUAL">Semi-Annually</option>
+            <option value="ANNUAL">Annually</option>
+            <option value="NONE">One-off / Ad-hoc</option>
+          </select>
+        </div>
+        <div>
+          <label class="cf-label">Client-Specific Filing Notes</label>
+          <textarea name="notes" class="cf-input" rows="2" placeholder="e.g. Portal login credentials ID, turnover threshold notes..."></textarea>
+        </div>
+        <div>
+          <label class="cf-checkbox-label">
+            <input type="checkbox" name="is_active" class="cf-checkbox" checked>
+            <span>Active Obligation</span>
+          </label>
+        </div>
+      </div>
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" onclick="CAFlow.closeModal('#modal-add-client-requirement')">Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Save Subscription</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# 9B. TAB 5B: CALENDAR #}
+{# ======================================================== #}
+<div class="cf-tab-panel {% if active_tab == 'calendar' %}active{% endif %}" id="panel-calendar">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+    <div>
+      <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0;">Client Calendar &amp; Engagements</h2>
+      <p style="font-size: 0.8125rem; color: var(--cf-text-muted); margin: 0;">Scheduled client review meetings, statutory tax audits, stock counts, and compliance hearings.</p>
+    </div>
+    <button type="button" class="cf-btn cf-btn-primary" data-cf-modal-trigger="cf-create-calendar-event-modal" id="action-btn-schedule-event">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>Schedule Event</span>
+    </button>
+  </div>
+
+  <div class="cf-table-container">
+    <table class="cf-table">
+      <thead>
+        <tr>
+          <th>Event Title</th>
+          <th>Type</th>
+          <th>Start Time</th>
+          <th>End Time</th>
+          <th>Location / Mode</th>
+          <th>Organized By</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ev in calendar_events %}
+          <tr>
+            <td>
+              <div style="font-weight: 700; color: var(--cf-primary-navy); font-size: 0.875rem;">
+                {{ ev.title }}
+              </div>
+            </td>
+            <td>
+              <span class="cf-badge cf-badge-secondary">{{ ev.get_event_type_display|default:ev.event_type }}</span>
+            </td>
+            <td>
+              <div style="font-weight: 600; font-size: 0.8125rem;">{{ ev.start_time|date:"M d, Y" }}</div>
+              <div style="font-size: 0.75rem; color: var(--cf-text-muted);">{{ ev.start_time|date:"h:i A" }}</div>
+            </td>
+            <td>
+              {% if ev.end_time %}
+                <div style="font-weight: 600; font-size: 0.8125rem;">{{ ev.end_time|date:"M d, Y" }}</div>
+                <div style="font-size: 0.75rem; color: var(--cf-text-muted);">{{ ev.end_time|date:"h:i A" }}</div>
+              {% else %}
+                <span style="color: var(--cf-text-muted);">&mdash;</span>
+              {% endif %}
+            </td>
+            <td>
+              <span style="font-size: 0.8125rem;">{{ ev.location|default:"In-Office / TBD" }}</span>
+            </td>
+            <td>
+              {% if ev.created_by %}
+                <div style="font-size: 0.8125rem; font-weight: 600;">{{ ev.created_by.get_full_name|default:ev.created_by.email }}</div>
+              {% else %}
+                <span style="color: var(--cf-text-muted);">&mdash;</span>
+              {% endif %}
+            </td>
+            <td>
+              <span style="font-size: 0.8125rem; color: var(--cf-text-secondary);">{{ ev.description|default:"—"|truncatechars:50 }}</span>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="7" style="text-align: center; padding: 3rem 1rem; color: var(--cf-text-muted);">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 0.75rem; opacity: 0.4;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <div style="font-weight: 600; font-size: 0.9375rem; margin-bottom: 0.25rem;">No Calendar Events Scheduled</div>
+              <p style="font-size: 0.8125rem; margin: 0 0 1rem 0;">Schedule review meetings, board audit presentations, or tax consultation sessions for this client.</p>
+              <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" data-cf-modal-trigger="cf-create-calendar-event-modal">Schedule Initial Event</button>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# 10. TAB 6: BILLING #}
+{# ======================================================== #}
+<div class="cf-tab-panel {% if active_tab == 'billing' %}active{% endif %}" id="panel-billing">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+    <div>
+      <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0;">Billing &amp; Fee Invoices</h2>
+      <p style="font-size: 0.8125rem; color: var(--cf-text-muted); margin: 0;">Professional audit and advisory fee billings with 13% Nepal VAT.</p>
+    </div>
+    <button type="button" class="cf-btn cf-btn-primary" data-cf-modal-trigger="cf-create-invoice-modal">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>Generate Invoice</span>
+    </button>
+  </div>
+
+  {# Billing Summary KPI Bar #}
+  <div class="row g-3" style="margin-bottom: 1.5rem;">
+    <div class="col-md-4">
+      <div class="cf-card" style="padding: 1.25rem;">
+        <div style="font-size: 0.75rem; color: var(--cf-text-muted); text-transform: uppercase; font-weight: 600;">Total Invoiced</div>
+        <div style="font-size: 1.5rem; font-weight: 800; color: var(--cf-primary-navy); margin-top: 4px;" class="mono-font">
+          NPR {{ total_invoiced_npr|floatformat:2 }}
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="cf-card" style="padding: 1.25rem;">
+        <div style="font-size: 0.75rem; color: var(--cf-text-muted); text-transform: uppercase; font-weight: 600;">Amount Received</div>
+        <div style="font-size: 1.5rem; font-weight: 800; color: var(--cf-success); margin-top: 4px;" class="mono-font">
+          NPR {{ total_paid_npr|floatformat:2 }}
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="cf-card" style="padding: 1.25rem;">
+        <div style="font-size: 0.75rem; color: var(--cf-text-muted); text-transform: uppercase; font-weight: 600;">Outstanding Balance</div>
+        <div style="font-size: 1.5rem; font-weight: 800; color: {% if total_outstanding_npr > 0 %}var(--cf-danger){% else %}var(--cf-success){% endif %}; margin-top: 4px;" class="mono-font">
+          NPR {{ total_outstanding_npr|floatformat:2 }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cf-table-container">
+    <table class="cf-table">
+      <thead>
+        <tr>
+          <th>Invoice #</th>
+          <th>Issue Date</th>
+          <th>Payment Due</th>
+          <th>Subtotal (NPR)</th>
+          <th>VAT 13%</th>
+          <th>Total Payable</th>
+          <th>Paid Amount</th>
+          <th>Payment Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for inv in invoices %}
+          <tr>
+            <td style="font-weight: 700; color: var(--cf-primary-navy);" class="mono-font">
+              INV-{{ inv.invoice_number }}
+            </td>
+            <td style="font-size: 0.8125rem;">{{ inv.issue_date|date:"M d, Y" }}</td>
+            <td style="font-size: 0.8125rem;">{{ inv.due_date|date:"M d, Y" }}</td>
+            <td class="mono-font">{{ inv.subtotal_npr|floatformat:2 }}</td>
+            <td class="mono-font" style="color: var(--cf-text-muted);">{{ inv.vat_amount_npr|floatformat:2 }}</td>
+            <td class="mono-font" style="font-weight: 700; color: var(--cf-primary-navy);">
+              {{ inv.total_amount_npr|floatformat:2 }}
+            </td>
+            <td class="mono-font" style="color: var(--cf-success); font-weight: 600;">
+              {{ inv.paid_amount_npr|floatformat:2 }}
+            </td>
+            <td>
+              <span class="cf-badge {% if inv.status == 'PAID' %}cf-badge-success{% elif inv.status == 'PARTIAL' %}cf-badge-warning{% elif inv.status == 'ISSUED' %}cf-badge-primary{% elif inv.status == 'CANCELLED' %}cf-badge-danger{% else %}cf-badge-muted{% endif %}" style="font-size: 0.6875rem;">
+                {{ inv.get_status_display }}
+              </span>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 2rem;">
+              <p style="color: var(--cf-text-muted); margin: 0 0 0.5rem 0;">No invoices generated for this client.</p>
+              <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" data-cf-modal-trigger="cf-create-invoice-modal">Create Invoice</button>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# 11. TAB 7: MESSAGES #}
+{# ======================================================== #}
+<div class="cf-tab-panel {% if active_tab == 'messages' %}active{% endif %}" id="panel-messages">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+    <div>
+      <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0;">Client Communications &amp; Audit Threads</h2>
+      <p style="font-size: 0.8125rem; color: var(--cf-text-muted); margin: 0;">Traceable discussions regarding audit observations, tax queries, and representations.</p>
+    </div>
+    <button type="button" class="cf-btn cf-btn-primary" data-cf-modal-trigger="cf-send-message-modal">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>New Message Thread</span>
+    </button>
+  </div>
+
+  <div class="row g-4">
+    {# Left: Thread List #}
+    <div class="col-md-5">
+      <div class="cf-card" style="padding: 1rem;">
+        <h4 style="font-size: 0.875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--cf-text-muted); margin-bottom: 0.75rem;">
+          Conversation Threads ({{ conversations.count }})
+        </h4>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+          {% for conv in conversations %}
+            <div style="padding: 0.75rem 1rem; border-radius: var(--cf-radius-md); border: 1px solid var(--cf-border); background: {% if forloop.first %}var(--cf-surface-active){% else %}var(--cf-surface){% endif %}; cursor: pointer;">
+              <div style="font-weight: 700; font-size: 0.875rem; color: var(--cf-primary-navy);">{{ conv.title }}</div>
+              <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 2px;">
+                {{ conv.messages.count }} message(s) &bull; {{ conv.updated_at|date:"M d, H:i" }}
+              </div>
+            </div>
+          {% empty %}
+            <div style="text-align: center; padding: 2rem 1rem; color: var(--cf-text-muted); font-size: 0.8125rem;">
+              No messages found. Start a new thread.
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    {# Right: Thread Messages & Composer #}
+    <div class="col-md-7">
+      <div class="cf-card" style="padding: 1.5rem; display: flex; flex-direction: column; min-height: 480px;">
+        {% if active_conversation %}
+          <div style="border-bottom: 1px solid var(--cf-border); padding-bottom: 0.75rem; margin-bottom: 1rem;">
+            <h3 style="font-size: 1rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0 0 0.25rem 0;">
+              {{ active_conversation.title }}
+            </h3>
+            <div style="font-size: 0.75rem; color: var(--cf-text-muted);">
+              Participants: 
+              {% for p in active_conversation.participants.all %}
+                <span class="cf-badge cf-badge-secondary" style="font-size: 0.625rem; margin-right: 2px;">{{ p.get_full_name }}</span>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem; max-height: 380px;">
+            {% for msg in active_conversation.messages.all %}
+              <div class="{% if msg.sender == request.user %}cf-chat-bubble-sent{% else %}cf-chat-bubble-received{% endif %}">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 0.6875rem;">
+                  <strong style="color: var(--cf-primary-navy);">{{ msg.sender.get_full_name }}</strong>
+                  <span style="color: var(--cf-text-muted);">{{ msg.created_at|date:"M d, H:i" }}</span>
+                </div>
+                <div style="font-size: 0.8125rem; color: var(--cf-text-primary); line-height: 1.5;">
+                  {{ msg.body }}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+
+          {# Inline Composer #}
+          <form method="post" action="{% url 'clients:client_send_message' client.id %}" style="border-top: 1px solid var(--cf-border); padding-top: 1rem; display: flex; gap: 0.5rem;">
+            {% csrf_token %}
+            <input type="hidden" name="subject" value="Re: {{ active_conversation.title }}">
+            <input type="text" name="body" class="cf-input" placeholder="Type a response or query regarding this client..." required style="flex: 1;">
+            <button type="submit" class="cf-btn cf-btn-primary">Send</button>
+          </form>
+        {% else %}
+          <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--cf-text-muted); text-align: center;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 0.75rem; opacity: 0.5;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <h4 style="font-size: 1rem; font-weight: 600; color: var(--cf-primary-navy); margin-bottom: 0.25rem;">No Thread Selected</h4>
+            <p style="font-size: 0.8125rem; max-width: 320px; margin-bottom: 1rem;">Communicate with client signatories and audit associates.</p>
+            <button type="button" class="cf-btn cf-btn-primary cf-btn-sm" data-cf-modal-trigger="cf-send-message-modal">Compose New Message</button>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# 12. TAB 8: ACTIVITY #}
+{# ======================================================== #}
+<div class="cf-tab-panel {% if active_tab == 'activity' %}active{% endif %}" id="panel-activity">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
+    <div>
+      <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0;">Chronological Client Activity Log</h2>
+      <p style="font-size: 0.8125rem; color: var(--cf-text-muted); margin: 0;">Complete audit trail of registrations, staff assignments, documents, tasks, and status changes.</p>
+    </div>
+    <span class="cf-badge cf-badge-secondary">{{ activities.count }} Audit Entries</span>
+  </div>
+
+  <div class="cf-timeline">
+    {% for act in activities %}
+      <div class="cf-timeline-item">
+        
+        {# Timeline Icon based on activity type #}
+        <div class="cf-timeline-icon" style="background: {% if act.activity_type == 'NEW_CLIENT' %}var(--cf-primary-navy){% elif act.activity_type == 'STAFF_ASSIGNED' %}#2563EB{% elif act.activity_type == 'DOC_UPLOADED' %}#059669{% elif act.activity_type == 'TASK_COMPLETED' %}var(--cf-success){% elif act.activity_type == 'MESSAGE_RECEIVED' %}#8B5CF6{% elif act.activity_type == 'STATUS_CHANGED' %}var(--cf-warning){% else %}var(--cf-secondary-navy){% endif %};">
+          {% if act.activity_type == 'NEW_CLIENT' %}
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/></svg>
+          {% elif act.activity_type == 'STAFF_ASSIGNED' %}
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+          {% elif act.activity_type == 'DOC_UPLOADED' %}
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          {% elif act.activity_type == 'TASK_COMPLETED' %}
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          {% elif act.activity_type == 'MESSAGE_RECEIVED' %}
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          {% else %}
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>
+          {% endif %}
+        </div>
+
+        {# Timeline Body #}
+        <div class="cf-timeline-content">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem; flex-wrap: wrap; gap: 0.5rem;">
+            <span class="cf-badge {% if act.activity_type == 'NEW_CLIENT' %}cf-badge-primary{% elif act.activity_type == 'TASK_COMPLETED' %}cf-badge-success{% elif act.activity_type == 'DOC_UPLOADED' %}cf-badge-secondary{% elif act.activity_type == 'STAFF_ASSIGNED' %}cf-badge-primary{% else %}cf-badge-muted{% endif %}" style="font-size: 0.6875rem;">
+              {{ act.get_activity_type_display }}
+            </span>
+            <span style="font-size: 0.75rem; color: var(--cf-text-muted);" title="{{ act.created_at|date:'r' }}">
+              {{ act.created_at|date:"M d, Y &bull; H:i" }}
+            </span>
+          </div>
+
+          <div style="font-size: 0.875rem; font-weight: 500; color: var(--cf-primary-navy); line-height: 1.45;">
+            {{ act.description }}
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 0.5rem;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span>Performed by: <strong>{{ act.performed_by.get_full_name|default:'System Automated Workflow' }}</strong></span>
+          </div>
+        </div>
+
+      </div>
+    {% empty %}
+      <div class="cf-empty-state" style="padding: 3rem 1rem;">
+        <p style="color: var(--cf-text-muted); margin: 0;">No activities recorded on client timeline yet.</p>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}
+
+{% block modals %}
+{# ======================================================== #}
+{# MODAL 1: EDIT CLIENT DETAILS #}
+{# ======================================================== #}
+<div class="cf-modal-backdrop" id="cf-edit-client-modal" role="dialog" aria-modal="true" aria-labelledby="cf-edit-title">
+  <div class="cf-modal-dialog" style="max-width: 680px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title" id="cf-edit-title">Edit Client &mdash; {{ client.display_business_name }}</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close dialog">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form method="post" action="{% url 'clients:client_edit' client.id %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="/clients/{{ client.id }}/">
+
+      <div class="cf-modal-body" style="max-height: 68vh; overflow-y: auto;">
+        
+        <h4 style="font-size: 0.8125rem; text-transform: uppercase; font-weight: 700; color: var(--cf-secondary-navy); margin-bottom: 0.75rem; letter-spacing: 0.05em;">
+          1. Business &amp; Registration Information
+        </h4>
+        <div class="row g-3" style="margin-bottom: 1.25rem;">
+          <div class="col-sm-6">
+            <label class="cf-label" for="{{ client_edit_form.business_name.id_for_label }}">Business / Trading Name</label>
+            {{ client_edit_form.business_name }}
+          </div>
+          <div class="col-sm-6">
+            <label class="cf-label" for="{{ client_edit_form.legal_name.id_for_label }}">Official Legal Name</label>
+            {{ client_edit_form.legal_name }}
+          </div>
+          <div class="col-sm-6">
+            <label class="cf-label" for="{{ client_edit_form.client_type.id_for_label }}">Entity Category</label>
+            {{ client_edit_form.client_type }}
+          </div>
+          <div class="col-sm-6">
+            <label class="cf-label" for="{{ client_edit_form.pan_number.id_for_label }}">9-Digit IRD PAN</label>
+            {{ client_edit_form.pan_number }}
+          </div>
+          <div class="col-sm-6">
+            <label class="cf-label" for="{{ client_edit_form.registration_number.id_for_label }}">Company Registrar (OCR) Reg No</label>
+            {{ client_edit_form.registration_number }}
+          </div>
+          <div class="col-sm-6">
+            <label class="cf-label" for="{{ client_edit_form.fiscal_year.id_for_label }}">Fiscal Year</label>
+            {{ client_edit_form.fiscal_year }}
+          </div>
+          <div class="col-sm-6">
+            <label class="cf-label" for="{{ client_edit_form.registration_date.id_for_label }}">Entity Registration Date</label>
+            {{ client_edit_form.registration_date }}
+          </div>
+          <div class="col-sm-6">
+            <label class="cf-label" for="{{ client_edit_form.tax_registration_date.id_for_label }}">Tax / PAN Registration Date</label>
+            {{ client_edit_form.tax_registration_date }}
+          </div>
+          <div class="col-sm-12">
+            <label class="cf-label" for="{{ client_edit_form.status.id_for_label }}">Client Status</label>
+            {{ client_edit_form.status }}
+          </div>
+        </div>
+
+        <h4 style="font-size: 0.8125rem; text-transform: uppercase; font-weight: 700; color: var(--cf-secondary-navy); margin-bottom: 0.75rem; letter-spacing: 0.05em;">
+          2. Contact Details
+        </h4>
+        <div class="row g-3" style="margin-bottom: 1.25rem;">
+          <div class="col-sm-6">
+            <label class="cf-label" for="{{ client_edit_form.name.id_for_label }}">Client Contact Name</label>
+            {{ client_edit_form.name }}
+          </div>
+          <div class="col-sm-6">
+            <label class="cf-label" for="{{ client_edit_form.contact_person.id_for_label }}">Signatory / Director</label>
+            {{ client_edit_form.contact_person }}
+          </div>
+          <div class="col-sm-6">
+            <label class="cf-label" for="{{ client_edit_form.email.id_for_label }}">Email</label>
+            {{ client_edit_form.email }}
+          </div>
+          <div class="col-sm-6">
+            <label class="cf-label" for="{{ client_edit_form.phone.id_for_label }}">Phone</label>
+            {{ client_edit_form.phone }}
+          </div>
+          <div class="col-sm-8">
+            <label class="cf-label" for="{{ client_edit_form.address.id_for_label }}">Address</label>
+            {{ client_edit_form.address }}
+          </div>
+          <div class="col-sm-4">
+            <label class="cf-label" for="{{ client_edit_form.city.id_for_label }}">City / District</label>
+            {{ client_edit_form.city }}
+          </div>
+        </div>
+
+        <h4 style="font-size: 0.8125rem; text-transform: uppercase; font-weight: 700; color: var(--cf-secondary-navy); margin-bottom: 0.75rem; letter-spacing: 0.05em;">
+          3. Subscribed CA Practice Services
+        </h4>
+        <div style="background: var(--cf-bg); padding: 1rem; border-radius: var(--cf-radius-md); border: 1px solid var(--cf-border); margin-bottom: 1.25rem;">
+          {{ client_edit_form.services }}
+        </div>
+
+        <h4 style="font-size: 0.8125rem; text-transform: uppercase; font-weight: 700; color: var(--cf-secondary-navy); margin-bottom: 0.75rem; letter-spacing: 0.05em;">
+          4. Practice &amp; Engagement Notes
+        </h4>
+        <div>
+          <label class="cf-label" for="{{ client_edit_form.notes.id_for_label }}">Confidential Practice Notes</label>
+          {{ client_edit_form.notes }}
+        </div>
+
+      </div>
+
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# MODAL 2: ASSIGN ENGAGEMENT TEAM #}
+{# ======================================================== #}
+<div class="cf-modal-backdrop" id="cf-assign-staff-modal" role="dialog" aria-modal="true" aria-labelledby="cf-assign-title">
+  <div class="cf-modal-dialog" style="max-width: 520px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title" id="cf-assign-title">Assign Engagement Team</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close dialog">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form method="post" action="{% url 'clients:client_assign_staff' client.id %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="/clients/{{ client.id }}/">
+
+      <div class="cf-modal-body">
+        <p style="font-size: 0.8125rem; color: var(--cf-text-secondary); margin-bottom: 1rem;">
+          Assign the Lead Chartered Accountant (CA) and servicing associates (Senior, Accountant, Staff) for <strong>{{ client.display_business_name }}</strong>.
+        </p>
+
+        <div style="margin-bottom: 1.25rem;">
+          <label class="cf-label" for="{{ assign_staff_form.assigned_manager.id_for_label }}">
+            Lead Chartered Accountant (CA / Partner)
+          </label>
+          {{ assign_staff_form.assigned_manager }}
+          <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 4px;">Responsible for engagement letter sign-off, audit reports, and statutory representations.</div>
+        </div>
+
+        <div>
+          <label class="cf-label" for="{{ assign_staff_form.assigned_staff.id_for_label }}">
+            Assigned Engagement Associates (Senior, Accountant, Staff)
+          </label>
+          {{ assign_staff_form.assigned_staff }}
+          <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 4px;">Hold ⌘ (Mac) or Ctrl (Windows) to select multiple team members.</div>
+        </div>
+      </div>
+
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Update Team</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# MODAL 3: CREATE ENGAGEMENT TASK #}
+{# ======================================================== #}
+<div class="cf-modal-backdrop" id="cf-create-task-modal" role="dialog" aria-modal="true" aria-labelledby="cf-task-title">
+  <div class="cf-modal-dialog" style="max-width: 540px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title" id="cf-task-title">Create Task &mdash; {{ client.display_business_name }}</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close dialog">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form method="post" action="{% url 'clients:client_create_task' client.id %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="/clients/{{ client.id }}/?tab=tasks">
+
+      <div class="cf-modal-body">
+        <div style="margin-bottom: 1rem;">
+          <label class="cf-label" for="{{ create_task_form.title.id_for_label }}">Task Title</label>
+          {{ create_task_form.title }}
+        </div>
+
+        <div class="row g-3" style="margin-bottom: 1rem;">
+          <div class="col-sm-6">
+            <label class="cf-label" for="{{ create_task_form.assigned_to.id_for_label }}">Assignee</label>
+            {{ create_task_form.assigned_to }}
+          </div>
+          <div class="col-sm-6">
+            <label class="cf-label" for="{{ create_task_form.priority.id_for_label }}">Priority</label>
+            {{ create_task_form.priority }}
+          </div>
+          <div class="col-12">
+            <label class="cf-label" for="{{ create_task_form.due_date.id_for_label }}">Due Date</label>
+            {{ create_task_form.due_date }}
+          </div>
+        </div>
+
+        <div>
+          <label class="cf-label" for="{{ create_task_form.description.id_for_label }}">Work Instructions / Audit Procedures</label>
+          {{ create_task_form.description }}
+        </div>
+      </div>
+
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Assign Task</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# MODAL 4: REQUEST DOCUMENTS #}
+{# ======================================================== #}
+<div class="cf-modal-backdrop" id="cf-request-doc-modal" role="dialog" aria-modal="true" aria-labelledby="cf-req-title">
+  <div class="cf-modal-dialog" style="max-width: 520px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title" id="cf-req-title">Request Documents from Client</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close dialog">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form method="post" action="{% url 'clients:client_request_document' client.id %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="/clients/{{ client.id }}/?tab=documents">
+
+      <div class="cf-modal-body">
+        <div style="margin-bottom: 1rem;">
+          <label class="cf-label" for="{{ request_doc_form.requested_documents.id_for_label }}">Requested Documents / Vouchers</label>
+          {{ request_doc_form.requested_documents }}
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <label class="cf-label" for="{{ request_doc_form.due_date.id_for_label }}">Submission Deadline</label>
+          {{ request_doc_form.due_date }}
+        </div>
+
+        <div>
+          <label class="cf-label" for="{{ request_doc_form.notes.id_for_label }}">Instructions for Client</label>
+          {{ request_doc_form.notes }}
+        </div>
+      </div>
+
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Send Request</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# MODAL 5: DEACTIVATE / REACTIVATE CLIENT #}
+{# ======================================================== #}
+<div class="cf-modal-backdrop" id="cf-deactivate-modal" role="dialog" aria-modal="true" aria-labelledby="cf-deactivate-title">
+  <div class="cf-modal-dialog" style="max-width: 460px;">
+    <div class="cf-modal-header" style="border-bottom: 1px solid var(--cf-border);">
+      <h3 class="cf-modal-title" id="cf-deactivate-title" style="color: {% if client.status == 'ACTIVE' or client.status == 'ONBOARDING' %}var(--cf-danger){% else %}var(--cf-success){% endif %};">
+        {% if client.status == 'ACTIVE' or client.status == 'ONBOARDING' %}Deactivate Client Entity{% else %}Re-activate Client Entity{% endif %}
+      </h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close dialog">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form method="post" action="{% url 'clients:client_deactivate' client.id %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="/clients/{{ client.id }}/">
+
+      <div class="cf-modal-body">
+        {% if client.status == 'ACTIVE' or client.status == 'ONBOARDING' %}
+          <p style="font-size: 0.875rem; color: var(--cf-text-primary); line-height: 1.5; margin-bottom: 0.75rem;">
+            Are you sure you want to deactivate <strong>{{ client.display_business_name }}</strong>?
+          </p>
+          <div style="font-size: 0.8125rem; color: var(--cf-text-secondary); background: #FDF2F2; border: 1px solid #F3C9C9; border-radius: var(--cf-radius-sm); padding: 0.75rem;">
+            Deactivating a client archives active notifications, halts automatic compliance deadline warnings, and restricts team task workflows until re-activated. All historical working papers and invoices remain intact.
+          </div>
+        {% else %}
+          <p style="font-size: 0.875rem; color: var(--cf-text-primary); line-height: 1.5; margin-bottom: 0.75rem;">
+            Re-activate <strong>{{ client.display_business_name }}</strong> to active engagement status?
+          </p>
+          <div style="font-size: 0.8125rem; color: var(--cf-text-secondary); background: #EDF7F1; border: 1px solid #C6E4D3; border-radius: var(--cf-radius-sm); padding: 0.75rem;">
+            This will reinstate statutory tracking, task assignments, and active billing for this client.
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn {% if client.status == 'ACTIVE' or client.status == 'ONBOARDING' %}cf-btn-danger{% else %}cf-btn-primary{% endif %}">
+          {% if client.status == 'ACTIVE' or client.status == 'ONBOARDING' %}Confirm Deactivation{% else %}Confirm Re-activation{% endif %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# MODAL 6: SEND MESSAGE #}
+{# ======================================================== #}
+<div class="cf-modal-backdrop" id="cf-send-message-modal" role="dialog" aria-modal="true" aria-labelledby="cf-msg-title">
+  <div class="cf-modal-dialog" style="max-width: 520px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title" id="cf-msg-title">Send Message &mdash; {{ client.display_business_name }}</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close dialog">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form method="post" action="{% url 'clients:client_send_message' client.id %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="/clients/{{ client.id }}/?tab=messages">
+
+      <div class="cf-modal-body">
+        <div style="margin-bottom: 1rem;">
+          <label class="cf-label" for="{{ send_message_form.subject.id_for_label }}">Subject</label>
+          {{ send_message_form.subject }}
+        </div>
+
+        <div>
+          <label class="cf-label" for="{{ send_message_form.body.id_for_label }}">Message Body / Statutory Advice</label>
+          {{ send_message_form.body }}
+        </div>
+      </div>
+
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Dispatch Message</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# MODAL 7: UPLOAD DOCUMENT #}
+{# ======================================================== #}
+<div class="cf-modal-backdrop" id="cf-upload-doc-modal" role="dialog" aria-modal="true" aria-labelledby="cf-upload-title">
+  <div class="cf-modal-dialog" style="max-width: 500px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title" id="cf-upload-title">Upload Working Paper / File</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close dialog">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form method="post" action="{% url 'clients:client_upload_document' client.id %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="/clients/{{ client.id }}/?tab=documents">
+
+      <div class="cf-modal-body">
+        <div style="margin-bottom: 1rem;">
+          <label class="cf-label" for="{{ upload_doc_form.title.id_for_label }}">Document Title</label>
+          {{ upload_doc_form.title }}
+        </div>
+
+        <div class="row g-3" style="margin-bottom: 1rem;">
+          <div class="col-sm-6">
+            <label class="cf-label" for="{{ upload_doc_form.category.id_for_label }}">Category</label>
+            {{ upload_doc_form.category }}
+          </div>
+          <div class="col-sm-6">
+            <label class="cf-label" for="{{ upload_doc_form.fiscal_year.id_for_label }}">Fiscal Year</label>
+            {{ upload_doc_form.fiscal_year }}
+          </div>
+        </div>
+
+        <div>
+          <label class="cf-label" for="{{ upload_doc_form.file.id_for_label }}">Select File (PDF, XLSX, DOCX)</label>
+          {{ upload_doc_form.file }}
+        </div>
+      </div>
+
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Upload Document</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# MODAL 8: CREATE INVOICE #}
+{# ======================================================== #}
+<div class="cf-modal-backdrop" id="cf-create-invoice-modal" role="dialog" aria-modal="true" aria-labelledby="cf-inv-title">
+  <div class="cf-modal-dialog" style="max-width: 520px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title" id="cf-inv-title">Generate Billing Invoice</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close dialog">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form method="post" action="{% url 'clients:client_create_invoice' client.id %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="/clients/{{ client.id }}/?tab=billing">
+
+      <div class="cf-modal-body">
+        <div class="row g-3" style="margin-bottom: 1rem;">
+          <div class="col-sm-6">
+            <label class="cf-label" for="{{ create_invoice_form.invoice_number.id_for_label }}">Invoice Serial #</label>
+            {{ create_invoice_form.invoice_number }}
+          </div>
+          <div class="col-sm-6">
+            <label class="cf-label" for="{{ create_invoice_form.status.id_for_label }}">Payment Status</label>
+            {{ create_invoice_form.status }}
+          </div>
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <label class="cf-label" for="{{ create_invoice_form.subtotal_npr.id_for_label }}">Fee Subtotal (NPR - Excl. 13% VAT)</label>
+          {{ create_invoice_form.subtotal_npr }}
+          <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 4px;">13% Nepal VAT will be automatically computed and appended.</div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <label class="cf-label" for="{{ create_invoice_form.issue_date.id_for_label }}">Issue Date</label>
+            {{ create_invoice_form.issue_date }}
+          </div>
+          <div class="col-sm-6">
+            <label class="cf-label" for="{{ create_invoice_form.due_date.id_for_label }}">Payment Due Date</label>
+            {{ create_invoice_form.due_date }}
+          </div>
+        </div>
+      </div>
+
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Generate Invoice</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# MODAL 9: ARCHIVE CLIENT #}
+{# ======================================================== #}
+<div class="cf-modal-backdrop" id="cf-archive-modal" role="dialog" aria-modal="true" aria-labelledby="cf-archive-title">
+  <div class="cf-modal-dialog" style="max-width: 480px;">
+    <div class="cf-modal-header" style="border-bottom: 1px solid var(--cf-border);">
+      <h3 class="cf-modal-title" id="cf-archive-title" style="color: var(--cf-danger);">
+        Archive Client &mdash; {{ client.display_business_name }}
+      </h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close dialog">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form method="post" action="{% url 'clients:client_archive' client.id %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="/clients/{{ client.id }}/">
+
+      <div class="cf-modal-body">
+        <p style="font-size: 0.875rem; color: var(--cf-text-primary); line-height: 1.5; margin-bottom: 0.75rem;">
+          Are you sure you want to archive <strong>{{ client.display_business_name }}</strong>?
+        </p>
+        <div style="font-size: 0.8125rem; color: var(--cf-text-secondary); background: #FDF2F2; border: 1px solid #F3C9C9; border-radius: var(--cf-radius-sm); padding: 0.75rem;">
+          Archiving moves this client out of active operational views while preserving all historical documents, audit trails, and invoices. You can restore this client at any time.
+        </div>
+      </div>
+
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-danger">Confirm Archive</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# MODAL 10: CREATE CALENDAR EVENT #}
+{# ======================================================== #}
+<div class="cf-modal-backdrop" id="cf-create-calendar-event-modal" role="dialog" aria-modal="true" aria-labelledby="cf-cal-event-title">
+  <div class="cf-modal-dialog" style="max-width: 520px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title" id="cf-cal-event-title">Schedule Calendar Event &mdash; {{ client.display_business_name }}</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close dialog">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form method="post" action="{% url 'clients:client_create_event' client.id %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="/clients/{{ client.id }}/?tab=calendar">
+
+      <div class="cf-modal-body">
+        <div style="margin-bottom: 1rem;">
+          <label class="cf-label" for="{{ create_calendar_event_form.title.id_for_label }}">Event Title</label>
+          {{ create_calendar_event_form.title }}
+        </div>
+
+        <div class="row g-3" style="margin-bottom: 1rem;">
+          <div class="col-sm-6">
+            <label class="cf-label" for="{{ create_calendar_event_form.event_type.id_for_label }}">Event Type</label>
+            {{ create_calendar_event_form.event_type }}
+          </div>
+          <div class="col-sm-6">
+            <label class="cf-label" for="{{ create_calendar_event_form.location.id_for_label }}">Location / Meeting Link</label>
+            {{ create_calendar_event_form.location }}
+          </div>
+        </div>
+
+        <div class="row g-3" style="margin-bottom: 1rem;">
+          <div class="col-sm-6">
+            <label class="cf-label" for="{{ create_calendar_event_form.start_time.id_for_label }}">Start Date &amp; Time</label>
+            {{ create_calendar_event_form.start_time }}
+          </div>
+          <div class="col-sm-6">
+            <label class="cf-label" for="{{ create_calendar_event_form.end_time.id_for_label }}">End Date &amp; Time</label>
+            {{ create_calendar_event_form.end_time }}
+          </div>
+        </div>
+
+        <div>
+          <label class="cf-label" for="{{ create_calendar_event_form.description.id_for_label }}">Description / Agenda</label>
+          {{ create_calendar_event_form.description }}
+        </div>
+      </div>
+
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Schedule Event</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  /**
+   * Client Detail Tab Switching Engine
+   * Seamlessly syncs with URL hash & query string (?tab=...)
+   */
+  function switchTab(tabName) {
+    if (!tabName) return;
+    
+    // Normalize tab name
+    tabName = tabName.replace('#', '').toLowerCase();
+
+    const targetPanel = document.getElementById('panel-' + tabName);
+    if (!targetPanel) return;
+
+    // Update active tab buttons
+    document.querySelectorAll('#client-detail-tabs .cf-tab-link').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-tab-target') === tabName);
+    });
+
+    // Update active tab panels
+    document.querySelectorAll('.cf-tab-panel').forEach(panel => {
+      panel.classList.remove('active');
+    });
+    targetPanel.classList.add('active');
+
+    // Update browser URL hash without full reload
+    if (history.pushState) {
+      const url = new URL(window.location);
+      url.searchParams.set('tab', tabName);
+      window.history.replaceState({ tab: tabName }, '', url);
+    }
+  }
+
+  // Handle tab click events
+  document.addEventListener('DOMContentLoaded', function() {
+    const tabLinks = document.querySelectorAll('#client-detail-tabs .cf-tab-link');
+    tabLinks.forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const tabTarget = this.getAttribute('data-tab-target');
+        switchTab(tabTarget);
+      });
+    });
+
+    // Handle hash on initial page load if specified
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab') || window.location.hash.replace('#', '');
+    if (tabParam) {
+      switchTab(tabParam);
+    }
+  });
+
+  // Handle browser back/forward buttons
+  window.addEventListener('popstate', function(e) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get('tab') || 'overview';
+    switchTab(tab);
+  });
+</script>
+{% endblock %}

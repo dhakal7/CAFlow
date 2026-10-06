@@ -13,7 +13,7 @@
   </div>
   <div style="flex: 1;">
     {% if title %}<strong style="display: block; margin-bottom: 2px;">{{ title }}</strong>{% endif %}
-    <div>{{ message|default:content|safe }}</div>
+    <div>{% if message %}{{ message|safe }}{% elif alert_content %}{{ alert_content|safe }}{% endif %}</div>
   </div>
   {% if dismissible %}
     <button type="button" style="background:none; border:none; color:currentColor; opacity:0.6; cursor:pointer;" onclick="this.closest('.cf-alert').remove()" aria-label="Dismiss alert">

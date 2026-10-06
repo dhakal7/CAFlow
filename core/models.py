@@ -18,10 +18,25 @@ class TimeStampedModel(models.Model):
         ordering = ['-created_at']
 
 
+class FirmAwareQuerySet(models.QuerySet):
+    """QuerySet providing automatic tenant scoping helpers."""
+    def for_firm(self, firm):
+        if not firm:
+            return self.none()
+        return self.filter(firm=firm)
+
+
+class FirmAwareManager(models.Manager.from_queryset(FirmAwareQuerySet)):
+    """Manager ensuring strict tenant isolation query operations."""
+    def for_firm(self, firm):
+        return self.get_queryset().for_firm(firm)
+
+
 class FirmAwareModel(TimeStampedModel):
     """
     Abstract multi-tenant base model for CAFlow.
     Ensures every tenant record is strictly associated with a firm.
+    All cross-tenant access must be prevented.
     """
     firm = models.ForeignKey(
         'firms.Firm',
@@ -30,6 +45,8 @@ class FirmAwareModel(TimeStampedModel):
         verbose_name=_('Chartered Accountancy Firm'),
         db_index=True,
     )
+
+    objects = FirmAwareManager()
 
     class Meta:
         abstract = True

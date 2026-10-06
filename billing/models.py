@@ -43,3 +43,14 @@ class Invoice(FirmAwareModel):
 
     def __str__(self):
         return f"INV-{self.invoice_number} ({self.client.name})"
+
+    def clean(self):
+        super().clean()
+        if self.client_id and self.firm_id and self.client.firm_id != self.firm_id:
+            from django.core.exceptions import ValidationError
+            raise ValidationError({'client': _('Client must belong to the same firm as the invoice.')})
+
+    def save(self, *args, **kwargs):
+        if self.client_id and self.firm_id and self.client.firm_id != self.firm_id:
+            raise ValueError(_('Cannot attach a client from another firm to this invoice.'))
+        super().save(*args, **kwargs)

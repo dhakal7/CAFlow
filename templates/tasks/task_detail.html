@@ -1,0 +1,577 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+
+{% block title %}{{ task.title }} &mdash; Tasks &mdash; {{ APP_NAME }}{% endblock %}
+
+{% block app_content %}
+{% include "components/breadcrumbs.html" with items=breadcrumbs %}
+
+{# ======================================================== #}
+{# 1. TASK DETAIL HEADER                                    #}
+{# ======================================================== #}
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem; flex-wrap: wrap;">
+      <span class="cf-badge {{ task.priority_badge_class }}">{{ task.get_priority_display }} Priority</span>
+      <span class="cf-badge {{ task.status_badge_class }}" dot="True">{{ task.get_status_display }}</span>
+      {% if task.is_recurring %}
+        <span class="cf-recurrence-pill">⟳ Recurring: {{ task.get_recurrence_interval_display }}</span>
+      {% endif %}
+      {% if task.is_overdue %}
+        <span class="cf-badge cf-badge-danger">Overdue Deadline</span>
+      {% endif %}
+    </div>
+
+    <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0 0 0.25rem 0;">
+      {{ task.title }}
+    </h1>
+
+    <div style="font-size: 0.875rem; color: var(--cf-text-secondary); display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+      {% if task.client %}
+        <span>
+          Client: 
+          <a href="{% url 'clients:client_detail' task.client.id %}" style="color: var(--cf-secondary-navy); font-weight: 600; text-decoration: underline;">
+            {{ task.client.business_name|default:task.client.name }}
+          </a>
+        </span>
+        <span>&bull;</span>
+      {% endif %}
+      <span>Service: <strong>{{ service_name }}</strong></span>
+      <span>&bull;</span>
+      <span>Created: <span class="mono-font">{{ task.created_at|date:"Y-m-d" }}</span> by {{ task.created_by|default:"Practice Team" }}</span>
+    </div>
+  </div>
+
+  {# Top Actions Bar #}
+  <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+    {# Complete / Reopen Action #}
+    <form method="post" action="{% url 'tasks:task_complete' task.id %}" style="margin: 0;">
+      {% csrf_token %}
+      {% if task.status == 'COMPLETED' %}
+        <button type="submit" class="cf-btn cf-btn-outline" style="height: 38px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+          <span>Reopen Task</span>
+        </button>
+      {% else %}
+        <button type="submit" class="cf-btn cf-btn-success" style="height: 38px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Complete Task</span>
+        </button>
+      {% endif %}
+    </form>
+
+    {# Edit Task #}
+    <button type="button" class="cf-btn cf-btn-outline" onclick="CAFlow.openModal('#cf-edit-task-modal')" style="height: 38px;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      <span>Edit</span>
+    </button>
+
+    {# Attach Document #}
+    <button type="button" class="cf-btn cf-btn-outline" onclick="CAFlow.openModal('#cf-attach-doc-modal')" style="height: 38px;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+      <span>Attach</span>
+    </button>
+
+    {# Delete Action #}
+    <button type="button" class="cf-btn cf-btn-danger" onclick="confirmDeleteTask()" style="height: 38px;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      <span>Delete</span>
+    </button>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# 2. MAIN GRID (CONTENT + METADATA SIDEBAR)                #}
+{# ======================================================== #}
+<div class="row g-4">
+  
+  {# ---------------- LEFT / MAIN COLUMN ---------------- #}
+  <div class="col-lg-8">
+    
+    {# Instructions / Notes Card #}
+    <div class="cf-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <h3 style="font-size: 1rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0;">
+          Working Instructions &amp; Description
+        </h3>
+        <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.openModal('#cf-edit-task-modal')">Edit</button>
+      </div>
+      
+      <div style="font-size: 0.9375rem; line-height: 1.6; color: var(--cf-text-primary); white-space: pre-wrap;">
+        {{ task.description|default:"No specific working paper instructions recorded. Use Edit to add technical audit guidance." }}
+      </div>
+    </div>
+
+    {# Checklist Section #}
+    <div class="cf-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <div>
+          <h3 style="font-size: 1rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0 0 0.25rem 0;">
+            Checklist &amp; Working Paper Steps
+          </h3>
+          <div style="font-size: 0.8125rem; color: var(--cf-text-muted);">
+            <span id="detail-stats-completed">{{ task.checklist_stats.completed }}</span> of <span id="detail-stats-total">{{ task.checklist_stats.total }}</span> completed (<span id="detail-stats-percent">{{ task.progress_percent }}%</span>)
+          </div>
+        </div>
+
+        {% if task.template_applied %}
+          <span class="cf-badge cf-badge-secondary" style="font-size: 0.75rem;">
+            Template: {{ task.template_applied.title }}
+          </span>
+        {% endif %}
+      </div>
+
+      {# Progress Bar #}
+      <div class="cf-task-progress-wrap" style="margin-bottom: 1.25rem;">
+        <div class="cf-task-progress-bar" style="height: 8px;">
+          <div id="detail-progress-fill" 
+               class="cf-task-progress-fill {% if task.status == 'COMPLETED' %}completed{% endif %}" 
+               style="width: {{ task.progress_percent }}%;"></div>
+        </div>
+      </div>
+
+      {# Checklist Items List #}
+      <div id="checklist-items-container" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem;">
+        {% for item in checklist_items %}
+          <div class="cf-checklist-item {% if item.is_completed %}is-completed{% endif %}" id="item-row-{{ item.id }}">
+            <input type="checkbox" 
+                   class="cf-checklist-checkbox" 
+                   {% if item.is_completed %}checked{% endif %} 
+                   onchange="toggleDetailItem('{{ item.id }}', this)">
+            <div class="cf-checklist-title">
+              <span>{{ item.title }}</span>
+              {% if item.is_completed and item.completed_at %}
+                <div style="font-size: 0.6875rem; color: var(--cf-text-muted); margin-top: 2px;">
+                  Completed by {{ item.completed_by|default:"Staff" }} on {{ item.completed_at|date:"Y-m-d H:i" }}
+                </div>
+              {% endif %}
+            </div>
+            <form method="post" action="{% url 'tasks:task_checklist_delete' item.id %}" onsubmit="return confirm('Remove checklist step?');" style="margin: 0;">
+              {% csrf_token %}
+              <button type="submit" class="cf-btn cf-btn-ghost cf-btn-sm" style="padding: 2px 6px; color: var(--cf-text-muted);" title="Delete step">&times;</button>
+            </form>
+          </div>
+        {% empty %}
+          <div id="no-checklist-msg" style="padding: 1.5rem; text-align: center; color: var(--cf-text-muted); font-size: 0.875rem; background: var(--cf-bg); border-radius: var(--cf-radius-md);">
+            No checklist steps added yet. Add individual steps below or apply a workflow template.
+          </div>
+        {% endfor %}
+      </div>
+
+      {# Add Step Form #}
+      <form method="post" action="{% url 'tasks:task_checklist_add' task.id %}" style="display: flex; gap: 0.5rem;">
+        {% csrf_token %}
+        <input type="text" name="title" class="cf-input" placeholder="Add checklist step (e.g. Verify tax deduction at source under Sec 88)..." required style="height: 38px;">
+        <button type="submit" class="cf-btn cf-btn-secondary" style="height: 38px; white-space: nowrap;">
+          + Add Step
+        </button>
+      </form>
+    </div>
+
+    {# Document Attachments #}
+    <div class="cf-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="font-size: 1rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0;">
+          Working Paper Attachments ({{ attachments.count }})
+        </h3>
+        <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" onclick="CAFlow.openModal('#cf-attach-doc-modal')">
+          + Upload File
+        </button>
+      </div>
+
+      {% if attachments %}
+        <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+          {% for att in attachments %}
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; border: 1px solid var(--cf-border); border-radius: var(--cf-radius-md); background: var(--cf-surface);">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--cf-secondary-navy);">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <div>
+                  <div style="font-size: 0.875rem; font-weight: 600; color: var(--cf-primary-navy);">{{ att.filename }}</div>
+                  <div style="font-size: 0.75rem; color: var(--cf-text-muted);">
+                    {{ att.formatted_size }} &bull; Uploaded {{ att.created_at|date:"Y-m-d H:i" }} by {{ att.uploaded_by|default:"Auditor" }}
+                  </div>
+                </div>
+              </div>
+              <a href="{{ att.file.url }}" class="cf-btn cf-btn-outline cf-btn-sm" target="_blank" download>
+                Download
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div style="padding: 1.5rem; text-align: center; color: var(--cf-text-muted); font-size: 0.875rem; background: var(--cf-bg); border-radius: var(--cf-radius-md);">
+          No files or working papers attached yet. Use Attach Document to upload supporting evidence.
+        </div>
+      {% endif %}
+    </div>
+
+    {# Internal Notes & Comments #}
+    <div class="cf-card" style="padding: 1.5rem;">
+      <h3 style="font-size: 1rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0 0 1rem 0;">
+        Internal Audit Discussion &amp; Review Notes ({{ comments.count }})
+      </h3>
+
+      <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem;">
+        {% for comment in comments %}
+          <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+            <div class="cf-avatar" style="width: 32px; height: 32px; font-size: 0.75rem; background: var(--cf-primary-navy); flex-shrink: 0;">
+              {{ comment.user.first_name|slice:":1" }}{{ comment.user.last_name|slice:":1" }}
+            </div>
+            <div style="flex: 1; background: var(--cf-bg); padding: 0.875rem 1rem; border-radius: var(--cf-radius-md); border: 1px solid var(--cf-border);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                <span style="font-size: 0.8125rem; font-weight: 700; color: var(--cf-primary-navy);">
+                  {{ comment.user.get_full_name|default:comment.user.username }}
+                </span>
+                <span class="mono-font" style="font-size: 0.6875rem; color: var(--cf-text-muted);">
+                  {{ comment.created_at|date:"Y-m-d H:i" }}
+                </span>
+              </div>
+              <div style="font-size: 0.875rem; color: var(--cf-text-primary); line-height: 1.5; white-space: pre-wrap;">{{ comment.content }}</div>
+            </div>
+          </div>
+        {% empty %}
+          <div style="padding: 1.25rem; text-align: center; color: var(--cf-text-muted); font-size: 0.8125rem; background: var(--cf-bg); border-radius: var(--cf-radius-md);">
+            No comments yet. Post notes, manager queries, or partner feedback below.
+          </div>
+        {% endfor %}
+      </div>
+
+      {# Post Comment Form #}
+      <form method="post" action="{% url 'tasks:task_comment_create' task.id %}">
+        {% csrf_token %}
+        <div class="mb-2">
+          <textarea name="content" class="cf-input" rows="3" placeholder="Write an internal review note, audit query, or IRD reference..." required></textarea>
+        </div>
+        <div style="display: flex; justify-content: flex-end;">
+          <button type="submit" class="cf-btn cf-btn-primary cf-btn-sm">Post Comment</button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+  {# ---------------- RIGHT / METADATA COLUMN ---------------- #}
+  <div class="col-lg-4">
+    
+    {# 1. Stage Control Card #}
+    <div class="cf-card" style="padding: 1.25rem; margin-bottom: 1.5rem;">
+      <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--cf-text-muted); font-weight: 700; margin-bottom: 0.5rem;">
+        Current Stage
+      </div>
+      <form method="post" action="{% url 'tasks:task_status_update' task.id %}" style="display: flex; flex-direction: column; gap: 0.5rem;">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.path }}">
+        <select name="status" class="cf-select" onchange="this.form.submit()" style="font-weight: 600;">
+          <option value="TODO" {% if task.status == 'TODO' %}selected{% endif %}>To Do</option>
+          <option value="IN_PROGRESS" {% if task.status == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
+          <option value="BLOCKED" {% if task.status == 'BLOCKED' %}selected{% endif %}>Waiting</option>
+          <option value="UNDER_REVIEW" {% if task.status == 'UNDER_REVIEW' %}selected{% endif %}>Review</option>
+          <option value="COMPLETED" {% if task.status == 'COMPLETED' %}selected{% endif %}>Completed</option>
+          <option value="CANCELLED" {% if task.status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
+        </select>
+      </form>
+      {% if task.completed_at %}
+        <div style="font-size: 0.75rem; color: var(--cf-success); margin-top: 0.5rem; font-weight: 600;">
+          &#10003; Completed on {{ task.completed_at|date:"Y-m-d H:i" }}
+        </div>
+      {% endif %}
+    </div>
+
+    {# 2. Staff Assignment Card #}
+    <div class="cf-card" style="padding: 1.25rem; margin-bottom: 1.5rem;">
+      <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--cf-text-muted); font-weight: 700; margin-bottom: 0.5rem;">
+        Assigned Staff
+      </div>
+      <form method="post" action="{% url 'tasks:task_assign' task.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.path }}">
+        <div style="display: flex; gap: 0.5rem;">
+          <select name="assigned_to" class="cf-select" style="flex: 1;" onchange="this.form.submit()">
+            <option value="">-- Unassigned --</option>
+            {% for staff in staff_members %}
+              <option value="{{ staff.id }}" {% if task.assigned_to and task.assigned_to.id == staff.id %}selected{% endif %}>
+                {{ staff.get_full_name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+      </form>
+      {% if task.assigned_to %}
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.75rem;">
+          <div class="cf-avatar" style="width: 28px; height: 28px; font-size: 0.75rem; background: var(--cf-primary-navy);">
+            {{ task.assigned_to.first_name|slice:":1" }}{{ task.assigned_to.last_name|slice:":1" }}
+          </div>
+          <div>
+            <div style="font-size: 0.8125rem; font-weight: 700; color: var(--cf-primary-navy);">{{ task.assigned_to.get_full_name }}</div>
+            <div style="font-size: 0.6875rem; color: var(--cf-text-muted);">{{ task.assigned_to.email }}</div>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    {# 3. Details Summary Card #}
+    <div class="cf-card" style="padding: 1.25rem; margin-bottom: 1.5rem;">
+      <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--cf-text-muted); font-weight: 700; margin-bottom: 0.75rem;">
+        Engagement Details
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.8125rem;">
+        <div>
+          <span style="color: var(--cf-text-muted); display: block; font-size: 0.75rem;">Due Date:</span>
+          {% if task.due_date %}
+            <strong class="mono-font {% if task.is_overdue %}cf-task-due overdue{% elif task.days_remaining == 0 %}cf-task-due today{% endif %}">
+              {{ task.due_date|date:"Y-m-d" }}
+              {% if task.days_remaining is not None %}
+                ({{ task.days_remaining }} days)
+              {% endif %}
+            </strong>
+          {% else %}
+            <span>No due date assigned</span>
+          {% endif %}
+        </div>
+
+        {% if task.start_date %}
+          <div>
+            <span style="color: var(--cf-text-muted); display: block; font-size: 0.75rem;">Start Date:</span>
+            <span class="mono-font">{{ task.start_date|date:"Y-m-d" }}</span>
+          </div>
+        {% endif %}
+
+        {% if task.estimated_hours %}
+          <div>
+            <span style="color: var(--cf-text-muted); display: block; font-size: 0.75rem;">Estimated Time:</span>
+            <strong>{{ task.estimated_hours }} hours</strong>
+          </div>
+        {% endif %}
+
+        {% if task.category %}
+          <div>
+            <span style="color: var(--cf-text-muted); display: block; font-size: 0.75rem;">Category:</span>
+            <span class="cf-badge cf-badge-secondary">{{ task.category }}</span>
+          </div>
+        {% endif %}
+
+        <div>
+          <span style="color: var(--cf-text-muted); display: block; font-size: 0.75rem;">Priority:</span>
+          <span class="cf-badge {{ task.priority_badge_class }}">{{ task.get_priority_display }}</span>
+        </div>
+
+        <div>
+          <span style="color: var(--cf-text-muted); display: block; font-size: 0.75rem;">Recurrence:</span>
+          {% if task.is_recurring %}
+            <strong>{{ task.get_recurrence_interval_display }}</strong>
+            {% if task.recurrence_end_date %}
+              <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Until {{ task.recurrence_end_date|date:"Y-m-d" }}</div>
+            {% endif %}
+          {% else %}
+            <span>One-time Task</span>
+          {% endif %}
+        </div>
+
+        {% if task.client %}
+          <div style="border-top: 1px solid var(--cf-border); padding-top: 0.75rem;">
+            <span style="color: var(--cf-text-muted); display: block; font-size: 0.75rem;">Client PAN:</span>
+            <span class="mono-font" style="font-weight: 700;">{{ task.client.pan_number|default:"N/A" }}</span>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {# 4. Activity & Audit Trail #}
+    <div class="cf-card" style="padding: 1.25rem;">
+      <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--cf-text-muted); font-weight: 700; margin-bottom: 0.75rem;">
+        Audit Trail ({{ activities.count }})
+      </div>
+
+      <div class="cf-activity-timeline">
+        {% for act in activities %}
+          <div class="cf-activity-node">
+            <div class="cf-activity-desc">{{ act.description }}</div>
+            <div class="cf-activity-time">{{ act.user.get_full_name|default:"System" }} &bull; {{ act.created_at|date:"M d, H:i" }}</div>
+          </div>
+        {% empty %}
+          <div style="font-size: 0.75rem; color: var(--cf-text-muted);">No activity recorded yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+{# ======================================================== #}
+{# EDIT TASK MODAL                                          #}
+{# ======================================================== #}
+<div class="cf-modal-backdrop" id="cf-edit-task-modal">
+  <div class="cf-modal-dialog" style="max-width: 640px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title">Edit Task Details</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form method="post" action="{% url 'tasks:task_edit' task.id %}">
+      {% csrf_token %}
+      <div class="cf-modal-body" style="max-height: 75vh; overflow-y: auto; padding: 1.5rem;">
+        <div class="mb-3">
+          <label class="cf-form-label" style="font-weight: 600;">Title</label>
+          {{ edit_form.title }}
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-sm-6">
+            <label class="cf-form-label" style="font-weight: 600;">Client Entity</label>
+            {{ edit_form.client }}
+          </div>
+          <div class="col-sm-6">
+            <label class="cf-form-label" style="font-weight: 600;">Service</label>
+            {{ edit_form.service }}
+          </div>
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-sm-6">
+            <label class="cf-form-label" style="font-weight: 600;">Assigned Staff</label>
+            {{ edit_form.assigned_to }}
+          </div>
+          <div class="col-sm-6">
+            <label class="cf-form-label" style="font-weight: 600;">Priority</label>
+            {{ edit_form.priority }}
+          </div>
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-sm-4">
+            <label class="cf-form-label" style="font-weight: 600;">Start Date</label>
+            {{ edit_form.start_date }}
+          </div>
+          <div class="col-sm-4">
+            <label class="cf-form-label" style="font-weight: 600;">Due Date</label>
+            {{ edit_form.due_date }}
+          </div>
+          <div class="col-sm-4">
+            <label class="cf-form-label" style="font-weight: 600;">Est. Hours</label>
+            {{ edit_form.estimated_hours }}
+          </div>
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-sm-6">
+            <label class="cf-form-label" style="font-weight: 600;">Category</label>
+            {{ edit_form.category }}
+          </div>
+          <div class="col-sm-6">
+            <label class="cf-form-label" style="font-weight: 600;">Status</label>
+            {{ edit_form.status }}
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="cf-form-label" style="font-weight: 600;">Description</label>
+          {{ edit_form.description }}
+        </div>
+        <div class="mb-3">
+          <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600; cursor: pointer;">
+            {{ edit_form.is_recurring }}
+            <span>Recurring Task</span>
+          </label>
+          <div class="row g-3 mt-1">
+            <div class="col-sm-6">
+              <label class="cf-form-label" style="font-size: 0.75rem;">Interval</label>
+              {{ edit_form.recurrence_interval }}
+            </div>
+            <div class="col-sm-6">
+              <label class="cf-form-label" style="font-size: 0.75rem;">End Date</label>
+              {{ edit_form.recurrence_end_date }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# ATTACH DOCUMENT MODAL                                    #}
+{# ======================================================== #}
+<div class="cf-modal-backdrop" id="cf-attach-doc-modal">
+  <div class="cf-modal-dialog" style="max-width: 480px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title">Attach Working Paper / Document</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form method="post" action="{% url 'tasks:task_attach_document' task.id %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="cf-modal-body" style="padding: 1.5rem;">
+        <label class="cf-form-label" style="font-weight: 600;">Select Document / File</label>
+        {{ attachment_form.file }}
+        <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 6px;">
+          Supports Excel working papers (.xlsx), PDF receipts, audit vouchers, or images up to 25MB.
+        </div>
+      </div>
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Upload Attachment</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# JAVASCRIPT FOR TASK DETAIL INTERACTIVITY                 #}
+{# ======================================================== #}
+<script>
+  function toggleDetailItem(itemId, checkboxElem) {
+    const csrfToken = '{{ csrf_token }}';
+    fetch(`/tasks/checklist/${itemId}/toggle/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest',
+      }
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        const row = document.getElementById(`item-row-${itemId}`);
+        if (row) {
+          row.classList.toggle('is-completed', data.is_completed);
+        }
+        document.getElementById('detail-stats-completed').textContent = data.stats.completed;
+        document.getElementById('detail-stats-total').textContent = data.stats.total;
+        document.getElementById('detail-stats-percent').textContent = `${data.stats.percent}%`;
+        
+        const fill = document.getElementById('detail-progress-fill');
+        fill.style.width = `${data.stats.percent}%`;
+        if (data.stats.percent === 100) {
+          fill.classList.add('completed');
+        } else {
+          fill.classList.remove('completed');
+        }
+
+        CAFlow.toast(data.is_completed ? 'Checklist step completed' : 'Checklist step reopened', 'info');
+      }
+    });
+  }
+
+  function confirmDeleteTask() {
+    CAFlow.confirm({
+      title: 'Delete Task',
+      message: 'Are you sure you want to permanently delete "{{ task.title|escapejs }}"? This action will be logged in the practice audit history.',
+      confirmText: 'Delete Task',
+      confirmClass: 'cf-btn-danger',
+      onConfirm: function() {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "{% url 'tasks:task_delete' task.id %}";
+        form.innerHTML = `<input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">`;
+        document.body.appendChild(form);
+        form.submit();
+      }
+    });
+  }
+</script>
+{% endblock %}

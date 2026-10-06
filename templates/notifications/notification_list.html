@@ -8,58 +8,88 @@
 
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
   <div>
-    <h1>Alerts &amp; Notifications</h1>
-    <p style="font-size: 0.875rem; color: var(--cf-text-muted);">
-      In-app alerts for statutory filing deadlines, task assignments, and client portal updates.
+    <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0 0 0.25rem 0;">Alerts &amp; Notifications</h1>
+    <p style="font-size: 0.875rem; color: var(--cf-text-muted); margin: 0;">
+      In-app alerts for statutory filing deadlines, task assignments, and practice events.
     </p>
   </div>
 
-  <button type="button" class="cf-btn cf-btn-outline" onclick="CAFlow.toast('All notifications marked as read', 'success')">
-    <span>Mark All as Read</span>
-  </button>
+  {% if unread_count > 0 %}
+    <form method="post" action="{% url 'notifications:notification_mark_all_read' %}" style="margin: 0;">
+      {% csrf_token %}
+      <button type="submit" class="cf-btn cf-btn-outline" style="height: 38px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        <span>Mark All as Read ({{ unread_count }})</span>
+      </button>
+    </form>
+  {% endif %}
 </div>
 
-<div class="cf-card" style="padding: 0.5rem 0;">
-  <div style="padding: 1rem 1.5rem; border-bottom: 1px solid var(--cf-border-subtle); display: flex; gap: 0.75rem;">
-    <button class="cf-btn cf-btn-secondary cf-btn-sm">All (8)</button>
-    <button class="cf-btn cf-btn-outline cf-btn-sm">Unread (3)</button>
-    <button class="cf-btn cf-btn-outline cf-btn-sm">Compliance</button>
-    <button class="cf-btn cf-btn-outline cf-btn-sm">Tasks</button>
+<div class="cf-card" style="padding: 0;">
+  <div style="padding: 0.875rem 1.25rem; border-bottom: 1px solid var(--cf-border); display: flex; gap: 0.5rem; flex-wrap: wrap; background: var(--cf-surface);">
+    <a href="?type=all" class="cf-btn {% if current_filter == 'all' %}cf-btn-primary{% else %}cf-btn-outline{% endif %} cf-btn-sm">
+      All ({{ total_count }})
+    </a>
+    <a href="?type=unread" class="cf-btn {% if current_filter == 'unread' %}cf-btn-primary{% else %}cf-btn-outline{% endif %} cf-btn-sm">
+      Unread ({{ unread_count }})
+    </a>
+    <a href="?type=TASK" class="cf-btn {% if current_filter == 'TASK' %}cf-btn-primary{% else %}cf-btn-outline{% endif %} cf-btn-sm">
+      Tasks ({{ task_count }})
+    </a>
+    <a href="?type=COMPLIANCE" class="cf-btn {% if current_filter == 'COMPLIANCE' %}cf-btn-primary{% else %}cf-btn-outline{% endif %} cf-btn-sm">
+      Compliance ({{ compliance_count }})
+    </a>
   </div>
 
   <div style="display: flex; flex-direction: column;">
-    <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--cf-border-subtle); background: var(--cf-surface-hover); display: flex; justify-content: space-between; align-items: center;">
-      <div style="display: flex; gap: 1rem; align-items: center;">
-        <span class="cf-status-dot danger"></span>
-        <div>
-          <strong style="color: var(--cf-primary-navy);">Monthly VAT Return Deadline approaching for 5 clients</strong>
-          <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Due 25th Ashoj 2081 &bull; Inland Revenue Department</div>
+    {% for n in notifications %}
+      <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--cf-border-subtle); background: {% if not n.is_read %}rgba(30, 92, 179, 0.03){% else %}var(--cf-surface){% endif %}; display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; transition: background 0.15s ease;" class="cf-card-hover">
+        <div style="display: flex; gap: 0.875rem; align-items: flex-start; flex: 1;">
+          <span class="cf-status-dot {% if not n.is_read %}warning{% else %}muted{% endif %}" style="margin-top: 5px;"></span>
+          <div style="flex: 1;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+              <strong style="color: var(--cf-primary-navy); font-size: 0.9375rem;">
+                {{ n.title }}
+              </strong>
+              {% if not n.is_read %}
+                <span class="cf-badge cf-badge-warning" style="font-size: 0.6875rem;">New</span>
+              {% endif %}
+              <span class="cf-badge cf-badge-secondary" style="font-size: 0.6875rem;">
+                {{ n.get_notification_type_display }}
+              </span>
+            </div>
+            <div style="font-size: 0.84rem; color: var(--cf-text-secondary); margin-top: 3px; line-height: 1.45;">
+              {{ n.message }}
+            </div>
+            <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 4px;">
+              {{ n.created_at|timesince }} ago
+            </div>
+          </div>
         </div>
-      </div>
-      <span class="cf-badge cf-badge-danger">Urgent</span>
-    </div>
 
-    <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--cf-border-subtle); background: var(--cf-surface-hover); display: flex; justify-content: space-between; align-items: center;">
-      <div style="display: flex; gap: 1rem; align-items: center;">
-        <span class="cf-status-dot warning"></span>
-        <div>
-          <strong style="color: var(--cf-primary-navy);">Trial Balance Scrutiny assigned to Bikash Karki</strong>
-          <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Assigned by CA. Suyog Dhakal &bull; 2 hours ago</div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          {% if n.action_url %}
+            <form method="post" action="{% url 'notifications:notification_mark_read' n.id %}" style="margin: 0;">
+              {% csrf_token %}
+              <button type="submit" class="cf-btn cf-btn-outline cf-btn-sm" style="font-size: 0.75rem;">
+                View &rarr;
+              </button>
+            </form>
+          {% elif not n.is_read %}
+            <form method="post" action="{% url 'notifications:notification_mark_read' n.id %}" style="margin: 0;">
+              {% csrf_token %}
+              <button type="submit" class="cf-btn cf-btn-ghost cf-btn-sm" style="font-size: 0.75rem;">
+                Mark Read
+              </button>
+            </form>
+          {% endif %}
         </div>
       </div>
-      <span class="cf-badge cf-badge-warning">Review</span>
-    </div>
-
-    <div style="padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
-      <div style="display: flex; gap: 1rem; align-items: center;">
-        <span class="cf-status-dot muted"></span>
-        <div>
-          <strong style="color: var(--cf-primary-navy);">Apex Hydropower paid Invoice INV-2081-0042</strong>
-          <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Payment of NPR 169,500.00 confirmed &bull; Yesterday</div>
-        </div>
+    {% empty %}
+      <div style="padding: 3.5rem 1rem; text-align: center;">
+        {% include "components/empty_state.html" with title="No notifications found" description="You have no notifications in this category. Important assignments and statutory reminders will appear here." %}
       </div>
-      <span class="cf-badge cf-badge-success">Paid</span>
-    </div>
+    {% endfor %}
   </div>
 </div>
 {% endblock %}

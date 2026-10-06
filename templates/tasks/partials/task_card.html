@@ -1,0 +1,99 @@
+{% load static %}
+<div class="cf-task-card" 
+     id="task-card-{{ task.id }}" 
+     draggable="true" 
+     ondragstart="handleDragStart(event, '{{ task.id }}')" 
+     ondragend="handleDragEnd(event)"
+     onclick="openTaskQuickDrawer('{{ task.id }}')">
+  
+  {# Top Row: Priority Badge + Recurrence Indicator + Quick Complete Checkbox #}
+  <div class="cf-task-card-header">
+    <div style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;">
+      <span class="cf-badge {{ task.priority_badge_class }}">
+        {{ task.get_priority_display }}
+      </span>
+
+      {% if task.is_recurring %}
+        <span class="cf-recurrence-pill" title="Recurring task: {{ task.get_recurrence_interval_display }}">
+          ⟳ {{ task.get_recurrence_interval_display }}
+        </span>
+      {% endif %}
+    </div>
+
+    {# Quick complete toggle checkbox (stops propagation so drawer isn't triggered) #}
+    <form method="post" action="{% url 'tasks:task_complete' task.id %}" style="margin: 0;" onclick="event.stopPropagation();">
+      {% csrf_token %}
+      <input type="checkbox" 
+             class="cf-checkbox" 
+             {% if task.status == 'COMPLETED' %}checked{% endif %}
+             onchange="this.form.submit()"
+             title="{% if task.status == 'COMPLETED' %}Reopen Task{% else %}Mark Complete{% endif %}">
+    </form>
+  </div>
+
+  {# Task Title #}
+  <div class="cf-task-card-title">
+    {{ task.title }}
+  </div>
+
+  {# Client Entity & Service #}
+  <div class="cf-task-card-client">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0; color: var(--cf-text-muted);">
+      <path d="M3 21h18M3 7v14M21 7v14M6 11h4M6 15h4M14 11h4M14 15h4M9 3l3-2 3 2"/>
+    </svg>
+    <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;" title="{{ task.client.business_name|default:task.client.name|default:'General Practice' }}">
+      {{ task.client.business_name|default:task.client.name|default:"General Practice / Firm Work" }}
+    </span>
+  </div>
+
+  {# Progress Bar & Checklist Stats #}
+  <div class="cf-task-progress-wrap">
+    <div class="cf-task-progress-meta">
+      <span>
+        {% if task.checklist_items.count > 0 %}
+          {{ task.checklist_stats.completed }}/{{ task.checklist_stats.total }} steps
+        {% else %}
+          Progress
+        {% endif %}
+      </span>
+      <span style="font-weight: 700;">{{ task.progress_percent }}%</span>
+    </div>
+    <div class="cf-task-progress-bar">
+      <div class="cf-task-progress-fill {% if task.status == 'COMPLETED' %}completed{% endif %}" 
+           style="width: {{ task.progress_percent }}%;"></div>
+    </div>
+  </div>
+
+  {# Footer Row: Due Date + Assigned Staff + Status Badge #}
+  <div class="cf-task-card-footer">
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+      {% if task.assigned_to %}
+        <div class="cf-task-assignee" title="Assigned to {{ task.assigned_to.get_full_name }}">
+          <div class="cf-avatar" style="width: 22px; height: 22px; font-size: 0.625rem; background: var(--cf-primary-navy);">
+            {{ task.assigned_to.first_name|slice:":1" }}{{ task.assigned_to.last_name|slice:":1" }}
+          </div>
+          <span style="max-width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            {{ task.assigned_to.first_name }}
+          </span>
+        </div>
+      {% else %}
+        <span style="color: var(--cf-text-muted); font-size: 0.6875rem;">Unassigned</span>
+      {% endif %}
+    </div>
+
+    <div>
+      {% if task.due_date %}
+        <span class="cf-task-due mono-font {% if task.is_overdue %}overdue{% elif task.days_remaining == 0 %}today{% endif %}" 
+              title="Due on {{ task.due_date|date:'Y-m-d' }}{% if task.is_overdue %} (Overdue){% endif %}">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          {{ task.due_date|date:"M d" }}
+        </span>
+      {% else %}
+        <span style="color: var(--cf-text-muted);">&mdash;</span>
+      {% endif %}
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,16 @@
+{# CAFlow Reusable Input Component #}
+<input 
+  type="{{ type|default:'text' }}"
+  class="cf-input {% if is_valid %}is-valid{% elif is_invalid %}is-invalid{% endif %} {% if mono %}mono-font{% endif %} {{ extra_classes|default:'' }}"
+  {% if id %}id="{{ id }}"{% endif %}
+  {% if name %}name="{{ name }}"{% endif %}
+  value="{{ value|default:'' }}"
+  placeholder="{{ placeholder|default:'' }}"
+  {% if required %}required{% endif %}
+  {% if disabled %}disabled{% endif %}
+  {% if readonly %}readonly{% endif %}
+  {% if maxlength %}maxlength="{{ maxlength }}"{% endif %}
+  {% if min %}min="{{ min }}"{% endif %}
+  {% if max %}max="{{ max }}"{% endif %}
+  {% if step %}step="{{ step }}"{% endif %}
+  {{ extra_attrs|default:'' }}>

@@ -6,74 +6,627 @@
 {% block app_content %}
 {% include "components/breadcrumbs.html" with items=breadcrumbs %}
 
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+{# 1. PAGE HEADER & QUICK ACTIONS #}
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
   <div>
-    <h1>Firm &amp; Client Document Vault</h1>
-    <p style="font-size: 0.875rem; color: var(--cf-text-muted);">
-      Secure repository for tax filings, audit working papers, VAT books, and signed financial statements.
+    <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--cf-primary-navy); margin: 0 0 0.35rem 0;">
+      Firm &amp; Client Document Vault
+    </h1>
+    <p style="font-size: 0.875rem; color: var(--cf-text-muted); margin: 0;">
+      Centralized repository for ICAN audit working papers, IRD tax returns, VAT sales/purchase books, and client document requests.
     </p>
   </div>
 
-  <button type="button" class="cf-btn cf-btn-primary" onclick="CAFlow.toast('Upload modal triggered', 'info')">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-    <span>Upload Document</span>
-  </button>
+  <div style="display: flex; gap: 0.625rem; flex-wrap: wrap;">
+    <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-target="#cf-request-doc-modal" data-cf-modal-trigger="cf-request-doc-modal">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+      <span>Request Documents</span>
+    </button>
+    <button type="button" class="cf-btn cf-btn-primary" data-cf-modal-target="#cf-upload-doc-modal" data-cf-modal-trigger="cf-upload-doc-modal">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <span>Upload Document</span>
+    </button>
+  </div>
 </div>
 
-<div class="cf-table-container">
-  <div class="cf-table-toolbar">
-    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-      <button class="cf-btn cf-btn-secondary cf-btn-sm">All Files (342)</button>
-      <button class="cf-btn cf-btn-outline cf-btn-sm">Audit Working Papers</button>
-      <button class="cf-btn cf-btn-outline cf-btn-sm">Tax Returns (D-01/02/03)</button>
-      <button class="cf-btn cf-btn-outline cf-btn-sm">VAT Books</button>
+{# 2. METRICS & KPI CARDS #}
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+  <div class="cf-card" style="padding: 1.125rem;">
+    <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--cf-text-muted); margin-bottom: 0.35rem;">
+      Active Repository Files
+    </div>
+    <div style="display: flex; align-items: baseline; gap: 0.5rem;">
+      <span style="font-size: 1.625rem; font-weight: 700; color: var(--cf-primary-navy);">{{ stats.total_active_docs }}</span>
+      <span style="font-size: 0.8125rem; color: var(--cf-text-secondary);">({{ stats.total_storage_mb }} MB)</span>
+    </div>
+    <div style="font-size: 0.75rem; color: var(--cf-success); margin-top: 0.35rem; display: flex; align-items: center; gap: 4px;">
+      <span>●</span> Secure practice storage
+    </div>
+  </div>
+
+  <div class="cf-card" style="padding: 1.125rem;">
+    <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--cf-text-muted); margin-bottom: 0.35rem;">
+      Pending Document Requests
+    </div>
+    <div style="display: flex; align-items: baseline; gap: 0.5rem;">
+      <span style="font-size: 1.625rem; font-weight: 700; color: var(--cf-primary-navy);">{{ stats.pending_requests }}</span>
+      {% if stats.overdue_requests > 0 %}
+        <span class="cf-badge cf-badge-danger" style="font-size: 0.6875rem;">{{ stats.overdue_requests }} Overdue</span>
+      {% endif %}
+    </div>
+    <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 0.35rem;">
+      Awaiting client upload
+    </div>
+  </div>
+
+  <div class="cf-card" style="padding: 1.125rem;">
+    <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--cf-text-muted); margin-bottom: 0.35rem;">
+      Expiring Licenses / Docs
+    </div>
+    <div style="display: flex; align-items: baseline; gap: 0.5rem;">
+      <span style="font-size: 1.625rem; font-weight: 700; color: {% if stats.expiring_docs > 0 %}var(--cf-warning){% else %}var(--cf-primary-navy){% endif %};">
+        {{ stats.expiring_docs }}
+      </span>
+      <span style="font-size: 0.8125rem; color: var(--cf-text-muted);">within 30 days</span>
+    </div>
+    <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 0.35rem;">
+      Tax clearances, contracts, permits
+    </div>
+  </div>
+
+  <div class="cf-card" style="padding: 1.125rem;">
+    <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--cf-text-muted); margin-bottom: 0.35rem;">
+      Archived Records
+    </div>
+    <div style="display: flex; align-items: baseline; gap: 0.5rem;">
+      <span style="font-size: 1.625rem; font-weight: 700; color: var(--cf-primary-navy);">{{ stats.archived_count }}</span>
+      <span style="font-size: 0.8125rem; color: var(--cf-text-muted);">preserved</span>
+    </div>
+    <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 0.35rem;">
+      Past audits &amp; inactive files
+    </div>
+  </div>
+</div>
+
+{# 3. TAB CONTROLS #}
+<div class="cf-card" style="margin-bottom: 1.5rem; overflow: visible;">
+  <div style="border-bottom: 1px solid var(--cf-border); padding: 0 1rem; display: flex; gap: 1.5rem; overflow-x: auto;">
+    <a href="?tab=vault" style="padding: 0.875rem 0.25rem; font-size: 0.875rem; font-weight: 600; text-decoration: none; color: {% if active_tab == 'vault' or not active_tab %}var(--cf-primary-navy){% else %}var(--cf-text-muted){% endif %}; border-bottom: 2px solid {% if active_tab == 'vault' or not active_tab %}var(--cf-primary-navy){% else %}transparent{% endif %}; white-space: nowrap;">
+      Document Vault ({{ stats.total_active_docs }})
+    </a>
+    <a href="?tab=requests" style="padding: 0.875rem 0.25rem; font-size: 0.875rem; font-weight: 600; text-decoration: none; color: {% if active_tab == 'requests' %}var(--cf-primary-navy){% else %}var(--cf-text-muted){% endif %}; border-bottom: 2px solid {% if active_tab == 'requests' %}var(--cf-primary-navy){% else %}transparent{% endif %}; white-space: nowrap;">
+      Client Document Requests ({% if stats.pending_requests > 0 %}<span style="color: var(--cf-danger);">{{ stats.pending_requests }}</span>{% else %}0{% endif %})
+    </a>
+    <a href="?tab=archived" style="padding: 0.875rem 0.25rem; font-size: 0.875rem; font-weight: 600; text-decoration: none; color: {% if active_tab == 'archived' %}var(--cf-primary-navy){% else %}var(--cf-text-muted){% endif %}; border-bottom: 2px solid {% if active_tab == 'archived' %}var(--cf-primary-navy){% else %}transparent{% endif %}; white-space: nowrap;">
+      Archived Documents ({{ stats.archived_count }})
+    </a>
+  </div>
+
+  {# 4. SEARCH & FILTER TOOLBAR #}
+  <div style="padding: 1rem 1.25rem; background: var(--cf-bg-subtle, #FAFAFA); border-bottom: 1px solid var(--cf-border);">
+    <form method="get" action="" style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+      <input type="hidden" name="tab" value="{{ active_tab }}">
+
+      {# Search input #}
+      <div style="flex: 1; min-width: 220px;">
+        <input type="search" name="q" value="{{ current_q }}" class="cf-input" placeholder="Search by title, client, PAN, uploader..." style="height: 36px; font-size: 0.8125rem;">
+      </div>
+
+      {# Client Filter #}
+      <div style="min-width: 170px;">
+        <select name="client" class="cf-select" style="height: 36px; font-size: 0.8125rem;">
+          <option value="ALL">All Clients</option>
+          {% for cl in clients_list %}
+            <option value="{{ cl.id }}" {% if current_client == cl.id|stringformat:"s" %}selected{% endif %}>
+              {{ cl.display_business_name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      {% if active_tab != 'requests' %}
+        {# Category Filter #}
+        <div style="min-width: 160px;">
+          <select name="category" class="cf-select" style="height: 36px; font-size: 0.8125rem;">
+            <option value="ALL">All Categories</option>
+            {% for cat_code, cat_label in categories %}
+              <option value="{{ cat_code }}" {% if current_category == cat_code %}selected{% endif %}>
+                {{ cat_label }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        {# Fiscal Year Filter #}
+        <div style="min-width: 130px;">
+          <select name="fiscal_year" class="cf-select" style="height: 36px; font-size: 0.8125rem;">
+            <option value="ALL">All Fiscal Years</option>
+            {% for fy_val, fy_lbl in fiscal_year_choices %}
+              <option value="{{ fy_val }}" {% if current_fiscal_year == fy_val %}selected{% endif %}>{{ fy_lbl }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        {# Expiry Filter #}
+        <div style="min-width: 130px;">
+          <select name="expiry" class="cf-select" style="height: 36px; font-size: 0.8125rem;">
+            <option value="ALL">Any Expiry</option>
+            <option value="expiring_soon" {% if current_expiry == 'expiring_soon' %}selected{% endif %}>Expiring Soon</option>
+            <option value="expired" {% if current_expiry == 'expired' %}selected{% endif %}>Expired</option>
+            <option value="has_expiry" {% if current_expiry == 'has_expiry' %}selected{% endif %}>Has Expiry Date</option>
+          </select>
+        </div>
+
+        {# Sort Selector #}
+        <div style="min-width: 140px;">
+          <select name="sort" class="cf-select" style="height: 36px; font-size: 0.8125rem;">
+            <option value="-created_at" {% if current_sort == '-created_at' %}selected{% endif %}>Newest First</option>
+            <option value="created_at" {% if current_sort == 'created_at' %}selected{% endif %}>Oldest First</option>
+            <option value="title" {% if current_sort == 'title' %}selected{% endif %}>Title (A-Z)</option>
+            <option value="-file_size" {% if current_sort == '-file_size' %}selected{% endif %}>Largest Size</option>
+            <option value="expiry" {% if current_sort == 'expiry' %}selected{% endif %}>Expiry Date</option>
+          </select>
+        </div>
+      {% else %}
+        {# Request Status Filter #}
+        <div style="min-width: 150px;">
+          <select name="req_status" class="cf-select" style="height: 36px; font-size: 0.8125rem;">
+            <option value="ALL">All Request Statuses</option>
+            {% for s_val, s_lbl in request_status_choices %}
+              <option value="{{ s_val }}" {% if request.GET.req_status == s_val %}selected{% endif %}>{{ s_lbl }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      {% endif %}
+
+      <button type="submit" class="cf-btn cf-btn-secondary cf-btn-sm" style="height: 36px; padding: 0 1rem;">Filter</button>
+      {% if current_q or current_category != 'ALL' or current_client != 'ALL' or current_fiscal_year != 'ALL' or current_expiry != 'ALL' or request.GET.req_status %}
+        <a href="?tab={{ active_tab }}" class="cf-btn cf-btn-ghost cf-btn-sm" style="height: 36px;">Reset</a>
+      {% endif %}
+    </form>
+  </div>
+
+  {# 5. DATA TABLES #}
+  {% if active_tab == 'requests' %}
+    {# ---------------- TAB: DOCUMENT REQUESTS ---------------- #}
+    <div class="cf-table-responsive">
+      <table class="cf-table" id="requests-table">
+        <thead>
+          <tr>
+            <th>Requested Document</th>
+            <th>Client Entity</th>
+            <th>Submission Deadline</th>
+            <th>Status</th>
+            <th>Requested By</th>
+            <th>Uploaded Document</th>
+            <th>Instructions / Notes</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for req in requests_list %}
+            <tr>
+              <td>
+                <strong style="color: var(--cf-primary-navy);">{{ req.requested_documents }}</strong>
+                <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Sent on {{ req.requested_date|date:"M d, Y" }}</div>
+              </td>
+              <td>
+                <a href="{% url 'clients:client_detail' req.client.id %}?tab=documents" style="font-weight: 600; text-decoration: none; color: var(--cf-secondary-navy);">
+                  {{ req.client.display_business_name }}
+                </a>
+                <div style="font-size: 0.6875rem; color: var(--cf-text-muted);" class="mono-font">PAN: {{ req.client.pan_number|default:'N/A' }}</div>
+              </td>
+              <td>
+                <span class="mono-font" style="font-size: 0.8125rem; {% if req.is_overdue %}color: var(--cf-danger); font-weight: 700;{% endif %}">
+                  {{ req.due_date|date:"M d, Y" }}
+                  {% if req.is_overdue %}
+                    <span class="cf-badge cf-badge-danger" style="font-size: 0.625rem; margin-left: 4px;">Overdue</span>
+                  {% endif %}
+                </span>
+              </td>
+              <td>
+                {% if req.status == 'RECEIVED' %}
+                  <span class="cf-badge cf-badge-success">Received</span>
+                {% elif req.status == 'PARTIALLY_RECEIVED' %}
+                  <span class="cf-badge cf-badge-warning">Partially Received</span>
+                {% elif req.status == 'OVERDUE' %}
+                  <span class="cf-badge cf-badge-danger">Overdue</span>
+                {% elif req.status == 'REJECTED' %}
+                  <span class="cf-badge cf-badge-danger">Rejected</span>
+                {% elif req.status == 'CANCELLED' %}
+                  <span class="cf-badge cf-badge-muted">Cancelled</span>
+                {% elif req.status == 'REMINDED' %}
+                  <span class="cf-badge cf-badge-warning">Reminded</span>
+                {% else %}
+                  <span class="cf-badge cf-badge-primary">Requested</span>
+                {% endif %}
+              </td>
+              <td>
+                <span style="font-size: 0.8125rem;">{{ req.requested_by.get_full_name|default:'Practice Staff' }}</span>
+              </td>
+              <td>
+                {% if req.uploaded_document %}
+                  <div style="display: flex; align-items: center; gap: 0.35rem;">
+                    <a href="{% url 'documents:document_download' req.uploaded_document.id %}" class="cf-btn cf-btn-ghost cf-btn-sm" style="font-size: 0.75rem;">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                      <span>{{ req.uploaded_document.title|truncatechars:18 }}</span>
+                    </a>
+                  </div>
+                {% else %}
+                  <span style="font-size: 0.75rem; color: var(--cf-text-muted);">Awaiting submission</span>
+                {% endif %}
+              </td>
+              <td style="font-size: 0.75rem; color: var(--cf-text-secondary); max-width: 200px;">
+                {{ req.notes|default:'None' }}
+              </td>
+              <td style="text-align: right;">
+                <div style="display: flex; gap: 0.25rem; justify-content: flex-end;">
+                  {% if req.status != 'RECEIVED' %}
+                    <form method="post" action="{% url 'documents:request_update_status' req.id %}" style="display: inline;">
+                      {% csrf_token %}
+                      <input type="hidden" name="status" value="RECEIVED">
+                      <button type="submit" class="cf-btn cf-btn-ghost cf-btn-sm" title="Mark as Received" style="font-size: 0.75rem; color: var(--cf-success);">
+                        Mark Received
+                      </button>
+                    </form>
+                  {% endif %}
+                  <form method="post" action="{% url 'documents:request_delete' req.id %}" onsubmit="return confirm('Delete this document request?');" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="cf-btn cf-btn-ghost cf-btn-sm" style="font-size: 0.75rem; color: var(--cf-danger);">
+                      Delete
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="8" style="text-align: center; padding: 3rem 1.5rem;">
+                <p style="color: var(--cf-text-muted); font-size: 0.9375rem; margin-bottom: 0.75rem;">No document requests found matching the criteria.</p>
+                <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" data-cf-modal-trigger="cf-request-doc-modal">Create Document Request</button>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
 
-    <input type="search" class="cf-input" placeholder="Search files..." style="height: 36px; width: 220px; font-size: 0.8125rem;" onkeyup="CAFlow.filterTable('docs-table', this.value)">
-  </div>
+  {% else %}
+    {# ---------------- TAB: DOCUMENT VAULT / ARCHIVED ---------------- #}
+    <div class="cf-table-responsive">
+      <table class="cf-table" id="docs-table">
+        <thead>
+          <tr>
+            <th>Document Title</th>
+            <th>Client Entity</th>
+            <th>Category</th>
+            <th>Fiscal Year</th>
+            <th>Uploaded By</th>
+            <th>Size</th>
+            <th>Date Added</th>
+            <th>Expiry Date</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for doc in documents %}
+            <tr>
+              <td>
+                <div style="display: flex; align-items: center; gap: 0.625rem;">
+                  <div style="width: 32px; height: 32px; border-radius: 4px; background: rgba(11,31,51,0.08); color: var(--cf-primary-navy); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.6875rem;">
+                    {{ doc.file_extension|upper|default:'FILE' }}
+                  </div>
+                  <div>
+                    <strong style="color: var(--cf-primary-navy); font-size: 0.875rem;">{{ doc.title }}</strong>
+                    {% if doc.description %}
+                      <div style="font-size: 0.75rem; color: var(--cf-text-muted); max-width: 280px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                        {{ doc.description }}
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              </td>
+              <td>
+                <a href="{% url 'clients:client_detail' doc.client.id %}?tab=documents" style="font-weight: 600; text-decoration: none; color: var(--cf-secondary-navy);">
+                  {{ doc.client.display_business_name }}
+                </a>
+                <div style="font-size: 0.6875rem; color: var(--cf-text-muted);" class="mono-font">PAN: {{ doc.client.pan_number|default:'N/A' }}</div>
+              </td>
+              <td>
+                <span class="cf-badge cf-badge-secondary" style="font-size: 0.6875rem;">
+                  {{ doc.get_category_display }}
+                </span>
+              </td>
+              <td class="mono-font" style="font-size: 0.8125rem;">{{ doc.fiscal_year }}</td>
+              <td>
+                <span style="font-size: 0.8125rem;">{{ doc.uploaded_by.get_full_name|default:'Practice Staff' }}</span>
+              </td>
+              <td class="mono-font" style="font-size: 0.75rem; color: var(--cf-text-muted);">
+                {{ doc.file_size_bytes|filesizeformat }}
+              </td>
+              <td style="font-size: 0.8125rem;">{{ doc.created_at|date:"M d, Y" }}</td>
+              <td>
+                {% if doc.expiry_date %}
+                  <span class="mono-font" style="font-size: 0.75rem; {% if doc.is_expired %}color: var(--cf-danger); font-weight: 700;{% elif doc.is_expiring_soon %}color: var(--cf-warning); font-weight: 700;{% endif %}">
+                    {{ doc.expiry_date|date:"M d, Y" }}
+                  </span>
+                  {% if doc.is_expired %}
+                    <span class="cf-badge cf-badge-danger" style="font-size: 0.5625rem; margin-left: 2px;">Expired</span>
+                  {% elif doc.is_expiring_soon %}
+                    <span class="cf-badge cf-badge-warning" style="font-size: 0.5625rem; margin-left: 2px;">Expiring Soon</span>
+                  {% endif %}
+                {% else %}
+                  <span style="color: var(--cf-text-muted); font-size: 0.75rem;">&mdash;</span>
+                {% endif %}
+              </td>
+              <td style="text-align: right;">
+                <div style="display: flex; gap: 0.35rem; justify-content: flex-end; align-items: center;">
+                  {% if doc.can_preview %}
+                    <a href="{% url 'documents:document_preview' doc.id %}" target="_blank" class="cf-btn cf-btn-ghost cf-btn-sm" title="Preview document in browser" style="font-size: 0.75rem; padding: 4px 8px;">
+                      Preview
+                    </a>
+                  {% endif %}
 
-  <div class="cf-table-responsive">
-    <table class="cf-table" id="docs-table">
-      <thead>
-        <tr>
-          <th>Document Title</th>
-          <th>Client</th>
-          <th>Category</th>
-          <th>Fiscal Year</th>
-          <th>Uploaded By</th>
-          <th style="text-align: right;">Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>
-            <strong style="color: var(--cf-primary-navy);">Signed Independent Auditor's Report FY 2080/81.pdf</strong>
-            <div style="font-size: 0.75rem; color: var(--cf-text-muted);">PDF &bull; 3.8 MB</div>
-          </td>
-          <td>Apex Hydropower Ltd</td>
-          <td><span class="cf-badge cf-badge-primary">Audit Report</span></td>
-          <td><span class="mono-font" style="font-size: 0.8125rem;">2080/81</span></td>
-          <td>CA. Suyog Dhakal</td>
-          <td style="text-align: right;">
-            <button class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('Downloading encrypted PDF', 'success')">Download</button>
-          </td>
-        </tr>
+                  <a href="{% url 'documents:document_download' doc.id %}" class="cf-btn cf-btn-ghost cf-btn-sm" title="Secure Download" style="font-size: 0.75rem; padding: 4px 8px;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <span>Download</span>
+                  </a>
 
-        <tr>
-          <td>
-            <strong style="color: var(--cf-primary-navy);">Bhadra Month VAT Sales &amp; Purchase Register.xlsx</strong>
-            <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Excel Workbook &bull; 1.2 MB</div>
-          </td>
-          <td>Himalayan Traders Pvt Ltd</td>
-          <td><span class="cf-badge cf-badge-secondary">VAT Books</span></td>
-          <td><span class="mono-font" style="font-size: 0.8125rem;">2081/82</span></td>
-          <td>Bikash Karki</td>
-          <td style="text-align: right;">
-            <button class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('Downloading spreadsheet', 'success')">Download</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+                  {# Edit Modal Trigger #}
+                  <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" style="font-size: 0.75rem; padding: 4px 8px;" onclick="openEditDocModal('{{ doc.id }}', '{{ doc.title|escapejs }}', '{{ doc.category }}', '{{ doc.fiscal_year }}', '{{ doc.expiry_date|default:'' }}', '{{ doc.description|escapejs }}', '{{ doc.status }}')">
+                    Edit
+                  </button>
+
+                  {# Archive / Restore #}
+                  <form method="post" action="{% url 'documents:document_archive' doc.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="cf-btn cf-btn-ghost cf-btn-sm" style="font-size: 0.75rem; padding: 4px 8px; color: {% if doc.status == 'ARCHIVED' %}var(--cf-success){% else %}var(--cf-text-muted){% endif %};">
+                      {% if doc.status == 'ARCHIVED' %}Restore{% else %}Archive{% endif %}
+                    </button>
+                  </form>
+
+                  {# Delete #}
+                  <form method="post" action="{% url 'documents:document_delete' doc.id %}" onsubmit="return confirm('Permanently delete {{ doc.title|escapejs }}? This action is irreversible.');" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="cf-btn cf-btn-ghost cf-btn-sm" style="font-size: 0.75rem; padding: 4px 8px; color: var(--cf-danger);">
+                      Delete
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="9" style="text-align: center; padding: 3rem 1.5rem;">
+                <p style="color: var(--cf-text-muted); font-size: 0.9375rem; margin-bottom: 0.75rem;">
+                  No documents found in this repository view.
+                </p>
+                <button type="button" class="cf-btn cf-btn-primary cf-btn-sm" data-cf-modal-trigger="cf-upload-doc-modal">
+                  Upload First Document
+                </button>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {# 6. PAGINATION #}
+    {% if is_paginated and page_obj.has_other_pages %}
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-top: 1px solid var(--cf-border); flex-wrap: wrap; gap: 0.75rem;">
+        <div style="font-size: 0.8125rem; color: var(--cf-text-muted);">
+          Showing <strong>{{ page_obj.start_index }}</strong> &ndash; <strong>{{ page_obj.end_index }}</strong> of <strong>{{ paginator.count }}</strong> documents
+        </div>
+
+        <ul class="cf-pagination">
+          {% if page_obj.has_previous %}
+            <li>
+              <a href="?page={{ page_obj.previous_page_number }}&tab={{ active_tab }}&q={{ current_q|urlencode }}&category={{ current_category|urlencode }}&client={{ current_client|urlencode }}&fiscal_year={{ current_fiscal_year|urlencode }}&expiry={{ current_expiry|urlencode }}&sort={{ current_sort|urlencode }}" class="cf-btn cf-btn-outline cf-btn-sm">&larr; Previous</a>
+            </li>
+          {% endif %}
+
+          <li style="margin: 0 8px; font-size: 0.8125rem; color: var(--cf-text-primary); font-weight: 600;">
+            Page {{ page_obj.number }} of {{ paginator.num_pages }}
+          </li>
+
+          {% if page_obj.has_next %}
+            <li>
+              <a href="?page={{ page_obj.next_page_number }}&tab={{ active_tab }}&q={{ current_q|urlencode }}&category={{ current_category|urlencode }}&client={{ current_client|urlencode }}&fiscal_year={{ current_fiscal_year|urlencode }}&expiry={{ current_expiry|urlencode }}&sort={{ current_sort|urlencode }}" class="cf-btn cf-btn-outline cf-btn-sm">Next &rarr;</a>
+            </li>
+          {% endif %}
+        </ul>
+      </div>
+    {% endif %}
+  {% endif %}
+</div>
+
+{# ======================================================== #}
+{# MODAL 1: UPLOAD DOCUMENT                                 #}
+{# ======================================================== #}
+<div class="cf-modal-backdrop" id="cf-upload-doc-modal" role="dialog" aria-modal="true" aria-labelledby="cf-upload-title">
+  <div class="cf-modal-dialog" style="max-width: 540px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title" id="cf-upload-title">Upload Repository Document</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close dialog">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form method="post" action="{% url 'documents:document_upload' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="cf-modal-body">
+        <div style="margin-bottom: 1rem;">
+          <label class="cf-label" for="{{ upload_form.client.id_for_label }}">Client Entity *</label>
+          {{ upload_form.client }}
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <label class="cf-label" for="{{ upload_form.title.id_for_label }}">Document Title *</label>
+          {{ upload_form.title }}
+        </div>
+
+        <div class="row g-3" style="margin-bottom: 1rem;">
+          <div class="col-sm-6">
+            <label class="cf-label" for="{{ upload_form.category.id_for_label }}">Category *</label>
+            {{ upload_form.category }}
+          </div>
+          <div class="col-sm-6">
+            <label class="cf-label" for="{{ upload_form.fiscal_year.id_for_label }}">Fiscal Year *</label>
+            {{ upload_form.fiscal_year }}
+          </div>
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <label class="cf-label" for="{{ upload_form.expiry_date.id_for_label }}">Expiry Date (Optional)</label>
+          {{ upload_form.expiry_date }}
+          <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 3px;">Applicable for tax clearance, company registration, or expiring agreements.</div>
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <label class="cf-label" for="{{ upload_form.description.id_for_label }}">Description / Internal Notes</label>
+          {{ upload_form.description }}
+        </div>
+
+        <div>
+          <label class="cf-label" for="{{ upload_form.file.id_for_label }}">Select File (PDF, XLSX, DOCX, Images, ZIP &bull; Max 25 MB) *</label>
+          {{ upload_form.file }}
+        </div>
+      </div>
+
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Upload Document</button>
+      </div>
+    </form>
   </div>
 </div>
+
+{# ======================================================== #}
+{# MODAL 2: REQUEST DOCUMENTS FROM CLIENT                   #}
+{# ======================================================== #}
+<div class="cf-modal-backdrop" id="cf-request-doc-modal" role="dialog" aria-modal="true" aria-labelledby="cf-req-title">
+  <div class="cf-modal-dialog" style="max-width: 540px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title" id="cf-req-title">Request Documents from Client</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close dialog">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form method="post" action="{% url 'documents:request_create' %}">
+      {% csrf_token %}
+      <div class="cf-modal-body">
+        <div style="margin-bottom: 1rem;">
+          <label class="cf-label" for="{{ request_form.client.id_for_label }}">Client Entity *</label>
+          {{ request_form.client }}
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <label class="cf-label" for="{{ request_form.requested_documents.id_for_label }}">Requested Documents / Schedules *</label>
+          {{ request_form.requested_documents }}
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <label class="cf-label" for="{{ request_form.due_date.id_for_label }}">Submission Deadline *</label>
+          {{ request_form.due_date }}
+        </div>
+
+        <div>
+          <label class="cf-label" for="{{ request_form.notes.id_for_label }}">Instructions / Client Notice</label>
+          {{ request_form.notes }}
+        </div>
+      </div>
+
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Send Document Request</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# ======================================================== #}
+{# MODAL 3: EDIT / RENAME DOCUMENT METADATA                 #}
+{# ======================================================== #}
+<div class="cf-modal-backdrop" id="cf-edit-doc-modal" role="dialog" aria-modal="true" aria-labelledby="cf-edit-title">
+  <div class="cf-modal-dialog" style="max-width: 520px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title" id="cf-edit-title">Edit Document Details</h3>
+      <button type="button" class="cf-modal-close-btn" data-cf-modal-close aria-label="Close dialog">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form id="edit-doc-form" method="post" action="">
+      {% csrf_token %}
+      <div class="cf-modal-body">
+        <div style="margin-bottom: 1rem;">
+          <label class="cf-label" for="edit-title-input">Document Title *</label>
+          <input type="text" id="edit-title-input" name="title" class="cf-input" required>
+        </div>
+
+        <div class="row g-3" style="margin-bottom: 1rem;">
+          <div class="col-sm-6">
+            <label class="cf-label" for="edit-category-input">Category *</label>
+            <select id="edit-category-input" name="category" class="cf-select">
+              {% for cat_val, cat_lbl in categories %}
+                <option value="{{ cat_val }}">{{ cat_lbl }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-sm-6">
+            <label class="cf-label" for="edit-fy-input">Fiscal Year *</label>
+            <select id="edit-fy-input" name="fiscal_year" class="cf-select">
+              {% for fy_val, fy_lbl in fiscal_year_choices %}
+                <option value="{{ fy_val }}">{{ fy_lbl }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="row g-3" style="margin-bottom: 1rem;">
+          <div class="col-sm-6">
+            <label class="cf-label" for="edit-status-input">Status</label>
+            <select id="edit-status-input" name="status" class="cf-select">
+              <option value="ACTIVE">Active</option>
+              <option value="ARCHIVED">Archived</option>
+            </select>
+          </div>
+          <div class="col-sm-6">
+            <label class="cf-label" for="edit-expiry-input">Expiry Date</label>
+            <input type="date" id="edit-expiry-input" name="expiry_date" class="cf-input">
+          </div>
+        </div>
+
+        <div>
+          <label class="cf-label" for="edit-desc-input">Description / Notes</label>
+          <textarea id="edit-desc-input" name="description" class="cf-input" rows="2"></textarea>
+        </div>
+      </div>
+
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" data-cf-modal-close>Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openEditDocModal(docId, title, category, fiscalYear, expiryDate, description, status) {
+  const form = document.getElementById('edit-doc-form');
+  form.action = `/documents/${docId}/edit/`;
+  document.getElementById('edit-title-input').value = title;
+  document.getElementById('edit-category-input').value = category;
+  document.getElementById('edit-fy-input').value = fiscalYear;
+  document.getElementById('edit-status-input').value = status;
+  document.getElementById('edit-expiry-input').value = expiryDate;
+  document.getElementById('edit-desc-input').value = description;
+
+  const modal = document.getElementById('cf-edit-doc-modal');
+  if (modal) {
+    modal.classList.add('active');
+  }
+}
+</script>
 {% endblock %}

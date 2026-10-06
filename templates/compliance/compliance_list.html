@@ -1,87 +1,810 @@
 {% extends "layouts/app.html" %}
 {% load static %}
 
-{% block title %}Nepal Statutory Compliance Calendar &mdash; {{ APP_NAME }}{% endblock %}
+{% block title %}Statutory Compliance Calendar &mdash; {{ APP_NAME }}{% endblock %}
 
 {% block app_content %}
 {% include "components/breadcrumbs.html" with items=breadcrumbs %}
 
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+<!-- PAGE HEADER -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
   <div>
-    <h1>Nepal Statutory Compliance Calendar</h1>
-    <p style="font-size: 0.875rem; color: var(--cf-text-muted);">
-      Inland Revenue Department (IRD), Office of Company Registrar (OCR), and ICAN statutory timelines.
+    <h1 style="margin: 0; font-size: 1.75rem; font-weight: 700; color: var(--cf-primary-navy);">
+      Nepal Statutory Compliance Calendar
+    </h1>
+    <p style="font-size: 0.875rem; color: var(--cf-text-muted); margin-top: 4px; margin-bottom: 0;">
+      Inland Revenue Department (IRD), Office of Company Registrar (OCR), ICAN, and SSF statutory management.
     </p>
   </div>
 
-  <button type="button" class="cf-btn cf-btn-primary" onclick="CAFlow.toast('New compliance tracking deadline created', 'success')">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    <span>Add Filing Deadline</span>
-  </button>
-</div>
+  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+    <form method="post" action="{% url 'compliance:check_overdue' %}" style="display: inline;">
+      {% csrf_token %}
+      <button type="submit" class="cf-btn cf-btn-outline" title="Scan and flag overdue items">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        <span>Auto-Scan Overdue</span>
+      </button>
+    </form>
 
-<div class="cf-alert cf-alert-warning" style="margin-bottom: 1.5rem;">
-  <div>
-    <strong>Upcoming Statutory Notice:</strong> Monthly VAT returns for Bhadra 2081 must be uploaded on the IRD portal by <strong>25th Ashoj 2081</strong> to prevent Section 19 penalty surcharges.
+    <a href="{% url 'compliance:compliance_types' %}" class="cf-btn cf-btn-secondary">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Configurable Types</span>
+    </a>
+
+    <button type="button" class="cf-btn cf-btn-primary" onclick="openCreateModal()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>Add Filing Deadline</span>
+    </button>
   </div>
 </div>
 
+<!-- STATUTORY ADVISORY ALERT -->
+<div class="cf-alert cf-alert-warning" style="margin-bottom: 1.5rem; display: flex; align-items: flex-start; gap: 0.75rem;">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  <div style="font-size: 0.8125rem;">
+    <strong>Statutory Notice &bull; Nepal Acts Compliance:</strong>
+    Monthly VAT returns (Annex 5, 6, 7) must be filed by the <strong>25th of every Bikram Sambat month</strong>. Advance income tax installments (Sec 94) are due end of Poush (40%), Chaitra (70%), and Ashad (100%). Unfiled returns incur automatic late surcharges under Section 19 of VAT Act 2052.
+  </div>
+</div>
+
+<!-- DASHBOARD METRIC STAT CARDS (DUE TODAY, DUE THIS WEEK, OVERDUE, WAITING FOR CLIENT, AWAITING REVIEW, COMPLETED) -->
+<div class="row g-3" style="margin-bottom: 1.5rem;">
+  <!-- Due Today -->
+  <div class="col-6 col-md-4 col-lg-2">
+    <a href="?scope=due_today" style="text-decoration: none;">
+      <div class="cf-card" style="padding: 1rem; border-left: 4px solid var(--cf-danger); cursor: pointer; transition: transform 0.15s; {% if selected_scope == 'due_today' %}box-shadow: 0 0 0 2px var(--cf-danger);{% endif %}">
+        <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--cf-danger);">Due Today</div>
+        <div style="font-size: 1.5rem; font-weight: 800; color: var(--cf-primary-navy); margin-top: 4px;">{{ dashboard_metrics.due_today }}</div>
+        <div style="font-size: 0.6875rem; color: var(--cf-text-muted); margin-top: 2px;">{{ today_str }}</div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Due This Week -->
+  <div class="col-6 col-md-4 col-lg-2">
+    <a href="?scope=due_this_week" style="text-decoration: none;">
+      <div class="cf-card" style="padding: 1rem; border-left: 4px solid var(--cf-warning); cursor: pointer; transition: transform 0.15s; {% if selected_scope == 'due_this_week' %}box-shadow: 0 0 0 2px var(--cf-warning);{% endif %}">
+        <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--cf-warning);">Due This Week</div>
+        <div style="font-size: 1.5rem; font-weight: 800; color: var(--cf-primary-navy); margin-top: 4px;">{{ dashboard_metrics.due_this_week }}</div>
+        <div style="font-size: 0.6875rem; color: var(--cf-text-muted); margin-top: 2px;">Next 7 Days</div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Overdue -->
+  <div class="col-6 col-md-4 col-lg-2">
+    <a href="?scope=overdue" style="text-decoration: none;">
+      <div class="cf-card" style="padding: 1rem; border-left: 4px solid #991B1B; cursor: pointer; transition: transform 0.15s; {% if selected_scope == 'overdue' %}box-shadow: 0 0 0 2px #991B1B;{% endif %}">
+        <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: #991B1B;">Overdue</div>
+        <div style="font-size: 1.5rem; font-weight: 800; color: #991B1B; margin-top: 4px;">{{ dashboard_metrics.overdue }}</div>
+        <div style="font-size: 0.6875rem; color: var(--cf-text-muted); margin-top: 2px;">Penalty Risk</div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Waiting for Client -->
+  <div class="col-6 col-md-4 col-lg-2">
+    <a href="?scope=waiting_for_client" style="text-decoration: none;">
+      <div class="cf-card" style="padding: 1rem; border-left: 4px solid var(--cf-secondary-navy); cursor: pointer; transition: transform 0.15s; {% if selected_scope == 'waiting_for_client' %}box-shadow: 0 0 0 2px var(--cf-secondary-navy);{% endif %}">
+        <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--cf-secondary-navy);">Waiting Client</div>
+        <div style="font-size: 1.5rem; font-weight: 800; color: var(--cf-primary-navy); margin-top: 4px;">{{ dashboard_metrics.waiting_for_client }}</div>
+        <div style="font-size: 0.6875rem; color: var(--cf-text-muted); margin-top: 2px;">Awaiting Books/OTP</div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Awaiting Review -->
+  <div class="col-6 col-md-4 col-lg-2">
+    <a href="?scope=awaiting_review" style="text-decoration: none;">
+      <div class="cf-card" style="padding: 1rem; border-left: 4px solid #D97706; cursor: pointer; transition: transform 0.15s; {% if selected_scope == 'awaiting_review' %}box-shadow: 0 0 0 2px #D97706;{% endif %}">
+        <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: #D97706;">Ready for Review</div>
+        <div style="font-size: 1.5rem; font-weight: 800; color: var(--cf-primary-navy); margin-top: 4px;">{{ dashboard_metrics.awaiting_review }}</div>
+        <div style="font-size: 0.6875rem; color: var(--cf-text-muted); margin-top: 2px;">Manager / CA Review</div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Completed -->
+  <div class="col-6 col-md-4 col-lg-2">
+    <a href="?scope=completed" style="text-decoration: none;">
+      <div class="cf-card" style="padding: 1rem; border-left: 4px solid var(--cf-success); cursor: pointer; transition: transform 0.15s; {% if selected_scope == 'completed' %}box-shadow: 0 0 0 2px var(--cf-success);{% endif %}">
+        <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--cf-success);">Completed</div>
+        <div style="font-size: 1.5rem; font-weight: 800; color: var(--cf-primary-navy); margin-top: 4px;">{{ dashboard_metrics.completed }}</div>
+        <div style="font-size: 0.6875rem; color: var(--cf-text-muted); margin-top: 2px;">Filed &amp; Signed Off</div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<!-- COMPLIANCE TABLE & TOOLBAR -->
 <div class="cf-table-container">
-  <div class="cf-table-toolbar">
-    <div style="display: flex; gap: 0.5rem;">
-      <button class="cf-btn cf-btn-secondary cf-btn-sm">Current Month (Ashoj 2081)</button>
-      <button class="cf-btn cf-btn-outline cf-btn-sm">Upcoming Quarter</button>
-      <button class="cf-btn cf-btn-outline cf-btn-sm">Annual Returns</button>
+  <!-- FILTER TOOLBAR -->
+  <div class="cf-table-toolbar" style="flex-wrap: wrap; gap: 0.75rem; padding: 1rem;">
+    <!-- Scope Tabs -->
+    <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+      <a href="?scope=all" class="cf-btn {% if not selected_scope or selected_scope == 'all' %}cf-btn-secondary{% else %}cf-btn-outline{% endif %} cf-btn-sm">All Items</a>
+      <a href="?scope=due_today" class="cf-btn {% if selected_scope == 'due_today' %}cf-btn-secondary{% else %}cf-btn-outline{% endif %} cf-btn-sm">Due Today</a>
+      <a href="?scope=due_this_week" class="cf-btn {% if selected_scope == 'due_this_week' %}cf-btn-secondary{% else %}cf-btn-outline{% endif %} cf-btn-sm">Due This Week</a>
+      <a href="?scope=overdue" class="cf-btn {% if selected_scope == 'overdue' %}cf-btn-secondary{% else %}cf-btn-outline{% endif %} cf-btn-sm">Overdue</a>
+      <a href="?scope=waiting_for_client" class="cf-btn {% if selected_scope == 'waiting_for_client' %}cf-btn-secondary{% else %}cf-btn-outline{% endif %} cf-btn-sm">Waiting Client</a>
+      <a href="?scope=awaiting_review" class="cf-btn {% if selected_scope == 'awaiting_review' %}cf-btn-secondary{% else %}cf-btn-outline{% endif %} cf-btn-sm">Awaiting Review</a>
+      <a href="?scope=completed" class="cf-btn {% if selected_scope == 'completed' %}cf-btn-secondary{% else %}cf-btn-outline{% endif %} cf-btn-sm">Completed</a>
     </div>
 
-    <input type="search" class="cf-input" placeholder="Search filings..." style="height: 36px; width: 220px; font-size: 0.8125rem;" onkeyup="CAFlow.filterTable('compliance-table', this.value)">
+    <!-- Filter Form -->
+    <form method="get" id="compliance-filter-form" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-left: auto;">
+      {% if selected_scope and selected_scope != 'all' %}
+        <input type="hidden" name="scope" value="{{ selected_scope }}">
+      {% endif %}
+
+      <!-- Status dropdown -->
+      <select name="status" class="cf-select" style="height: 36px; font-size: 0.8125rem; width: 140px;" onchange="this.form.submit()">
+        <option value="ALL">All Statuses</option>
+        {% for st_val, st_lbl in status_choices %}
+          <option value="{{ st_val }}" {% if selected_status == st_val %}selected{% endif %}>{{ st_lbl }}</option>
+        {% endfor %}
+      </select>
+
+      <!-- Act / Category dropdown -->
+      <select name="act" class="cf-select" style="height: 36px; font-size: 0.8125rem; width: 150px;" onchange="this.form.submit()">
+        <option value="ALL">All Acts</option>
+        {% for act_val, act_lbl in act_choices %}
+          <option value="{{ act_val }}" {% if selected_act == act_val %}selected{% endif %}>{{ act_lbl|truncatechars:20 }}</option>
+        {% endfor %}
+      </select>
+
+      <!-- Client dropdown -->
+      <select name="client" class="cf-select" style="height: 36px; font-size: 0.8125rem; width: 160px;" onchange="this.form.submit()">
+        <option value="">All Clients</option>
+        {% for cl in clients_list %}
+          <option value="{{ cl.id }}" {% if selected_client == cl.id|stringformat:"s" %}selected{% endif %}>{{ cl.display_business_name|truncatechars:22 }}</option>
+        {% endfor %}
+      </select>
+
+      <!-- Search Box -->
+      <input type="search" name="q" class="cf-input" value="{{ search_query }}" placeholder="Search filings, PAN, token..." style="height: 36px; width: 190px; font-size: 0.8125rem;">
+      <button type="submit" class="cf-btn cf-btn-secondary cf-btn-sm" style="height: 36px;">Search</button>
+      {% if search_query or selected_status != 'ALL' or selected_act != 'ALL' or selected_client or selected_scope != 'all' %}
+        <a href="{% url 'compliance:compliance_list' %}" class="cf-btn cf-btn-outline cf-btn-sm" style="height: 36px; display: flex; align-items: center;" title="Clear filters">Clear</a>
+      {% endif %}
+    </form>
   </div>
 
+  <!-- TABLE -->
   <div class="cf-table-responsive">
     <table class="cf-table" id="compliance-table">
       <thead>
         <tr>
-          <th>Statutory Filing</th>
-          <th>Governing Act / Authority</th>
-          <th>BS Due Date</th>
-          <th>AD Equivalent</th>
-          <th>Pending Clients</th>
-          <th>Status</th>
+          <th>Statutory Filing &bull; Period</th>
+          <th>Client Entity &bull; PAN</th>
+          <th>Governing Act</th>
+          <th>Due Date (BS &bull; AD)</th>
+          <th>Assigned / Reviewer</th>
+          <th>Workflow Stage &bull; Status</th>
+          <th>Priority</th>
           <th style="text-align: right;">Action</th>
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td>
-            <strong style="color: var(--cf-primary-navy);">Monthly VAT Return (Bhadra 2081)</strong>
-            <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Annex 5, 6, 7 &amp; Payment Challan</div>
-          </td>
-          <td>VAT Act, 2052 (Section 17)</td>
-          <td><span class="mono-font" style="font-weight: 700; color: var(--cf-danger);">2081-06-25</span></td>
-          <td><span class="mono-font" style="font-size: 0.8125rem;">2024-10-11</span></td>
-          <td>5 Clients Pending</td>
-          <td><span class="cf-badge cf-badge-danger" dot="True">3 Days Left</span></td>
-          <td style="text-align: right;">
-            <button class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('Bulk reminder queued', 'info')">Remind Clients</button>
-          </td>
-        </tr>
+        {% for deadline in deadlines %}
+          <tr>
+            <!-- Filing & Period -->
+            <td>
+              <a href="javascript:void(0)" onclick="openDetailModal('{{ deadline.id }}')" style="font-weight: 700; color: var(--cf-primary-navy); text-decoration: none; font-size: 0.875rem;">
+                {{ deadline.title }}
+              </a>
+              <div style="font-size: 0.75rem; color: var(--cf-text-muted); margin-top: 2px;">
+                {% if deadline.period %}Period: <strong>{{ deadline.period }}</strong> &bull; {% endif %}
+                {% if deadline.filing_reference_number %}
+                  <span class="mono-font" style="color: var(--cf-success);">Ref: {{ deadline.filing_reference_number }}</span>
+                {% else %}
+                  {{ deadline.compliance_type.name|default:'Standard Act Filing' }}
+                {% endif %}
+              </div>
+            </td>
 
-        <tr>
-          <td>
-            <strong style="color: var(--cf-primary-navy);">1st Advance Tax Installment (40%)</strong>
-            <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Income Tax Act Section 94 projection</div>
-          </td>
-          <td>Income Tax Act, 2058</td>
-          <td><span class="mono-font" style="font-weight: 700;">2081-09-30 (Poush End)</span></td>
-          <td><span class="mono-font" style="font-size: 0.8125rem;">2025-01-14</span></td>
-          <td>28 Clients</td>
-          <td><span class="cf-badge cf-badge-warning" dot="True">In Preparation</span></td>
-          <td style="text-align: right;">
-            <button class="cf-btn cf-btn-ghost cf-btn-sm" onclick="CAFlow.toast('Opening advance tax worksheet', 'info')">Estimate</button>
-          </td>
-        </tr>
+            <!-- Client Entity -->
+            <td>
+              {% if deadline.client %}
+                <a href="{% url 'clients:client_detail' deadline.client.id %}#compliance" style="font-weight: 600; color: var(--cf-secondary-navy); text-decoration: none; font-size: 0.8125rem;">
+                  {{ deadline.client.display_business_name }}
+                </a>
+                <div class="mono-font" style="font-size: 0.6875rem; color: var(--cf-text-muted);">
+                  PAN: {{ deadline.client.pan_number|default:'N/A' }}
+                </div>
+              {% else %}
+                <span class="cf-badge cf-badge-secondary" style="font-size: 0.6875rem;">General Practice Filing</span>
+              {% endif %}
+            </td>
+
+            <!-- Governing Act -->
+            <td>
+              <span class="cf-badge cf-badge-secondary" style="font-size: 0.6875rem;">
+                {{ deadline.get_governing_act_display }}
+              </span>
+            </td>
+
+            <!-- Due Date (BS & AD) -->
+            <td>
+              <div class="mono-font" style="font-weight: 700; {% if deadline.is_overdue or deadline.status == 'OVERDUE' %}color: var(--cf-danger);{% else %}color: #B58A3A;{% endif %}">
+                BS {{ deadline.due_date_bs }}
+              </div>
+              <div class="mono-font" style="font-size: 0.75rem; color: var(--cf-text-secondary); margin-top: 2px;">
+                AD {{ deadline.due_date_ad|date:"M d, Y" }}
+                {% if deadline.days_remaining < 0 %}
+                  <span class="cf-badge cf-badge-danger" style="font-size: 0.625rem; padding: 1px 4px;">Overdue ({{ deadline.days_remaining }}d)</span>
+                {% elif deadline.days_remaining == 0 %}
+                  <span class="cf-badge cf-badge-danger" style="font-size: 0.625rem; padding: 1px 4px;">Today</span>
+                {% elif deadline.days_remaining <= 3 %}
+                  <span class="cf-badge cf-badge-warning" style="font-size: 0.625rem; padding: 1px 4px;">{{ deadline.days_remaining }}d left</span>
+                {% endif %}
+              </div>
+            </td>
+
+            <!-- Assigned Staff & Reviewer -->
+            <td style="font-size: 0.8125rem;">
+              <div>Staff: <strong>{{ deadline.assigned_to.get_full_name|default:'Unassigned' }}</strong></div>
+              {% if deadline.reviewer %}
+                <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Rev: {{ deadline.reviewer.get_full_name }}</div>
+              {% endif %}
+            </td>
+
+            <!-- Workflow Stage & Status -->
+            <td>
+              <span class="cf-badge {% if deadline.status == 'COMPLETED' or deadline.status == 'FILED' %}cf-badge-success{% elif deadline.status == 'OVERDUE' or deadline.is_overdue %}cf-badge-danger{% elif deadline.status == 'READY_FOR_REVIEW' or deadline.status == 'WAITING_FOR_CLIENT' %}cf-badge-warning{% elif deadline.status == 'IN_PROGRESS' %}cf-badge-primary{% else %}cf-badge-secondary{% endif %}" style="font-size: 0.75rem;">
+                {{ deadline.get_status_display }}
+              </span>
+
+              <!-- Pipeline mini indicator: Stage 1 to 6 -->
+              <div style="display: flex; gap: 2px; margin-top: 4px; width: 90px;" title="Pipeline Stage: {{ deadline.workflow_stage_index }}/6">
+                <div style="height: 3px; flex: 1; border-radius: 1px; background: {% if deadline.workflow_stage_index >= 1 %}var(--cf-primary-navy){% else %}var(--cf-border){% endif %};"></div>
+                <div style="height: 3px; flex: 1; border-radius: 1px; background: {% if deadline.workflow_stage_index >= 2 %}var(--cf-primary-navy){% else %}var(--cf-border){% endif %};"></div>
+                <div style="height: 3px; flex: 1; border-radius: 1px; background: {% if deadline.workflow_stage_index >= 3 %}var(--cf-primary-navy){% else %}var(--cf-border){% endif %};"></div>
+                <div style="height: 3px; flex: 1; border-radius: 1px; background: {% if deadline.workflow_stage_index >= 4 %}var(--cf-primary-navy){% else %}var(--cf-border){% endif %};"></div>
+                <div style="height: 3px; flex: 1; border-radius: 1px; background: {% if deadline.workflow_stage_index >= 5 %}var(--cf-success){% else %}var(--cf-border){% endif %};"></div>
+                <div style="height: 3px; flex: 1; border-radius: 1px; background: {% if deadline.workflow_stage_index >= 6 %}var(--cf-success){% else %}var(--cf-border){% endif %};"></div>
+              </div>
+            </td>
+
+            <!-- Priority -->
+            <td>
+              <span class="cf-badge {% if deadline.priority == 'URGENT' %}cf-badge-danger{% elif deadline.priority == 'HIGH' %}cf-badge-warning{% elif deadline.priority == 'MEDIUM' %}cf-badge-primary{% else %}cf-badge-secondary{% endif %}" style="font-size: 0.6875rem;">
+                {{ deadline.get_priority_display }}
+              </span>
+            </td>
+
+            <!-- Actions -->
+            <td style="text-align: right;">
+              <div style="display: flex; justify-content: flex-end; gap: 0.35rem;">
+                <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" onclick="openDetailModal('{{ deadline.id }}')" title="View details and workflow">
+                  Details
+                </button>
+                <button type="button" class="cf-btn cf-btn-outline cf-btn-sm" onclick="openStatusModal('{{ deadline.id }}', '{{ deadline.status }}', '{{ deadline.title|escapejs }}')" title="Change status">
+                  Status
+                </button>
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 3rem 1rem; color: var(--cf-text-muted);">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 0.75rem;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+              <h4 style="color: var(--cf-primary-navy); margin-bottom: 4px;">No Compliance Deadlines Found</h4>
+              <p style="font-size: 0.875rem; margin-bottom: 1rem;">No statutory deadlines match the selected filters or search query.</p>
+              <button type="button" class="cf-btn cf-btn-primary cf-btn-sm" onclick="openCreateModal()">
+                Add Filing Deadline
+              </button>
+            </td>
+          </tr>
+        {% endfor %}
       </tbody>
     </table>
   </div>
+
+  <!-- PAGINATION -->
+  {% if is_paginated %}
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-top: 1px solid var(--cf-border);">
+      <span style="font-size: 0.8125rem; color: var(--cf-text-muted);">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} ({{ paginator.count }} total filings)
+      </span>
+      <div style="display: flex; gap: 0.35rem;">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}&scope={{ selected_scope }}&status={{ selected_status }}&q={{ search_query }}" class="cf-btn cf-btn-outline cf-btn-sm">&larr; Previous</a>
+        {% endif %}
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}&scope={{ selected_scope }}&status={{ selected_status }}&q={{ search_query }}" class="cf-btn cf-btn-outline cf-btn-sm">Next &rarr;</a>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
 </div>
+
+
+<!-- ========================================== -->
+<!-- 1. MODAL: CREATE FILING DEADLINE           -->
+<!-- ========================================== -->
+<div class="cf-modal-backdrop" id="modal-create-compliance" style="display: none;">
+  <div class="cf-modal" style="max-width: 650px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title">Schedule Statutory Filing Deadline</h3>
+      <button type="button" class="cf-modal-close" onclick="CAFlow.closeModal('#modal-create-compliance')">&times;</button>
+    </div>
+
+    <form method="post" action="{% url 'compliance:compliance_create' %}">
+      {% csrf_token %}
+      <div class="cf-modal-body" style="display: flex; flex-direction: column; gap: 1rem; max-height: 70vh; overflow-y: auto;">
+        <!-- Title -->
+        <div>
+          <label class="cf-label"><strong>Filing Title *</strong></label>
+          {{ create_form.title }}
+        </div>
+
+        <!-- Client & Compliance Type -->
+        <div class="row g-2">
+          <div class="col-md-6">
+            <label class="cf-label">Client Entity</label>
+            {{ create_form.client }}
+          </div>
+          <div class="col-md-6">
+            <label class="cf-label">Configurable Compliance Type</label>
+            {{ create_form.compliance_type }}
+          </div>
+        </div>
+
+        <!-- Governing Act & Period -->
+        <div class="row g-2">
+          <div class="col-md-6">
+            <label class="cf-label">Governing Act / Authority</label>
+            {{ create_form.governing_act }}
+          </div>
+          <div class="col-md-6">
+            <label class="cf-label">Filing Period / Return Cycle</label>
+            {{ create_form.period }}
+          </div>
+        </div>
+
+        <!-- Due Dates (BS & AD) -->
+        <div class="row g-2">
+          <div class="col-md-6">
+            <label class="cf-label"><strong>Due Date (Bikram Sambat) *</strong></label>
+            {{ create_form.due_date_bs }}
+          </div>
+          <div class="col-md-6">
+            <label class="cf-label"><strong>Due Date (Gregorian / AD) *</strong></label>
+            {{ create_form.due_date_ad }}
+          </div>
+        </div>
+
+        <!-- Assigned Staff & Reviewer -->
+        <div class="row g-2">
+          <div class="col-md-6">
+            <label class="cf-label">Assigned Staff</label>
+            {{ create_form.assigned_to }}
+          </div>
+          <div class="col-md-6">
+            <label class="cf-label">Reviewer / Engagement Partner</label>
+            {{ create_form.reviewer }}
+          </div>
+        </div>
+
+        <!-- Priority & Status -->
+        <div class="row g-2">
+          <div class="col-md-6">
+            <label class="cf-label">Priority</label>
+            {{ create_form.priority }}
+          </div>
+          <div class="col-md-6">
+            <label class="cf-label">Initial Status</label>
+            {{ create_form.status }}
+          </div>
+        </div>
+
+        <!-- Description & Notes -->
+        <div>
+          <label class="cf-label">Filing Scope &amp; Instructions</label>
+          {{ create_form.description }}
+        </div>
+
+        <div>
+          <label class="cf-label">Statutory Notes &amp; Penalty Guidelines</label>
+          {{ create_form.notes }}
+        </div>
+
+        <!-- Recurring Schedule -->
+        <div style="padding: 0.75rem; background: var(--cf-surface-muted); border-radius: var(--cf-radius-sm); border: 1px solid var(--cf-border);">
+          <label class="cf-checkbox-label" style="margin-bottom: 0.5rem;">
+            {{ create_form.is_recurring }}
+            <span><strong>Recurring Compliance Schedule</strong></span>
+          </label>
+          <div class="row g-2" style="margin-top: 4px;">
+            <div class="col-md-6">
+              <label class="cf-label" style="font-size: 0.75rem;">Recurrence Frequency</label>
+              {{ create_form.recurrence_frequency }}
+            </div>
+            <div class="col-md-6">
+              <label class="cf-label" style="font-size: 0.75rem;">Recurrence End Date</label>
+              {{ create_form.recurrence_end_date }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" onclick="CAFlow.closeModal('#modal-create-compliance')">Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Schedule Deadline</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- ========================================== -->
+<!-- 2. MODAL: COMPLIANCE DETAIL & WORKFLOW     -->
+<!-- ========================================== -->
+<div class="cf-modal-backdrop" id="modal-compliance-detail" style="display: none;">
+  <div class="cf-modal" style="max-width: 750px;">
+    <div class="cf-modal-header">
+      <div>
+        <h3 class="cf-modal-title" id="dt-title">Statutory Compliance Detail</h3>
+        <div style="font-size: 0.8125rem; color: var(--cf-text-muted);" id="dt-subtitle"></div>
+      </div>
+      <button type="button" class="cf-modal-close" onclick="CAFlow.closeModal('#modal-compliance-detail')">&times;</button>
+    </div>
+
+    <div class="cf-modal-body" style="max-height: 72vh; overflow-y: auto;">
+      <!-- WORKFLOW PIPELINE PROGRESS BAR -->
+      <div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--cf-surface-muted); border: 1px solid var(--cf-border); border-radius: var(--cf-radius-md);">
+        <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--cf-primary-navy); margin-bottom: 0.75rem;">
+          Compliance Workflow Pipeline
+        </div>
+        <div style="display: flex; justify-content: space-between; position: relative; gap: 0.5rem; text-align: center;">
+          <!-- Step 1: Deadline -->
+          <div style="flex: 1;" id="pipe-step-1">
+            <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--cf-primary-navy); color: #fff; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700;">1</div>
+            <div style="font-size: 0.6875rem; font-weight: 600; margin-top: 4px;">Deadline</div>
+          </div>
+          <!-- Step 2: Preparation -->
+          <div style="flex: 1;" id="pipe-step-2">
+            <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--cf-border); color: var(--cf-text-primary); margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700;">2</div>
+            <div style="font-size: 0.6875rem; font-weight: 600; margin-top: 4px;">Preparation</div>
+          </div>
+          <!-- Step 3: Documents -->
+          <div style="flex: 1;" id="pipe-step-3">
+            <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--cf-border); color: var(--cf-text-primary); margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700;">3</div>
+            <div style="font-size: 0.6875rem; font-weight: 600; margin-top: 4px;">Documents</div>
+          </div>
+          <!-- Step 4: Review -->
+          <div style="flex: 1;" id="pipe-step-4">
+            <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--cf-border); color: var(--cf-text-primary); margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700;">4</div>
+            <div style="font-size: 0.6875rem; font-weight: 600; margin-top: 4px;">Review</div>
+          </div>
+          <!-- Step 5: Filing -->
+          <div style="flex: 1;" id="pipe-step-5">
+            <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--cf-border); color: var(--cf-text-primary); margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700;">5</div>
+            <div style="font-size: 0.6875rem; font-weight: 600; margin-top: 4px;">Filing</div>
+          </div>
+          <!-- Step 6: Completed -->
+          <div style="flex: 1;" id="pipe-step-6">
+            <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--cf-border); color: var(--cf-text-primary); margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700;">6</div>
+            <div style="font-size: 0.6875rem; font-weight: 600; margin-top: 4px;">Completed</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- METADATA GRID -->
+      <div class="row g-3" style="margin-bottom: 1.25rem;">
+        <div class="col-md-6">
+          <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Client Entity</div>
+          <div style="font-weight: 700; color: var(--cf-primary-navy);" id="dt-client">-</div>
+        </div>
+        <div class="col-md-6">
+          <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Governing Act</div>
+          <div style="font-weight: 600;" id="dt-act">-</div>
+        </div>
+        <div class="col-md-6">
+          <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Due Date</div>
+          <div class="mono-font" style="font-weight: 700; color: #B58A3A;" id="dt-dates">-</div>
+        </div>
+        <div class="col-md-6">
+          <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Filing Status &bull; Priority</div>
+          <div id="dt-status-pill">-</div>
+        </div>
+        <div class="col-md-6">
+          <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Assigned Staff</div>
+          <div style="font-weight: 600;" id="dt-staff">-</div>
+        </div>
+        <div class="col-md-6">
+          <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Reviewer / Partner</div>
+          <div style="font-weight: 600;" id="dt-reviewer">-</div>
+        </div>
+        <div class="col-md-6">
+          <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Filing Reference / Token</div>
+          <div class="mono-font" style="font-weight: 700; color: var(--cf-success);" id="dt-ref">-</div>
+        </div>
+        <div class="col-md-6">
+          <div style="font-size: 0.75rem; color: var(--cf-text-muted);">Completion Date</div>
+          <div class="mono-font" id="dt-completed-date">-</div>
+        </div>
+      </div>
+
+      <!-- DESCRIPTION & NOTES -->
+      <div style="margin-bottom: 1.25rem;">
+        <div style="font-size: 0.75rem; font-weight: 700; color: var(--cf-text-muted); text-transform: uppercase; margin-bottom: 4px;">Filing Instructions &amp; Scope</div>
+        <p style="font-size: 0.8125rem; color: var(--cf-text-secondary); background: var(--cf-surface-muted); padding: 0.75rem; border-radius: var(--cf-radius-sm); margin: 0;" id="dt-desc"></p>
+      </div>
+
+      <div style="margin-bottom: 1.25rem;">
+        <div style="font-size: 0.75rem; font-weight: 700; color: var(--cf-text-muted); text-transform: uppercase; margin-bottom: 4px;">Statutory Notes &amp; Penalty Provisions</div>
+        <p style="font-size: 0.8125rem; color: var(--cf-text-secondary); background: #FEF8EC; border: 1px solid #F1DEC0; padding: 0.75rem; border-radius: var(--cf-radius-sm); margin: 0;" id="dt-notes"></p>
+      </div>
+
+      <!-- CONNECTED TASKS -->
+      <div style="margin-bottom: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <div style="font-size: 0.75rem; font-weight: 700; color: var(--cf-primary-navy); text-transform: uppercase;">Connected Tasks</div>
+          <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" onclick="openLinkTaskModal()">+ Link Task</button>
+        </div>
+        <div id="dt-tasks-list" style="font-size: 0.8125rem;">No connected tasks.</div>
+      </div>
+
+      <!-- CONNECTED DOCUMENTS -->
+      <div style="margin-bottom: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <div style="font-size: 0.75rem; font-weight: 700; color: var(--cf-primary-navy); text-transform: uppercase;">Attached Working Papers &amp; Documents</div>
+          <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm" onclick="openLinkDocModal()">+ Attach Document</button>
+        </div>
+        <div id="dt-docs-list" style="font-size: 0.8125rem;">No documents attached.</div>
+      </div>
+
+      <!-- AUDIT TRAIL -->
+      <div>
+        <div style="font-size: 0.75rem; font-weight: 700; color: var(--cf-primary-navy); text-transform: uppercase; margin-bottom: 6px;">Activity &amp; Audit Trail</div>
+        <div id="dt-activities-list" style="font-size: 0.75rem; color: var(--cf-text-muted);">No activity recorded.</div>
+      </div>
+    </div>
+
+    <div class="cf-modal-footer">
+      <button type="button" class="cf-btn cf-btn-outline" onclick="CAFlow.closeModal('#modal-compliance-detail')">Close</button>
+      <button type="button" class="cf-btn cf-btn-secondary" id="dt-status-btn" onclick="openStatusFromDetail()">Advance Workflow &rarr;</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ========================================== -->
+<!-- 3. MODAL: UPDATE WORKFLOW STATUS           -->
+<!-- ========================================== -->
+<div class="cf-modal-backdrop" id="modal-status-update" style="display: none;">
+  <div class="cf-modal" style="max-width: 500px;">
+    <div class="cf-modal-header">
+      <div>
+        <h3 class="cf-modal-title">Update Workflow Status</h3>
+        <div style="font-size: 0.8125rem; color: var(--cf-text-muted);" id="st-deadline-title"></div>
+      </div>
+      <button type="button" class="cf-modal-close" onclick="CAFlow.closeModal('#modal-status-update')">&times;</button>
+    </div>
+
+    <form method="post" id="status-update-form" action="">
+      {% csrf_token %}
+      <div class="cf-modal-body" style="display: flex; flex-direction: column; gap: 1rem;">
+        <div>
+          <label class="cf-label"><strong>New Filing Status *</strong></label>
+          <select name="status" id="st-select" class="cf-select" required>
+            {% for st_val, st_lbl in status_choices %}
+              <option value="{{ st_val }}">{{ st_lbl }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="cf-label">Filing / Acknowledgment / Token Ref No.</label>
+          <input type="text" name="filing_reference_number" id="st-ref-input" class="cf-input" placeholder="e.g. IRD Token #2081-9921 / SSF Ack">
+        </div>
+
+        <div>
+          <label class="cf-label">Completion Date</label>
+          <input type="date" name="completion_date" id="st-comp-date" class="cf-input" value="{{ today_str }}">
+        </div>
+
+        <div>
+          <label class="cf-label">Reviewer Notes / Filing Remarks</label>
+          <textarea name="notes" class="cf-input" rows="2" placeholder="Audit verification notes, challan verification, or comments..."></textarea>
+        </div>
+      </div>
+
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" onclick="CAFlow.closeModal('#modal-status-update')">Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Update Status</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- ========================================== -->
+<!-- 4. MODAL: LINK TASK                        -->
+<!-- ========================================== -->
+<div class="cf-modal-backdrop" id="modal-link-task" style="display: none;">
+  <div class="cf-modal" style="max-width: 500px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title">Connect Practice Task</h3>
+      <button type="button" class="cf-modal-close" onclick="CAFlow.closeModal('#modal-link-task')">&times;</button>
+    </div>
+
+    <form method="post" id="link-task-form" action="">
+      {% csrf_token %}
+      <div class="cf-modal-body" style="display: flex; flex-direction: column; gap: 1rem;">
+        <div>
+          <label class="cf-label">Link Existing Task</label>
+          <select name="existing_task_id" class="cf-select">
+            <option value="">-- Or Create New Below --</option>
+          </select>
+        </div>
+
+        <div style="text-align: center; font-size: 0.75rem; color: var(--cf-text-muted);">&mdash; OR CREATE NEW WORK TASK &mdash;</div>
+
+        <div>
+          <label class="cf-label">New Task Title</label>
+          <input type="text" name="new_task_title" class="cf-input" placeholder="e.g. Reconcile VAT Purchase Register Annex 5">
+        </div>
+      </div>
+
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" onclick="CAFlow.closeModal('#modal-link-task')">Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Connect Task</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- ========================================== -->
+<!-- 5. MODAL: LINK DOCUMENT                    -->
+<!-- ========================================== -->
+<div class="cf-modal-backdrop" id="modal-link-doc" style="display: none;">
+  <div class="cf-modal" style="max-width: 500px;">
+    <div class="cf-modal-header">
+      <h3 class="cf-modal-title">Attach Working Paper / Document</h3>
+      <button type="button" class="cf-modal-close" onclick="CAFlow.closeModal('#modal-link-doc')">&times;</button>
+    </div>
+
+    <form method="post" id="link-doc-form" action="" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="cf-modal-body" style="display: flex; flex-direction: column; gap: 1rem;">
+        <div>
+          <label class="cf-label">Upload New File</label>
+          <input type="file" name="upload_file" class="cf-input">
+        </div>
+        <div>
+          <label class="cf-label">Document Title</label>
+          <input type="text" name="document_title" class="cf-input" placeholder="e.g. Bhadra 2081 VAT Sales Ledger (Annex 5)">
+        </div>
+      </div>
+
+      <div class="cf-modal-footer">
+        <button type="button" class="cf-btn cf-btn-outline" onclick="CAFlow.closeModal('#modal-link-doc')">Cancel</button>
+        <button type="submit" class="cf-btn cf-btn-primary">Attach Document</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+var activeDeadlineId = null;
+
+function openCreateModal() {
+  CAFlow.openModal('#modal-create-compliance');
+}
+
+function openStatusModal(id, currentStatus, title) {
+  activeDeadlineId = id;
+  document.getElementById('st-deadline-title').textContent = title || '';
+  document.getElementById('st-select').value = currentStatus || 'UPCOMING';
+  document.getElementById('status-update-form').action = '/compliance/' + id + '/status/';
+  CAFlow.openModal('#modal-status-update');
+}
+
+function openStatusFromDetail() {
+  if (!activeDeadlineId) return;
+  CAFlow.closeModal('#modal-compliance-detail');
+  var curStatus = document.getElementById('dt-status-pill').textContent.trim();
+  openStatusModal(activeDeadlineId, curStatus, document.getElementById('dt-title').textContent);
+}
+
+function openLinkTaskModal() {
+  if (!activeDeadlineId) return;
+  document.getElementById('link-task-form').action = '/compliance/' + activeDeadlineId + '/link-task/';
+  CAFlow.openModal('#modal-link-task');
+}
+
+function openLinkDocModal() {
+  if (!activeDeadlineId) return;
+  document.getElementById('link-doc-form').action = '/compliance/' + activeDeadlineId + '/link-document/';
+  CAFlow.openModal('#modal-link-doc');
+}
+
+function openDetailModal(id) {
+  activeDeadlineId = id;
+  fetch('/compliance/' + id + '/?format=json', {
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    document.getElementById('dt-title').textContent = data.title;
+    document.getElementById('dt-subtitle').textContent = (data.period ? 'Period: ' + data.period + ' • ' : '') + 'BS ' + data.due_date_bs;
+    document.getElementById('dt-client').textContent = data.client_name;
+    document.getElementById('dt-act').textContent = data.governing_act;
+    document.getElementById('dt-dates').textContent = 'BS ' + data.due_date_bs + ' (AD ' + data.due_date_ad + ')';
+    document.getElementById('dt-status-pill').innerHTML = '<span class="cf-badge cf-badge-primary">' + data.status_display + '</span> <span class="cf-badge cf-badge-secondary">' + data.priority_display + '</span>';
+    document.getElementById('dt-staff').textContent = data.assigned_to;
+    document.getElementById('dt-reviewer').textContent = data.reviewer;
+    document.getElementById('dt-ref').textContent = data.filing_reference_number || 'None (Pending Filing)';
+    document.getElementById('dt-completed-date').textContent = data.completion_date || 'In Progress';
+    document.getElementById('dt-desc').textContent = data.description || 'Standard statutory return procedure.';
+    document.getElementById('dt-notes').textContent = data.notes || 'Standard Act provisions and penalties apply.';
+
+    // Pipeline Steps Highlight
+    var stage = data.stage_index || 1;
+    for (var i = 1; i <= 6; i++) {
+      var stepEl = document.getElementById('pipe-step-1'.replace('1', i));
+      if (stepEl) {
+        var circle = stepEl.querySelector('div');
+        if (circle) {
+          if (i <= stage) {
+            circle.style.background = (stage === 6 || (stage === 5 && i === 5)) ? 'var(--cf-success)' : 'var(--cf-primary-navy)';
+            circle.style.color = '#fff';
+          } else {
+            circle.style.background = 'var(--cf-border)';
+            circle.style.color = 'var(--cf-text-primary)';
+          }
+        }
+      }
+    }
+
+    // Tasks list
+    var tasksHtml = '';
+    if (data.tasks && data.tasks.length > 0) {
+      tasksHtml = '<ul style="margin: 0; padding-left: 1.25rem;">';
+      data.tasks.forEach(function(t) {
+        tasksHtml += '<li><strong>' + t.title + '</strong> (' + t.status + ')</li>';
+      });
+      tasksHtml += '</ul>';
+    } else {
+      tasksHtml = '<span style="color: var(--cf-text-muted);">No tasks linked yet. Click "+ Link Task" to create one.</span>';
+    }
+    document.getElementById('dt-tasks-list').innerHTML = tasksHtml;
+
+    // Docs list
+    var docsHtml = '';
+    if (data.documents && data.documents.length > 0) {
+      docsHtml = '<ul style="margin: 0; padding-left: 1.25rem;">';
+      data.documents.forEach(function(d) {
+        docsHtml += '<li><a href="' + (d.url || '#') + '" target="_blank" style="color: var(--cf-secondary-navy); font-weight: 600;">' + d.title + '</a> (' + d.category + ')</li>';
+      });
+      docsHtml += '</ul>';
+    } else {
+      docsHtml = '<span style="color: var(--cf-text-muted);">No working papers attached. Click "+ Attach Document" to upload.</span>';
+    }
+    document.getElementById('dt-docs-list').innerHTML = docsHtml;
+
+    // Activities
+    var actHtml = '';
+    if (data.activities && data.activities.length > 0) {
+      actHtml = '<div style="display: flex; flex-direction: column; gap: 4px;">';
+      data.activities.forEach(function(a) {
+        actHtml += '<div><span class="mono-font" style="color: var(--cf-text-muted);">' + a.date + '</span> &bull; <strong>' + a.user + '</strong>: ' + a.description + '</div>';
+      });
+      actHtml += '</div>';
+    } else {
+      actHtml = '<span>Initial schedule created.</span>';
+    }
+    document.getElementById('dt-activities-list').innerHTML = actHtml;
+
+    CAFlow.openModal('#modal-compliance-detail');
+  })
+  .catch(function(err) {
+    CAFlow.toast('Failed to load deadline detail: ' + err, 'error');
+  });
+}
+</script>
 {% endblock %}

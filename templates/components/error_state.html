@@ -1,0 +1,41 @@
+{# CAFlow Reusable Error State Component #}
+<div class="cf-error-state {{ extra_classes|default:'' }}">
+  <div class="cf-error-icon">
+    {% if icon_svg %}
+      {{ icon_svg|safe }}
+    {% else %}
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+    {% endif %}
+  </div>
+
+  {% if code %}
+    <span class="cf-error-code">Error {{ code }}</span>
+  {% endif %}
+
+  <h3 class="cf-error-title">{{ title|default:'Unable to load records' }}</h3>
+  <p class="cf-error-desc">{{ description|default:'An unexpected issue occurred while fetching practice data. Please check your connection or try again.' }}</p>
+
+  <div style="display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap;">
+    {% if retry_url %}
+      <a href="{{ retry_url }}" class="cf-btn cf-btn-primary">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+        <span>{{ retry_text|default:'Retry' }}</span>
+      </a>
+    {% elif retry_action %}
+      <button type="button" class="cf-btn cf-btn-primary" onclick="{{ retry_action }}">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+        <span>{{ retry_text|default:'Retry' }}</span>
+      </button>
+    {% endif %}
+
+    {% if secondary_url %}
+      <a href="{{ secondary_url }}" class="cf-btn cf-btn-outline">
+        <span>{{ secondary_text|default:'Return to Dashboard' }}</span>
+      </a>
+    {% endif %}
+
+    {% if custom_actions_html %}
+      {{ custom_actions_html|safe }}
+    {% endif %}
+  </div>
+</div>

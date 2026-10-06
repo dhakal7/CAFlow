@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Workspace Affiliation Required — {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background-color: var(--cf-bg); padding: 2rem 1rem;">
+  <div style="width: 100%; max-width: 600px;">
+    
+    <!-- Top Branding -->
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <a href="{% url 'core:landing' %}" style="display: inline-flex; align-items: center; gap: 0.75rem; text-decoration: none;">
+        <div style="width: 44px; height: 44px; background: var(--cf-primary-navy); border-radius: var(--cf-radius-md); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 1.25rem;">
+          CF
+        </div>
+        <div style="text-align: left;">
+          <div style="font-size: 1.45rem; font-weight: 800; color: var(--cf-primary-navy); line-height: 1.1; letter-spacing: -0.02em;">
+            {{ APP_NAME }}
+          </div>
+          <div style="font-size: 0.75rem; font-weight: 600; color: var(--cf-text-muted); text-transform: uppercase; letter-spacing: 0.05em;">
+            Nepal CA Practice OS
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Main Card -->
+    <div class="cf-card" style="padding: 2.5rem; box-shadow: var(--cf-shadow-lg); border-radius: var(--cf-radius-lg);">
+      
+      <!-- Icon & Status -->
+      <div style="text-align: center; margin-bottom: 1.5rem;">
+        <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(220, 38, 38, 0.1); color: var(--cf-danger); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--cf-primary-navy); margin-bottom: 0.5rem;">
+          Active Workspace Required
+        </h2>
+        <p style="font-size: 0.9375rem; color: var(--cf-text-muted); margin: 0; line-height: 1.5;">
+          Your account (<strong>{{ request.user.email }}</strong>) is authenticated, but is not currently attached to an active Chartered Accountancy practice workspace.
+        </p>
+      </div>
+
+      {# Section: Pending Invitations if any #}
+      {% if pending_invites %}
+        <div style="margin-bottom: 2rem; padding: 1.25rem; background: var(--cf-bg-card-subtle); border: 1px solid var(--cf-border-color); border-radius: var(--cf-radius-md);">
+          <div style="font-size: 0.875rem; font-weight: 700; color: var(--cf-primary-navy); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <span>You have pending invitations:</span>
+          </div>
+          {% for invite in pending_invites %}
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: #fff; border: 1px solid var(--cf-border-color); border-radius: var(--cf-radius-sm); margin-bottom: 0.5rem;">
+              <div>
+                <div style="font-weight: 600; font-size: 0.9375rem; color: var(--cf-text-default);">{{ invite.firm.name }}</div>
+                <div style="font-size: 0.8125rem; color: var(--cf-text-muted);">Role: <span class="cf-badge cf-badge-primary">{{ invite.get_role_display }}</span> &bull; Invited by {{ invite.invited_by.get_full_name }}</div>
+              </div>
+              <a href="{% url 'firms:accept_invitation' token=invite.token %}" class="cf-btn cf-btn-primary cf-btn-sm">
+                Accept &amp; Join
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {# Section: Inactive / Suspended Memberships if any #}
+      {% if other_memberships %}
+        <div style="margin-bottom: 2rem; padding: 1.25rem; background: rgba(234, 179, 8, 0.08); border: 1px solid rgba(234, 179, 8, 0.25); border-radius: var(--cf-radius-md);">
+          <div style="font-size: 0.875rem; font-weight: 700; color: var(--cf-warning); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>Membership Status Alert</span>
+          </div>
+          {% for m in other_memberships %}
+            <div style="font-size: 0.875rem; color: var(--cf-text-default); margin-bottom: 0.25rem;">
+              Practice: <strong>{{ m.firm.name }}</strong> &bull; Status: <span class="cf-badge cf-badge-warning">{{ m.get_status_display }}</span>
+            </div>
+          {% endfor %}
+          <div style="font-size: 0.8125rem; color: var(--cf-text-muted); margin-top: 0.5rem;">
+            Please contact your firm owner or managing partner to re-activate your workspace access.
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Action Options -->
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <a href="{% url 'firms:create_firm' %}" class="cf-btn cf-btn-primary" style="justify-content: center; padding: 0.875rem 1.5rem; font-size: 1rem;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>Register a New CA Practice Workspace</span>
+        </a>
+
+        <div style="text-align: center; margin-top: 1rem;">
+          <form id="cf-signout-form" action="{% url 'accounts:logout' %}" method="post" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="cf-btn cf-btn-outline" style="border: none; color: var(--cf-text-muted); text-decoration: underline; background: transparent; cursor: pointer;">
+              Sign out of this account
+            </button>
+          </form>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Security Note -->
+    <div style="text-align: center; margin-top: 1.75rem; font-size: 0.75rem; color: var(--cf-text-muted);">
+      <div style="display: inline-flex; align-items: center; gap: 0.35rem;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>ICAN Multi-Tenant Data Protection &bull; Strict Tenant Boundary Enforcement</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends "layouts/auth.html" %}
+{% load static %}
+
+{% block title %}Join {{ invitation.firm.name }} &mdash; {{ APP_NAME }}{% endblock %}
+
+{% block auth_content %}
+<div style="margin-bottom: 1.5rem; text-align: center;">
+  <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(30, 58, 138, 0.08); color: var(--cf-secondary-navy); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem;">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+  </div>
+  <h2 style="font-size: 1.35rem; margin-bottom: 0.35rem; color: var(--cf-primary-navy); font-weight: 700;">Join Practice Workspace</h2>
+  <p style="font-size: 0.8125rem; color: var(--cf-text-muted); margin: 0;">
+    You have been invited to join <strong>{{ invitation.firm.name }}</strong>
+  </p>
+</div>
+
+<div style="padding: 1rem; background: var(--cf-bg); border-radius: var(--cf-radius-md); border: 1px solid var(--cf-border); margin-bottom: 1.5rem;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+    <span style="font-size: 0.75rem; color: var(--cf-text-muted); text-transform: uppercase; font-weight: 600;">Practice Firm</span>
+    <span style="font-size: 0.875rem; font-weight: 700; color: var(--cf-primary-navy);">{{ invitation.firm.name }}</span>
+  </div>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+    <span style="font-size: 0.75rem; color: var(--cf-text-muted); text-transform: uppercase; font-weight: 600;">Assigned Role</span>
+    <span class="cf-badge {{ invitation.role_badge_class|default:'cf-badge-secondary' }}">{{ invitation.get_role_display }}</span>
+  </div>
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <span style="font-size: 0.75rem; color: var(--cf-text-muted); text-transform: uppercase; font-weight: 600;">Invited By</span>
+    <span style="font-size: 0.8125rem; color: var(--cf-text-secondary);">{{ invitation.invited_by.get_full_name }}</span>
+  </div>
+</div>
+
+{% if is_authenticated %}
+  <div style="margin-bottom: 1.5rem; text-align: center;">
+    <p style="font-size: 0.875rem; color: var(--cf-text-secondary); margin-bottom: 1rem;">
+      You are currently signed in as <strong>{{ user.email }}</strong>.
+    </p>
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="cf-btn cf-btn-primary" style="width: 100%; height: 44px;">
+        Accept Invitation &amp; Join Workspace &rarr;
+      </button>
+    </form>
+  </div>
+{% elif existing_user %}
+  <div style="text-align: center;">
+    <p style="font-size: 0.875rem; color: var(--cf-text-secondary); margin-bottom: 1.25rem;">
+      An account with <strong>{{ invitation.email }}</strong> already exists. Sign in with your existing password to accept this invitation.
+    </p>
+    <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="cf-btn cf-btn-primary" style="width: 100%; height: 44px;">
+      Sign In &amp; Join Firm &rarr;
+    </a>
+  </div>
+{% else %}
+  <!-- Registration form for new staff -->
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="cf-form-group">
+      <label class="cf-label">Invited Email</label>
+      <input type="email" class="cf-input" value="{{ invitation.email }}" disabled style="background-color: var(--cf-bg); cursor: not-allowed;">
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+      <div class="cf-form-group">
+        <label class="cf-label" for="id_first_name">First Name <span class="required-star">*</span></label>
+        <input type="text" name="first_name" id="id_first_name" class="cf-input" placeholder="Aayush" required>
+        {% if form.first_name.errors %}<div style="color: var(--cf-danger); font-size: 0.75rem;">{{ form.first_name.errors.0 }}</div>{% endif %}
+      </div>
+      <div class="cf-form-group">
+        <label class="cf-label" for="id_last_name">Last Name <span class="required-star">*</span></label>
+        <input type="text" name="last_name" id="id_last_name" class="cf-input" placeholder="Sharma" required>
+        {% if form.last_name.errors %}<div style="color: var(--cf-danger); font-size: 0.75rem;">{{ form.last_name.errors.0 }}</div>{% endif %}
+      </div>
+    </div>
+
+    <div class="cf-form-group">
+      <label class="cf-label" for="id_phone">Mobile Number</label>
+      <input type="text" name="phone" id="id_phone" class="cf-input" placeholder="+977 98XXXXXXXX">
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+      <div class="cf-form-group">
+        <label class="cf-label" for="id_password">Create Password <span class="required-star">*</span></label>
+        <input type="password" name="password" id="id_password" class="cf-input" placeholder="••••••••••••" required>
+        {% if form.password.errors %}<div style="color: var(--cf-danger); font-size: 0.75rem;">{{ form.password.errors.0 }}</div>{% endif %}
+      </div>
+      <div class="cf-form-group">
+        <label class="cf-label" for="id_password_confirm">Confirm Password <span class="required-star">*</span></label>
+        <input type="password" name="password_confirm" id="id_password_confirm" class="cf-input" placeholder="••••••••••••" required>
+        {% if form.password_confirm.errors %}<div style="color: var(--cf-danger); font-size: 0.75rem;">{{ form.password_confirm.errors.0 }}</div>{% endif %}
+      </div>
+    </div>
+
+    <button type="submit" class="cf-btn cf-btn-primary" style="width: 100%; height: 44px; margin-top: 0.5rem;">
+      Create Account &amp; Join Workspace &rarr;
+    </button>
+  </form>
+{% endif %}
+{% endblock %}

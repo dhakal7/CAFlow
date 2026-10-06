@@ -1,0 +1,19 @@
+{# CAFlow Reusable Toast Component / Django Message Converter #}
+{% if messages %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      {% for message in messages %}
+        (function() {
+          var tag = '{{ message.tags|default:"info" }}';
+          var cfType = 'info';
+          if (tag.indexOf('success') !== -1) cfType = 'success';
+          else if (tag.indexOf('warning') !== -1) cfType = 'warning';
+          else if (tag.indexOf('error') !== -1 || tag.indexOf('danger') !== -1) cfType = 'danger';
+          if (window.CAFlow && typeof window.CAFlow.toast === 'function') {
+            window.CAFlow.toast("{{ message|escapejs }}", cfType);
+          }
+        })();
+      {% endfor %}
+    });
+  </script>
+{% endif %}

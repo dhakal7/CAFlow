@@ -13,10 +13,12 @@
     init() {
       this.initMobileSidebar();
       this.initModals();
+      this.initDrawers();
       this.initDropdowns();
       this.initKeyboardShortcuts();
       this.initAutoFormLoading();
       this.initToastsContainer();
+      this.initSortableTables();
     },
 
     // -------------------------------------------------------------
@@ -67,12 +69,15 @@
     // 2. Modal Controller
     // -------------------------------------------------------------
     initModals() {
-      // Data attribute triggers: data-cf-modal-target="#modalId"
+      // Data attribute triggers: data-cf-modal-target="#modalId" or data-cf-modal-trigger="modalId"
       document.addEventListener('click', (e) => {
-        const trigger = e.target.closest('[data-cf-modal-target]');
+        const trigger = e.target.closest('[data-cf-modal-target], [data-cf-modal-trigger]');
         if (trigger) {
           e.preventDefault();
-          const targetSelector = trigger.getAttribute('data-cf-modal-target');
+          let targetSelector = trigger.getAttribute('data-cf-modal-target') || trigger.getAttribute('data-cf-modal-trigger');
+          if (targetSelector && !targetSelector.startsWith('#') && !targetSelector.startsWith('.')) {
+            targetSelector = '#' + targetSelector;
+          }
           this.openModal(targetSelector);
         }
 
@@ -97,7 +102,7 @@
       // Close on ESC
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-          const openModal = document.querySelector('.cf-modal-backdrop.is-open');
+          const openModal = document.querySelector('.cf-modal-backdrop.is-open, .cf-modal-backdrop.active');
           if (openModal) {
             this.closeModal(openModal);
           }
@@ -112,6 +117,7 @@
 
       if (!modal) return;
       modal.classList.add('is-open');
+      modal.classList.add('active');
       document.body.style.overflow = 'hidden';
 
       // Autofocus first input if any
@@ -128,7 +134,77 @@
 
       if (!modal) return;
       modal.classList.remove('is-open');
-      if (!document.querySelector('.cf-modal-backdrop.is-open')) {
+      modal.classList.remove('active');
+      if (!document.querySelector('.cf-modal-backdrop.is-open') && !document.querySelector('.cf-drawer-backdrop.is-open')) {
+        document.body.style.overflow = '';
+      }
+    },
+
+    // -------------------------------------------------------------
+    // 2.1. Drawer / Slide-Over Controller
+    // -------------------------------------------------------------
+    initDrawers() {
+      // Data attribute triggers: data-cf-drawer-target="#drawerId"
+      document.addEventListener('click', (e) => {
+        const trigger = e.target.closest('[data-cf-drawer-target]');
+        if (trigger) {
+          e.preventDefault();
+          const targetSelector = trigger.getAttribute('data-cf-drawer-target');
+          this.openDrawer(targetSelector);
+        }
+
+        // Close triggers: data-cf-drawer-close
+        const closeBtn = e.target.closest('[data-cf-drawer-close]');
+        if (closeBtn) {
+          e.preventDefault();
+          const drawerBackdrop = closeBtn.closest('.cf-drawer-backdrop');
+          if (drawerBackdrop) {
+            this.closeDrawer(drawerBackdrop);
+          }
+        }
+      });
+
+      // Close on backdrop click (outside drawer panel)
+      document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('cf-drawer-backdrop')) {
+          this.closeDrawer(e.target);
+        }
+      });
+
+      // Close on ESC
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          const openDrawer = document.querySelector('.cf-drawer-backdrop.is-open');
+          if (openDrawer) {
+            this.closeDrawer(openDrawer);
+          }
+        }
+      });
+    },
+
+    openDrawer(drawerElementOrSelector) {
+      const drawer = typeof drawerElementOrSelector === 'string'
+        ? document.querySelector(drawerElementOrSelector)
+        : drawerElementOrSelector;
+
+      if (!drawer) return;
+      drawer.classList.add('is-open');
+      document.body.style.overflow = 'hidden';
+
+      const input = drawer.querySelector('input:not([type=hidden]), textarea, select');
+      if (input) {
+        setTimeout(() => input.focus(), 150);
+      }
+    },
+
+    closeDrawer(drawerElementOrSelector) {
+      const drawer = typeof drawerElementOrSelector === 'string'
+        ? document.querySelector(drawerElementOrSelector)
+        : drawerElementOrSelector;
+
+      if (!drawer) return;
+      drawer.classList.remove('is-open');
+      if (!document.querySelector('.cf-modal-backdrop.is-open') && !document.querySelector('.cf-drawer-backdrop.is-open')) {
         document.body.style.overflow = '';
       }
     },
@@ -324,6 +400,47 @@
       rows.forEach((row) => {
         const text = row.textContent.toLowerCase();
         row.style.display = text.includes(q) ? '' : 'none';
+      });
+    },
+
+    // -------------------------------------------------------------
+    // 9. Interactive Table Column Sorting
+    // -------------------------------------------------------------
+    initSortableTables() {
+      document.addEventListener('click', (e) => {
+        const th = e.target.closest('th.is-sortable');
+        if (!th) return;
+
+        const table = th.closest('table');
+        if (!table) return;
+
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return;
+
+        const colIndex = Array.from(th.parentNode.children).indexOf(th);
+        const isAsc = !th.classList.contains('is-sorted-asc');
+
+        table.querySelectorAll('th.is-sortable').forEach((h) => {
+          h.classList.remove('is-sorted', 'is-sorted-asc', 'is-sorted-desc');
+        });
+
+        th.classList.add('is-sorted', isAsc ? 'is-sorted-asc' : 'is-sorted-desc');
+
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        rows.sort((a, b) => {
+          const aText = (a.children[colIndex]?.innerText || '').trim();
+          const bText = (b.children[colIndex]?.innerText || '').trim();
+
+          const aNum = parseFloat(aText.replace(/[^0-9.-]/g, ''));
+          const bNum = parseFloat(bText.replace(/[^0-9.-]/g, ''));
+
+          if (!isNaN(aNum) && !isNaN(bNum)) {
+            return isAsc ? aNum - bNum : bNum - aNum;
+          }
+          return isAsc ? aText.localeCompare(bText) : bText.localeCompare(aText);
+        });
+
+        rows.forEach((r) => tbody.appendChild(r));
       });
     },
   };

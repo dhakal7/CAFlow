@@ -45,3 +45,14 @@ class CalendarEvent(FirmAwareModel):
 
     def __str__(self):
         return self.title
+
+    def clean(self):
+        super().clean()
+        if self.client_id and self.firm_id and self.client.firm_id != self.firm_id:
+            from django.core.exceptions import ValidationError
+            raise ValidationError({'client': _('Client must belong to the same firm as the calendar event.')})
+
+    def save(self, *args, **kwargs):
+        if self.client_id and self.firm_id and self.client.firm_id != self.firm_id:
+            raise ValueError(_('Cannot attach a client from another firm to this calendar event.'))
+        super().save(*args, **kwargs)

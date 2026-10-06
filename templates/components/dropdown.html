@@ -1,0 +1,24 @@
+{# CAFlow Reusable Dropdown Component #}
+<div class="cf-dropdown {{ extra_classes|default:'' }}">
+  {% if trigger_html %}
+    {{ trigger_html|safe }}
+  {% else %}
+    <button type="button" 
+            class="cf-btn cf-btn-{{ button_variant|default:'outline' }} cf-btn-{{ button_size|default:'sm' }}" 
+            data-cf-dropdown-toggle
+            aria-haspopup="true" 
+            aria-expanded="false">
+      {% if icon %}{{ icon|safe }}{% endif %}
+      <span>{{ text|default:'Options' }}</span>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+  {% endif %}
+
+  <div class="cf-dropdown-menu {% if align == 'left' %}cf-dropdown-menu-left{% endif %}" style="{% if min_width %}min-width: {{ min_width }};{% endif %}">
+    {% if header %}
+      <div class="cf-dropdown-header">{{ header }}</div>
+    {% endif %}
+
+    {{ items_html|safe }}
+  </div>
+</div>
